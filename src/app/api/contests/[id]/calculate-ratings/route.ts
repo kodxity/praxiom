@@ -27,7 +27,7 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
     }
 
     // Get unique participants
-    const userIds = [...new Set(contest.submissions.map(s => s.userId))];
+    const userIds = [...new Set(contest.submissions.map((s: any) => s.userId))];
 
     // Calculate scores per user
     const participants = [];
@@ -36,18 +36,18 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
         if (!user) continue;
 
         let score = 0;
-        const userSubs = contest.submissions.filter(s => s.userId === userId);
+        const userSubs = contest.submissions.filter((s: any) => s.userId === userId);
 
         // Logic same as Standings:
         // For each problem, checking validation.
-        contest.problems.forEach(problem => {
-            const pSubs = userSubs.filter(s => s.problemId === problem.id);
+        contest.problems.forEach((problem: any) => {
+            const pSubs = userSubs.filter((s: any) => s.problemId === problem.id);
             // Check if solved
-            const solvedSub = pSubs.find(s => s.isCorrect);
+            const solvedSub = pSubs.find((s: any) => s.isCorrect);
             if (solvedSub) {
                 // Determine attempts until solved
                 // Filter subs before solved time
-                const attempts = pSubs.filter(s => s.createdAt <= solvedSub.createdAt).length;
+                const attempts = pSubs.filter((s: any) => s.createdAt <= solvedSub.createdAt).length;
                 const penalty = (attempts - 1) * 10;
                 const earned = Math.max(problem.points * 0.3, problem.points - penalty);
                 score += earned;
@@ -67,7 +67,7 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
     // ELO Calc (K=32 simple pairwise)
     const K = 32;
     const changes: Record<string, number> = {};
-    participants.forEach(p => changes[p.userId] = 0);
+    participants.forEach((p: any) => changes[p.userId] = 0);
 
     // Only compare if more than 1 participant
     if (participants.length > 1) {

@@ -90,7 +90,7 @@ export default async function StandingsPage(props: { params: Promise<{ id: strin
                                 <th className="p-3 pl-4">Rank</th>
                                 <th className="p-3">User</th>
                                 <th className="p-3 font-bold">Total Score</th>
-                                {contest.problems.map((p, i) => (
+                                {contest.problems.map((p: any, i: number) => (
                                     <th key={p.id} className="p-3 text-center min-w-[80px]">
                                         <div className="text-xs uppercase text-muted-foreground">Problem</div>
                                         #{i + 1}
@@ -99,7 +99,7 @@ export default async function StandingsPage(props: { params: Promise<{ id: strin
                             </tr>
                         </thead>
                         <tbody>
-                            {standings.map((row, i) => (
+                            {standings.map((row: any, i: number) => (
                                 <tr key={row.user.id} className="border-b hover:bg-muted/30 transition-colors">
                                     <td className="p-3 pl-4 font-bold text-muted-foreground">#{i + 1}</td>
                                     <td className="p-3 font-medium">

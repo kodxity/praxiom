@@ -80,7 +80,7 @@ export default async function UserProfile(props: { params: Promise<{ username: s
                         <div className="flex justify-between border-b pb-2">
                             <span className="text-muted-foreground">Max Rating</span>
                             <span className="font-bold">
-                                {Math.max(1200, ...user.ratingHistory.map(r => r.newRating))}
+                                {Math.max(1200, ...user.ratingHistory.map((r: any) => r.newRating))}
                             </span>
                         </div>
                     </div>

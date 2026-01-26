@@ -25,7 +25,7 @@ export default async function HomePage() {
       </div>
 
       <div className="grid gap-6">
-        {posts.map((post) => (
+        {posts.map((post: any) => (
           <div key={post.id} className="card hover:shadow-md transition-shadow">
             <h2 className="text-xl font-bold mb-2">
               <Link href={`/posts/${post.id}`} className="hover:text-primary">

@@ -46,7 +46,7 @@ export function CommentSection({ postId, initialComments }: { postId: string, in
             )}
 
             <div className="space-y-4">
-                {initialComments.map((comment) => (
+                {initialComments.map((comment: any) => (
                     <div key={comment.id} className="p-4 border rounded-lg bg-card">
                         <div className="flex justify-between items-start mb-2">
                             <span className="font-medium text-sm text-primary">{comment.author.username}</span>

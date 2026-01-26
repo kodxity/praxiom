@@ -47,8 +47,8 @@ export default async function ContestPage(props: { params: Promise<{ id: string 
                         <div>End: {contest.endTime.toLocaleString()}</div>
                         <div className="flex items-center gap-2 mt-2">
                             <span className={`px-2 py-1 rounded text-xs font-medium ${isActive ? 'bg-green-100 text-green-700' :
-                                    isPast ? 'bg-gray-100 text-gray-700' :
-                                        'bg-blue-100 text-blue-700'
+                                isPast ? 'bg-gray-100 text-gray-700' :
+                                    'bg-blue-100 text-blue-700'
                                 }`}>
                                 {isActive ? '🟢 Active' : isPast ? '⚫ Ended' : '🔵 Upcoming'}
                             </span>
@@ -118,7 +118,7 @@ export default async function ContestPage(props: { params: Promise<{ id: string 
                         <div>
                             <h3 className="font-semibold mb-2">Problems ({contest.problems.length})</h3>
                             <div className="space-y-2">
-                                {contest.problems.map((p, i) => (
+                                {contest.problems.map((p: any, i: number) => (
                                     <div key={p.id} className="p-3 border rounded bg-muted/30">
                                         <div className="font-medium">#{i + 1} {p.title}</div>
                                         <div className="text-sm text-muted-foreground mt-1">Answer: {p.correctAnswer} | Points: {p.points}</div>

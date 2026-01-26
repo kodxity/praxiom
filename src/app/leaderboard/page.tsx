@@ -32,7 +32,7 @@ export default async function LeaderboardPage() {
                         </tr>
                     </thead>
                     <tbody>
-                        {users.map((user, i) => (
+                        {users.map((user: any, i: number) => (
                             <tr key={user.id} className="border-b hover:bg-muted/30 transition-colors">
                                 <td className="p-4 text-muted-foreground font-medium">#{i + 1}</td>
                                 <td className="p-4 font-medium">

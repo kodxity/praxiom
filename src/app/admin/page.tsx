@@ -40,7 +40,7 @@ export default async function AdminPage() {
                     </h2>
                     {pendingUsers.length === 0 ? <p className="text-muted-foreground">No pending users.</p> : (
                         <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
-                            {pendingUsers.map(user => (
+                            {pendingUsers.map((user: any) => (
                                 <UserApproval key={user.id} user={user} />
                             ))}
                         </div>
