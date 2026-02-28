@@ -1,0 +1,2474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AXIOM - Complete Client UI Collection</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ]
+  });"></script>
+<style>
+
+/* ═══════════════════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════════════════ */
+:root {
+  --bg: #eeeae3;
+  --bg2: #e8e3db;
+  --glass: rgba(255,255,255,0.68);
+  --glass-hover: rgba(255,255,255,0.82);
+  --glass-strong: rgba(255,255,255,0.90);
+  --glass-border: rgba(255,255,255,0.52);
+  --glass-border-strong: rgba(255,255,255,0.78);
+  --shadow: 0 4px 24px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 16px 48px rgba(0,0,0,0.11), 0 4px 12px rgba(0,0,0,0.06);
+  --shadow-xl: 0 32px 80px rgba(0,0,0,0.14), 0 8px 24px rgba(0,0,0,0.08);
+
+  --ink: #18160f;
+  --ink2: #2e2b22;
+  --ink3: #5a5548;
+  --ink4: #8a8274;
+  --ink5: #bfb8ad;
+
+  --sage: #6b9478;
+  --sage-bg: rgba(107,148,120,0.10);
+  --sage-border: rgba(107,148,120,0.22);
+  --rose: #b8604e;
+  --rose-bg: rgba(184,96,78,0.09);
+  --rose-border: rgba(184,96,78,0.22);
+  --amber: #b8853a;
+  --amber-bg: rgba(184,133,58,0.10);
+  --amber-border: rgba(184,133,58,0.22);
+  --slate: #5878a0;
+  --slate-bg: rgba(88,120,160,0.10);
+  --slate-border: rgba(88,120,160,0.22);
+  --violet: #7b6aab;
+  --violet-bg: rgba(123,106,171,0.10);
+  --violet-border: rgba(123,106,171,0.22);
+
+  --r: 14px;
+  --r-lg: 20px;
+  --r-xl: 28px;
+
+  --ff-display: 'Instrument Serif', serif;
+  --ff-body: 'DM Sans', sans-serif;
+  --ff-ui: 'Instrument Sans', sans-serif;
+  --ff-mono: 'JetBrains Mono', monospace;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--ff-body);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* Ambient blobs */
+.blobs {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+}
+.blob {
+  position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.28;
+}
+.b1 { width:700px;height:700px;background:#cde0d4;top:-200px;left:-150px; }
+.b2 { width:550px;height:550px;background:#e8d0c8;top:30%;right:-200px; }
+.b3 { width:450px;height:450px;background:#ccd5e0;bottom:-100px;left:25%; }
+
+/* ── Layout ── */
+.wrap { position:relative;z-index:1;max-width:1360px;margin:0 auto;padding:40px 28px 120px; }
+.sec { margin-bottom:88px; }
+.sec-label {
+  font-family:var(--ff-mono);font-size:10px;letter-spacing:.22em;color:var(--ink5);
+  text-transform:uppercase;margin-bottom:22px;padding-bottom:10px;
+  border-bottom:1px dashed var(--ink5);display:flex;align-items:center;gap:8px;
+}
+.sec-label::before { content:'';width:5px;height:5px;border-radius:50%;background:var(--ink5);display:block;flex-shrink:0; }
+.grid { display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start; }
+.col { display:flex;flex-direction:column;gap:14px; }
+.lbl { font-family:var(--ff-mono);font-size:9px;letter-spacing:.14em;color:var(--ink5);text-transform:uppercase;margin-bottom:7px; }
+
+/* ── Glass card ── */
+.g {
+  background:var(--glass);
+  backdrop-filter:blur(22px) saturate(1.5);
+  -webkit-backdrop-filter:blur(22px) saturate(1.5);
+  border:1px solid var(--glass-border);
+  box-shadow:var(--shadow);
+  border-radius:var(--r-lg);
+}
+.g-strong {
+  background:var(--glass-strong);
+  backdrop-filter:blur(32px) saturate(1.7);
+  -webkit-backdrop-filter:blur(32px) saturate(1.7);
+  border:1px solid var(--glass-border-strong);
+  box-shadow:var(--shadow-lg);
+  border-radius:var(--r-lg);
+}
+
+/* ── Skeleton gleam ── */
+@keyframes gleam {
+  0%{background-position:-500px 0}
+  100%{background-position:700px 0}
+}
+.skel {
+  background:rgba(0,0,0,0.065);
+  border-radius:6px;
+  position:relative;
+  overflow:hidden;
+}
+.skel::after {
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.72) 45%,rgba(255,255,255,.72) 55%,transparent 100%);
+  background-size:700px 100%;
+  animation:gleam 1.7s ease-in-out infinite;
+}
+.skel-t{height:13px;border-radius:4px;}
+.skel-t-sm{height:10px;border-radius:3px;}
+.skel-t-lg{height:19px;border-radius:5px;}
+.skel-btn{height:40px;border-radius:var(--r);}
+.skel-circ{border-radius:50%!important;}
+
+/* ── Scroll sidebar nav ── */
+.sidebar {
+  position:fixed;left:20px;top:50%;transform:translateY(-50%);
+  display:flex;flex-direction:column;gap:6px;z-index:100;
+}
+.sidebar a {
+  font-family:var(--ff-mono);font-size:9px;letter-spacing:.1em;
+  color:var(--ink5);text-decoration:none;padding:4px 8px;border-radius:6px;
+  transition:all .15s;white-space:nowrap;
+}
+.sidebar a:hover{background:rgba(0,0,0,.05);color:var(--ink3);}
+
+@media(max-width:900px){.sidebar{display:none;}}
+
+/* Page header */
+.page-hd {
+  padding:40px 44px 36px;
+  margin-bottom:56px;
+}
+.page-hd h1 {
+  font-family:var(--ff-display);font-size:48px;font-weight:400;
+  line-height:1.05;letter-spacing:-.02em;margin-bottom:10px;
+}
+.page-hd h1 em { font-style:italic;color:var(--sage); }
+.page-hd p { font-size:16px;font-weight:300;color:var(--ink3);max-width:580px;line-height:1.65; }
+.chip {
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 10px;border-radius:100px;
+  font-family:var(--ff-mono);font-size:10px;letter-spacing:.06em;
+  background:rgba(0,0,0,.05);color:var(--ink3);border:1px solid rgba(0,0,0,.08);
+  margin-top:14px;margin-right:6px;
+}
+
+/* ══════════════════════════════════════
+   SECTION A: HOMEPAGE / LANDING
+══════════════════════════════════════ */
+
+/* Hero section */
+.hero-card {
+  padding:56px 52px;
+  max-width:820px;
+  position:relative;
+  overflow:hidden;
+}
+.hero-card::before {
+  content:'';position:absolute;top:-80px;right:-80px;width:320px;height:320px;
+  background:radial-gradient(circle,rgba(107,148,120,.12),transparent 70%);
+  border-radius:50%;pointer-events:none;
+}
+.hero-eyebrow {
+  font-family:var(--ff-mono);font-size:10px;letter-spacing:.25em;
+  color:var(--sage);margin-bottom:16px;display:flex;align-items:center;gap:10px;
+}
+.hero-eyebrow::before{content:'';width:28px;height:1px;background:var(--sage);opacity:.6;}
+.hero-title {
+  font-family:var(--ff-display);font-size:clamp(40px,5.5vw,64px);
+  font-weight:400;line-height:1.05;letter-spacing:-.02em;margin-bottom:18px;color:var(--ink);
+}
+.hero-title em { font-style:italic;color:var(--sage); }
+.hero-sub { font-size:17px;font-weight:300;color:var(--ink3);line-height:1.7;margin-bottom:36px;max-width:440px; }
+.hero-actions { display:flex;gap:12px;align-items:center;flex-wrap:wrap; }
+
+/* ── Buttons ── */
+.btn {
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  font-family:var(--ff-ui);font-size:14px;font-weight:500;
+  border:none;cursor:pointer;text-decoration:none;white-space:nowrap;
+  position:relative;overflow:hidden;transition:all .18s cubic-bezier(.4,0,.2,1);
+}
+.btn::after{content:'';position:absolute;inset:0;background:white;opacity:0;transition:opacity .15s;border-radius:inherit;}
+.btn:hover::after{opacity:.1;}
+.btn:active{transform:scale(.97);}
+.btn-ink{padding:12px 26px;background:var(--ink);color:white;border-radius:var(--r);}
+.btn-glass{padding:12px 22px;background:var(--glass);color:var(--ink2);border:1px solid var(--glass-border);border-radius:var(--r);backdrop-filter:blur(12px);box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.btn-glass:hover{background:var(--glass-hover);}
+.btn-sage{padding:12px 22px;background:var(--sage);color:white;border-radius:var(--r);}
+.btn-ghost{padding:11px 22px;background:transparent;color:var(--ink3);border:1.5px solid var(--ink5);border-radius:var(--r);}
+.btn-ghost:hover{border-color:var(--ink3);color:var(--ink);}
+.btn-danger{padding:11px 22px;background:var(--rose-bg);color:var(--rose);border:1px solid var(--rose-border);border-radius:var(--r);}
+.btn-sm{padding:7px 14px;font-size:12px;}
+.btn-lg{padding:15px 36px;font-size:16px;}
+.btn-xs{padding:5px 11px;font-size:11px;}
+.btn-icon{width:38px;height:38px;padding:0;border-radius:10px;background:var(--glass);color:var(--ink3);border:1px solid var(--glass-border);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;backdrop-filter:blur(12px);}
+.btn-icon:hover{background:white;color:var(--ink);transform:scale(1.05);}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;}
+.spin-dk{border-color:rgba(0,0,0,.1);border-top-color:var(--ink3);}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Tags / badges ── */
+.tag{font-family:var(--ff-mono);font-size:10px;letter-spacing:.08em;padding:3px 8px;border-radius:100px;background:rgba(0,0,0,.05);color:var(--ink4);}
+.tag-sage{background:var(--sage-bg);color:var(--sage);border:1px solid var(--sage-border);}
+.tag-rose{background:var(--rose-bg);color:var(--rose);border:1px solid var(--rose-border);}
+.tag-amber{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);}
+.tag-slate{background:var(--slate-bg);color:var(--slate);border:1px solid var(--slate-border);}
+.tag-violet{background:var(--violet-bg);color:var(--violet);border:1px solid var(--violet-border);}
+
+/* ══════════════════════════════════════
+   SECTION B: PROBLEM BROWSER
+══════════════════════════════════════ */
+
+/* Problem row - used in problem list table view */
+.prob-row {
+  display:flex;align-items:center;gap:14px;padding:14px 20px;
+  border-bottom:1px solid rgba(0,0,0,.05);transition:background .15s;cursor:pointer;
+}
+.prob-row:hover{background:rgba(255,255,255,.35);}
+.prob-row:last-child{border-bottom:none;}
+.prob-row.solved .prob-title{color:var(--ink4);}
+.prob-num{font-family:var(--ff-mono);font-size:11px;color:var(--ink5);width:30px;text-align:center;flex-shrink:0;}
+.diff-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.diff-e{background:var(--sage);box-shadow:0 0 6px rgba(107,148,120,.5);}
+.diff-m{background:var(--amber);box-shadow:0 0 6px rgba(184,133,58,.5);}
+.diff-h{background:var(--rose);box-shadow:0 0 6px rgba(184,96,78,.5);}
+.diff-x{background:var(--violet);box-shadow:0 0 6px rgba(123,106,171,.5);}
+.prob-title{font-family:var(--ff-ui);font-size:15px;font-weight:500;color:var(--ink);flex:1;}
+.prob-topic{font-family:var(--ff-mono);font-size:10px;color:var(--ink4);width:130px;flex-shrink:0;}
+.prob-rate{font-family:var(--ff-mono);font-size:11px;color:var(--ink4);width:48px;text-align:right;flex-shrink:0;}
+.prob-xp{font-family:var(--ff-mono);font-size:11px;color:var(--amber);background:var(--amber-bg);padding:2px 7px;border-radius:100px;width:58px;text-align:center;flex-shrink:0;}
+.solved-icon{width:18px;height:18px;border-radius:50%;background:var(--sage);display:flex;align-items:center;justify-content:center;color:white;font-size:9px;flex-shrink:0;}
+
+/* Problem card - card grid view */
+.prob-card {
+  padding:22px 24px;width:300px;cursor:pointer;
+  transition:all .2s cubic-bezier(.4,0,.2,1);position:relative;
+}
+.prob-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);background:var(--glass-hover);}
+.prob-card-meta{display:flex;align-items:center;gap:8px;margin-bottom:11px;}
+.prob-card-title{font-family:var(--ff-display);font-size:17px;color:var(--ink);margin-bottom:8px;line-height:1.3;}
+.prob-card-excerpt{font-size:13px;font-weight:300;color:var(--ink3);line-height:1.55;margin-bottom:15px;}
+/* Truncate math preview */
+.math-preview{
+  font-family:var(--ff-mono);font-size:12px;color:var(--ink3);
+  background:rgba(0,0,0,.04);border-radius:8px;padding:8px 12px;
+  margin-bottom:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  border-left:2px solid var(--ink5);
+}
+.prob-card-footer{display:flex;align-items:center;justify-content:space-between;}
+
+/* ══════════════════════════════════════
+   SECTION C: PROBLEM VIEW (FULL)
+══════════════════════════════════════ */
+
+/* The main problem layout - 2 col */
+.prob-layout {
+  display:grid;grid-template-columns:1fr 340px;gap:18px;
+  max-width:1100px;
+}
+.prob-main{display:flex;flex-direction:column;gap:14px;}
+.prob-side{display:flex;flex-direction:column;gap:14px;}
+
+/* Problem statement card */
+.prob-statement { padding:36px 40px; }
+.prob-contest-tag {
+  display:flex;align-items:center;gap:10px;margin-bottom:20px;
+}
+.prob-contest-tag .chapter {
+  font-family:var(--ff-mono);font-size:10px;letter-spacing:.18em;color:var(--ink4);
+  background:rgba(0,0,0,.04);padding:4px 10px;border-radius:6px;
+}
+.prob-title-main {
+  font-family:var(--ff-display);font-size:28px;font-weight:400;
+  color:var(--ink);margin-bottom:6px;line-height:1.2;letter-spacing:-.01em;
+}
+.prob-lore-line {
+  font-family:var(--ff-display);font-style:italic;font-size:15px;
+  color:var(--ink4);margin-bottom:28px;line-height:1.5;
+}
+.prob-body {
+  font-size:16px;font-weight:300;color:var(--ink2);line-height:1.78;margin-bottom:20px;
+}
+.prob-body strong { font-weight:500;color:var(--ink); }
+
+/* Math block display */
+.math-block {
+  background:rgba(0,0,0,.03);
+  border:1px solid rgba(0,0,0,.07);
+  border-left:3px solid var(--ink4);
+  border-radius:0 var(--r) var(--r) 0;
+  padding:20px 28px;margin:22px 0;
+  overflow-x:auto;
+}
+.math-block-label {
+  font-family:var(--ff-mono);font-size:9px;letter-spacing:.15em;color:var(--ink5);
+  margin-bottom:10px;text-transform:uppercase;
+}
+
+/* Inline math styling - KaTeX overrides */
+.katex { font-size:1.05em; }
+.katex-display { margin:0;overflow-x:auto; }
+
+/* Diagram container */
+.diagram-wrap {
+  background:rgba(255,255,255,.6);
+  border:1px solid rgba(0,0,0,.08);
+  border-radius:var(--r);
+  padding:24px;
+  display:flex;align-items:center;justify-content:center;
+  margin:22px 0;
+  position:relative;
+}
+.diagram-caption {
+  font-family:var(--ff-mono);font-size:10px;color:var(--ink5);
+  text-align:center;margin-top:10px;letter-spacing:.06em;
+}
+/* Doodle slot for diagrams */
+.diagram-doodle-slot {
+  width:100%;min-height:200px;
+  border:2px dashed rgba(184,96,78,.25);
+  border-radius:var(--r);
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;
+  background:rgba(184,96,78,.02);
+}
+.diagram-doodle-slot p {
+  font-family:var(--ff-mono);font-size:9px;letter-spacing:.12em;
+  color:rgba(184,96,78,.5);text-align:center;
+}
+
+/* Notes / conditions */
+.prob-note {
+  font-size:13px;font-weight:300;color:var(--ink4);font-style:italic;
+  padding:12px 16px;background:rgba(0,0,0,.03);border-radius:var(--r);
+  border-left:2px solid var(--ink5);margin-top:8px;
+}
+
+/* ── Answer panel ── */
+.answer-panel { padding:28px; }
+.answer-panel-title {
+  font-family:var(--ff-ui);font-size:12px;font-weight:600;
+  letter-spacing:.12em;color:var(--ink4);text-transform:uppercase;margin-bottom:18px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.answer-type-indicator {
+  font-family:var(--ff-mono);font-size:10px;letter-spacing:.08em;
+  color:var(--sage);background:var(--sage-bg);padding:3px 8px;border-radius:6px;
+}
+
+/* Big answer input */
+.ans-input {
+  width:100%;background:rgba(255,255,255,.5);
+  border:2px solid rgba(0,0,0,.1);border-radius:var(--r);
+  padding:20px 18px;font-family:var(--ff-mono);font-size:28px;
+  font-weight:400;color:var(--ink);text-align:center;letter-spacing:.08em;
+  outline:none;transition:all .15s;margin-bottom:12px;
+}
+.ans-input:focus{border-color:var(--sage);box-shadow:0 0 0 3px var(--sage-bg);}
+.ans-input.correct{border-color:var(--sage);box-shadow:0 0 0 3px var(--sage-bg);color:var(--sage);}
+.ans-input.wrong{border-color:var(--rose);box-shadow:0 0 0 3px var(--rose-bg);color:var(--rose);}
+.ans-input::placeholder{color:var(--ink5);font-size:16px;letter-spacing:.04em;}
+
+.ans-format-hint {
+  font-family:var(--ff-mono);font-size:11px;color:var(--ink5);
+  text-align:center;margin-bottom:16px;line-height:1.6;
+}
+
+/* Attempt counter */
+.attempts-row {
+  display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:18px;
+}
+.attempt-pip{width:8px;height:8px;border-radius:50%;background:var(--sage);}
+.attempt-pip.used{background:var(--rose);}
+.attempt-pip.empty{background:rgba(0,0,0,.1);}
+
+/* Timer in answer panel */
+.contest-timer {
+  display:flex;align-items:center;justify-content:center;gap:4px;
+  padding:10px;background:rgba(0,0,0,.03);border-radius:var(--r);
+  margin-bottom:16px;font-family:var(--ff-mono);font-size:20px;font-weight:500;color:var(--ink);
+}
+.timer-sep{color:var(--ink4);margin:0 1px;}
+.timer-warn{color:var(--rose);}
+
+/* ── Hint panel ── */
+.hint-panel { padding:22px; }
+.hint-item {
+  display:flex;align-items:flex-start;gap:10px;
+  padding:12px 14px;border-radius:var(--r);border:1px dashed rgba(0,0,0,.12);
+  cursor:pointer;transition:all .15s;margin-bottom:8px;
+}
+.hint-item:last-child{margin-bottom:0;}
+.hint-item:hover{background:rgba(88,120,160,.04);border-color:var(--slate-border);border-style:solid;}
+.hint-item.revealed{border-style:solid;cursor:default;border-color:var(--slate-border);background:var(--slate-bg);}
+.hint-num{font-family:var(--ff-mono);font-size:10px;color:var(--slate);background:var(--slate-bg);padding:3px 7px;border-radius:6px;flex-shrink:0;margin-top:1px;}
+.hint-content{flex:1;}
+.hint-title{font-family:var(--ff-ui);font-size:13px;font-weight:500;color:var(--ink3);margin-bottom:3px;}
+.hint-text{font-size:13px;font-weight:300;color:var(--ink3);line-height:1.55;filter:blur(4px);transition:filter .3s;user-select:none;}
+.hint-item.revealed .hint-text{filter:none;user-select:auto;}
+.hint-cost{font-family:var(--ff-mono);font-size:10px;color:var(--amber);margin-left:auto;flex-shrink:0;}
+
+/* ── Problem navigation (within contest) ── */
+.prob-nav {
+  padding:16px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+}
+.prob-nav-dot {
+  width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--ff-mono);font-size:12px;font-weight:500;cursor:pointer;
+  transition:all .15s;border:1.5px solid transparent;flex-shrink:0;
+}
+.prob-nav-dot.default{background:rgba(0,0,0,.05);color:var(--ink4);}
+.prob-nav-dot.default:hover{background:rgba(0,0,0,.09);color:var(--ink);}
+.prob-nav-dot.current{background:var(--ink);color:white;border-color:var(--ink);}
+.prob-nav-dot.solved{background:var(--sage-bg);color:var(--sage);border-color:var(--sage-border);}
+.prob-nav-dot.attempted{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-border);}
+.prob-nav-dot.skipped{background:var(--rose-bg);color:var(--rose);border-color:var(--rose-border);}
+
+/* ══════════════════════════════════════
+   SECTION D: COMPETITION CONTAINER
+══════════════════════════════════════ */
+
+/* Competition header bar */
+.contest-bar {
+  padding:14px 24px;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  border-bottom:1px solid rgba(0,0,0,.07);
+}
+.contest-bar-title{font-family:var(--ff-display);font-size:20px;color:var(--ink);}
+.contest-bar-meta{display:flex;align-items:center;gap:12px;}
+
+/* ── JADE CITY theme container ── */
+.theme-jade {
+  border-radius:var(--r-xl);overflow:hidden;position:relative;
+  background:linear-gradient(160deg,#0d1a12 0%,#112018 40%,#0a140d 100%);
+  min-height:500px;
+}
+.theme-jade-doodle {
+  position:absolute;inset:0;z-index:0;overflow:hidden;opacity:.08;
+  background-image:
+    radial-gradient(circle at 20% 30%,rgba(180,220,170,.3) 0%,transparent 40%),
+    radial-gradient(circle at 80% 70%,rgba(100,180,120,.2) 0%,transparent 35%);
+}
+.theme-jade-overlay {
+  position:absolute;inset:0;z-index:1;
+  background:linear-gradient(160deg,rgba(10,20,14,.3),rgba(8,18,11,.15));
+  backdrop-filter:blur(1px);
+}
+.theme-jade-content{position:relative;z-index:2;padding:36px;}
+.jade-eyebrow{font-family:var(--ff-mono);font-size:10px;letter-spacing:.22em;color:rgba(150,210,160,.7);margin-bottom:12px;}
+.jade-title{font-family:var(--ff-display);font-size:32px;color:rgba(200,240,200,.92);margin-bottom:8px;line-height:1.2;}
+.jade-sub{font-size:14px;font-weight:300;color:rgba(150,200,160,.6);margin-bottom:28px;line-height:1.6;}
+.jade-glass{
+  background:rgba(255,255,255,.06);border:1px solid rgba(150,220,160,.14);
+  backdrop-filter:blur(20px);border-radius:var(--r-lg);
+  color:rgba(200,240,200,.88);
+}
+.jade-doodle-zone{
+  border:2px dashed rgba(150,220,160,.2);border-radius:var(--r);
+  padding:14px;display:flex;align-items:center;justify-content:center;
+  text-align:center;min-height:70px;margin-top:14px;
+}
+.jade-doodle-zone p{font-family:var(--ff-mono);font-size:9px;letter-spacing:.1em;color:rgba(150,220,160,.4);}
+
+/* Progress stepper for story chapters */
+.story-stepper {
+  display:flex;align-items:center;gap:0;
+  padding:0 36px;margin-bottom:28px;
+}
+.story-step {
+  display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;
+}
+.step-circle {
+  width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-family:var(--ff-mono);font-size:12px;font-weight:500;border:2px solid;
+  transition:all .2s;flex-shrink:0;
+}
+.step-circle.done{background:rgba(150,220,160,.15);color:rgba(180,240,180,.9);border-color:rgba(150,220,160,.35);}
+.step-circle.current{background:rgba(150,220,160,.2);color:rgba(200,255,200,.95);border-color:rgba(150,220,160,.6);box-shadow:0 0 16px rgba(150,220,160,.2);}
+.step-circle.locked{background:rgba(255,255,255,.04);color:rgba(255,255,255,.25);border-color:rgba(255,255,255,.1);}
+.step-label{font-family:var(--ff-mono);font-size:9px;letter-spacing:.08em;text-align:center;color:rgba(180,220,180,.5);line-height:1.3;}
+.step-connector{flex:1;height:1px;background:rgba(150,220,160,.15);margin-bottom:20px;}
+
+/* ══════════════════════════════════════
+   SECTION E: LORE REVEAL MODAL
+══════════════════════════════════════ */
+
+.lore-modal-wrap {
+  width:520px;height:420px;position:relative;
+  background:linear-gradient(160deg,#0d1a12,#091410);
+  border-radius:var(--r-xl);overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+}
+.lore-modal-particles{position:absolute;inset:0;overflow:hidden;}
+.lore-particle{
+  position:absolute;border-radius:50%;
+  animation:lore-float ease-in-out infinite;
+}
+@keyframes lore-float{
+  0%,100%{transform:translateY(0) scale(1);opacity:.5;}
+  50%{transform:translateY(-20px) scale(1.15);opacity:.8;}
+}
+.lore-modal{
+  position:relative;z-index:2;padding:40px;text-align:center;max-width:420px;
+}
+.lore-orb{
+  width:88px;height:88px;border-radius:50%;margin:0 auto 22px;
+  background:radial-gradient(circle,rgba(150,220,160,.25),rgba(107,148,120,.1));
+  border:2px solid rgba(150,220,160,.3);
+  display:flex;align-items:center;justify-content:center;font-size:36px;
+  animation:orb-pulse 3s ease-in-out infinite;
+  box-shadow:0 0 32px rgba(150,220,160,.15);
+}
+@keyframes orb-pulse{
+  0%,100%{box-shadow:0 0 32px rgba(150,220,160,.15);}
+  50%{box-shadow:0 0 52px rgba(150,220,160,.3);}
+}
+.lore-solved-label{font-family:var(--ff-mono);font-size:10px;letter-spacing:.22em;color:rgba(150,220,160,.7);margin-bottom:10px;}
+.lore-title{font-family:var(--ff-display);font-size:26px;color:rgba(200,240,200,.92);margin-bottom:12px;line-height:1.2;}
+.lore-text{font-family:var(--ff-display);font-style:italic;font-size:15px;color:rgba(160,210,170,.65);line-height:1.65;margin-bottom:24px;}
+.lore-xp{font-family:var(--ff-mono);font-size:30px;color:rgba(200,180,100,.9);margin-bottom:24px;text-shadow:0 0 20px rgba(200,180,100,.3);}
+.lore-meta-note{font-size:12px;font-weight:300;color:rgba(150,200,160,.4);line-height:1.6;font-style:italic;margin-bottom:22px;}
+.lore-actions{display:flex;gap:10px;justify-content:center;}
+.jade-btn-ghost{
+  padding:11px 22px;background:rgba(255,255,255,.06);color:rgba(200,240,200,.7);
+  border:1px solid rgba(150,220,160,.2);border-radius:var(--r);font-family:var(--ff-ui);
+  font-size:13px;cursor:pointer;transition:all .15s;
+}
+.jade-btn-ghost:hover{background:rgba(255,255,255,.1);color:rgba(200,240,200,.9);}
+.jade-btn-primary{
+  padding:11px 22px;background:rgba(107,148,120,.25);color:rgba(200,240,200,.92);
+  border:1px solid rgba(150,220,160,.3);border-radius:var(--r);font-family:var(--ff-ui);
+  font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;
+}
+.jade-btn-primary:hover{background:rgba(107,148,120,.35);}
+
+/* ══════════════════════════════════════
+   SECTION F: USER PROFILE
+══════════════════════════════════════ */
+
+.profile-hero{padding:36px 40px;max-width:700px;}
+.profile-top{display:flex;align-items:flex-start;gap:20px;margin-bottom:28px;}
+.avatar{
+  width:64px;height:64px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,var(--sage-bg),var(--slate-bg));
+  border:2px solid rgba(255,255,255,.7);display:flex;align-items:center;
+  justify-content:center;font-family:var(--ff-ui);font-size:22px;font-weight:600;color:var(--ink2);
+}
+.avatar-sm{width:36px;height:36px;font-size:13px;border-width:1.5px;}
+.avatar-xs{width:28px;height:28px;font-size:11px;border-width:1px;}
+.profile-name{font-family:var(--ff-display);font-size:28px;color:var(--ink);margin-bottom:5px;}
+.profile-handle{font-family:var(--ff-mono);font-size:12px;color:var(--ink4);margin-bottom:10px;}
+.profile-bio{font-size:14px;font-weight:300;color:var(--ink3);line-height:1.6;}
+
+.rank-badge{
+  display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:100px;
+  font-family:var(--ff-mono);font-size:11px;font-weight:500;
+}
+.rank-archon{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);}
+.rank-seeker{background:var(--slate-bg);color:var(--slate);border:1px solid var(--slate-border);}
+.rank-initiate{background:rgba(0,0,0,.05);color:var(--ink4);border:1px solid var(--ink5);}
+.rank-legend{background:var(--violet-bg);color:var(--violet);border:1px solid var(--violet-border);}
+
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.stat-block{padding:18px 20px;}
+.stat-val{font-family:var(--ff-display);font-size:34px;color:var(--ink);line-height:1;margin-bottom:4px;}
+.stat-label{font-family:var(--ff-mono);font-size:9px;letter-spacing:.14em;color:var(--ink5);text-transform:uppercase;}
+.stat-delta{font-family:var(--ff-mono);font-size:10px;padding:2px 6px;border-radius:100px;}
+.delta-up{background:var(--sage-bg);color:var(--sage);}
+.delta-down{background:var(--rose-bg);color:var(--rose);}
+
+/* Rating graph skeleton + placeholder */
+.rating-graph-wrap{padding:24px;position:relative;}
+.rating-graph-title{font-family:var(--ff-ui);font-size:14px;font-weight:500;color:var(--ink);margin-bottom:18px;}
+.rating-graph-placeholder{
+  width:100%;height:140px;background:rgba(0,0,0,.03);border-radius:var(--r);
+  display:flex;align-items:flex-end;gap:3px;padding:0 8px 8px;overflow:hidden;
+}
+.graph-bar{
+  flex:1;border-radius:3px 3px 0 0;min-height:10%;
+  background:linear-gradient(to top,var(--sage),rgba(107,148,120,.3));
+  opacity:.7;
+}
+
+/* Activity heatmap */
+.heatmap{display:flex;gap:3px;flex-wrap:wrap;max-width:420px;}
+.heatmap-cell{
+  width:12px;height:12px;border-radius:2px;background:rgba(0,0,0,.06);
+  transition:transform .1s;cursor:pointer;
+}
+.heatmap-cell:hover{transform:scale(1.3);}
+.hm-1{background:rgba(107,148,120,.25);}
+.hm-2{background:rgba(107,148,120,.5);}
+.hm-3{background:rgba(107,148,120,.75);}
+.hm-4{background:rgba(107,148,120,1);}
+
+/* Recent submissions table */
+.sub-row{
+  display:flex;align-items:center;gap:12px;padding:12px 20px;
+  border-bottom:1px solid rgba(0,0,0,.04);transition:background .15s;
+}
+.sub-row:hover{background:rgba(255,255,255,.3);}
+.sub-row:last-child{border-bottom:none;}
+.verdict-chip{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 9px;border-radius:100px;font-family:var(--ff-mono);font-size:10px;flex-shrink:0;width:90px;justify-content:center;
+}
+.v-correct{background:var(--sage-bg);color:var(--sage);border:1px solid var(--sage-border);}
+.v-wrong{background:var(--rose-bg);color:var(--rose);border:1px solid var(--rose-border);}
+.v-pending{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);}
+
+/* ══════════════════════════════════════
+   SECTION G: LEADERBOARD
+══════════════════════════════════════ */
+
+.lb-card{padding:0;overflow:hidden;max-width:600px;}
+.lb-head{padding:20px 24px 16px;border-bottom:1px solid rgba(0,0,0,.06);display:flex;align-items:center;justify-content:space-between;}
+.lb-filters{display:flex;gap:6px;}
+.lb-filter{
+  font-family:var(--ff-mono);font-size:10px;letter-spacing:.06em;padding:5px 12px;
+  border-radius:100px;background:rgba(0,0,0,.05);color:var(--ink4);cursor:pointer;
+  transition:all .15s;border:none;
+}
+.lb-filter.active{background:var(--ink);color:white;}
+.lb-row{display:flex;align-items:center;gap:12px;padding:13px 24px;border-bottom:1px solid rgba(0,0,0,.04);transition:background .15s;}
+.lb-row:hover{background:rgba(0,0,0,.02);}
+.lb-row:last-child{border-bottom:none;}
+.lb-row.me{background:rgba(107,148,120,.05);}
+.lb-rank{font-family:var(--ff-mono);font-size:13px;font-weight:500;color:var(--ink4);width:26px;text-align:center;flex-shrink:0;}
+.lb-rank.gold{color:#b87a28;}
+.lb-rank.silver{color:#7a90a8;}
+.lb-rank.bronze{color:#a06848;}
+.lb-name{font-family:var(--ff-ui);font-size:14px;font-weight:500;color:var(--ink);flex:1;}
+.lb-sub-info{font-size:12px;font-weight:300;color:var(--ink4);}
+.lb-score{font-family:var(--ff-mono);font-size:14px;font-weight:500;color:var(--ink2);}
+.lb-delta{font-family:var(--ff-mono);font-size:10px;padding:2px 6px;border-radius:100px;}
+
+/* ══════════════════════════════════════
+   SECTION H: BLOG
+══════════════════════════════════════ */
+
+.blog-card{padding:24px;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);max-width:480px;}
+.blog-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);}
+.blog-img-placeholder{
+  width:100%;height:160px;border-radius:var(--r);margin-bottom:16px;
+  background:linear-gradient(135deg,var(--sage-bg),var(--slate-bg));
+  display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;
+}
+.blog-doodle-zone{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  border:2px dashed rgba(184,96,78,.2);border-radius:var(--r);
+}
+.blog-doodle-zone p{font-family:var(--ff-mono);font-size:9px;letter-spacing:.1em;color:rgba(184,96,78,.4);}
+.blog-meta{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.blog-date{font-family:var(--ff-mono);font-size:11px;color:var(--ink5);}
+.blog-title{font-family:var(--ff-display);font-size:21px;color:var(--ink);margin-bottom:8px;line-height:1.25;}
+.blog-excerpt{font-size:13px;font-weight:300;color:var(--ink3);line-height:1.6;margin-bottom:14px;}
+.blog-footer{display:flex;align-items:center;justify-content:space-between;}
+.blog-author{display:flex;align-items:center;gap:8px;}
+.blog-read-time{font-family:var(--ff-mono);font-size:10px;color:var(--ink5);}
+
+/* ══════════════════════════════════════
+   SECTION I: NAV
+══════════════════════════════════════ */
+
+.nav-glass{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:13px 24px;border-radius:var(--r-lg);max-width:900px;
+}
+.nav-logo{font-family:var(--ff-display);font-size:22px;color:var(--ink);display:flex;align-items:baseline;gap:3px;}
+.nav-logo em{font-style:italic;color:var(--sage);}
+.nav-links{display:flex;gap:2px;list-style:none;}
+.nav-link{
+  font-family:var(--ff-ui);font-size:14px;font-weight:500;color:var(--ink4);
+  text-decoration:none;padding:7px 14px;border-radius:9px;transition:all .15s;cursor:pointer;
+}
+.nav-link:hover{background:rgba(0,0,0,.05);color:var(--ink);}
+.nav-link.active{background:white;color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.xp-counter{
+  display:flex;align-items:center;gap:8px;padding:6px 12px;
+  background:rgba(0,0,0,.04);border-radius:8px;
+}
+.xp-val{font-family:var(--ff-mono);font-size:12px;color:var(--ink2);}
+.xp-label{font-family:var(--ff-mono);font-size:10px;color:var(--ink5);}
+
+/* ══════════════════════════════════════
+   SECTION J: PROGRESS / LOADING
+══════════════════════════════════════ */
+
+@keyframes shimmer{
+  0%{background-position:-300% 0}100%{background-position:300% 0}
+}
+.prog-bar-wrap{background:rgba(0,0,0,.07);border-radius:100px;overflow:hidden;position:relative;}
+.prog-fill{
+  height:100%;border-radius:100px;transition:width .4s cubic-bezier(.4,0,.2,1);
+  position:relative;overflow:hidden;
+}
+.prog-fill::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);
+  background-size:200% 100%;animation:shimmer 1.5s linear infinite;
+}
+.prog-sage{background:var(--sage);}
+.prog-amber{background:var(--amber);}
+.prog-rose{background:var(--rose);}
+.prog-slate{background:var(--slate);}
+
+@keyframes indeterminate{0%{left:-45%}100%{left:115%}}
+.prog-indeterminate{
+  position:relative;background:rgba(0,0,0,.07);border-radius:100px;overflow:hidden;
+}
+.prog-indeterminate::after{
+  content:'';position:absolute;top:0;left:-45%;width:45%;height:100%;
+  background:linear-gradient(90deg,transparent,var(--sage),transparent);
+  border-radius:100px;animation:indeterminate 1.2s ease-in-out infinite;
+}
+
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--rose);animation:pulse 1.4s ease infinite;flex-shrink:0;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.75)}}
+
+/* Countdown */
+.countdown{display:flex;gap:8px;align-items:center;}
+.cd-block{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  background:var(--glass);border:1px solid var(--glass-border);
+  border-radius:10px;padding:10px 14px;min-width:50px;backdrop-filter:blur(12px);
+}
+.cd-val{font-family:var(--ff-mono);font-size:22px;font-weight:500;color:var(--ink);line-height:1;}
+.cd-unit{font-family:var(--ff-mono);font-size:9px;letter-spacing:.12em;color:var(--ink5);text-transform:uppercase;}
+.cd-sep{font-family:var(--ff-mono);font-size:18px;color:var(--ink5);margin-bottom:12px;}
+
+/* Top progress bar */
+.top-bar-wrap{height:3px;background:transparent;border-radius:100px;overflow:visible;width:100%;}
+.top-bar-fill{height:100%;background:linear-gradient(90deg,var(--sage),#a8d8bc);border-radius:100px;box-shadow:0 0 8px rgba(107,148,120,.5);transition:width .3s ease;}
+
+/* ══════════════════════════════════════
+   SECTION K: TOASTS
+══════════════════════════════════════ */
+
+.toast{
+  display:flex;align-items:flex-start;gap:12px;padding:14px 18px;
+  border-radius:var(--r-lg);max-width:340px;
+  background:var(--glass-strong);border:1px solid var(--glass-border-strong);
+  box-shadow:var(--shadow-xl);backdrop-filter:blur(28px);
+}
+.toast-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.t-success .toast-icon{background:var(--sage-bg);}
+.t-error .toast-icon{background:var(--rose-bg);}
+.t-xp .toast-icon{background:var(--amber-bg);}
+.t-info .toast-icon{background:var(--slate-bg);}
+.toast-title{font-family:var(--ff-ui);font-size:13px;font-weight:500;color:var(--ink);margin-bottom:2px;}
+.toast-body{font-size:12px;font-weight:300;color:var(--ink3);}
+
+/* Optimistic states */
+@keyframes opt-success{0%{background:var(--sage);transform:scale(1.02)}100%{background:var(--ink);transform:scale(1)}}
+.btn-opt-success{animation:opt-success .4s ease forwards;}
+@keyframes row-appear{from{opacity:.4;transform:translateY(-5px);background:rgba(107,148,120,.08)}to{opacity:1;transform:none;background:transparent}}
+.opt-row{animation:row-appear .4s ease forwards;}
+@keyframes opt-rollback{0%{background:var(--rose-bg)}100%{background:transparent}}
+.opt-rollback{animation:opt-rollback .6s ease forwards;}
+
+/* ══════════════════════════════════════
+   SECTION L: SKELETON STATES
+══════════════════════════════════════ */
+/* All skeletons are defined inline with .skel class */
+
+/* ══════════════════════════════════════
+   SECTION M: FORMS & AUTH
+══════════════════════════════════════ */
+
+.form-card{padding:36px;max-width:380px;}
+.input-group{display:flex;flex-direction:column;gap:5px;}
+.input-label{font-family:var(--ff-ui);font-size:13px;font-weight:500;color:var(--ink2);}
+.input{
+  background:rgba(255,255,255,.5);border:1.5px solid rgba(0,0,0,.1);
+  border-radius:var(--r);padding:11px 14px;font-family:var(--ff-body);font-size:15px;
+  color:var(--ink);outline:none;transition:all .15s;width:100%;
+}
+.input::placeholder{color:var(--ink5);font-weight:300;}
+.input:focus{border-color:var(--ink3);box-shadow:0 0 0 3px rgba(28,22,15,.05);}
+.input-err{border-color:var(--rose)!important;}
+.input-ok{border-color:var(--sage)!important;}
+.input-hint{font-size:12px;font-weight:300;color:var(--ink5);}
+.input-hint.err{color:var(--rose);}
+.input-hint.ok{color:var(--sage);}
+.select{
+  background:rgba(255,255,255,.5);border:1.5px solid rgba(0,0,0,.1);
+  border-radius:var(--r);padding:11px 14px;font-family:var(--ff-body);font-size:15px;
+  color:var(--ink);outline:none;width:100%;appearance:none;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a8274' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;
+}
+.search-wrap{position:relative;}
+.search-ico{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--ink5);width:15px;height:15px;}
+.input-search{padding-left:36px;}
+.input-math{
+  background:rgba(255,255,255,.5);border:2px solid rgba(0,0,0,.1);
+  border-radius:var(--r-lg);padding:22px 18px;font-family:var(--ff-mono);font-size:26px;
+  font-weight:300;color:var(--ink);text-align:center;letter-spacing:.08em;
+  width:100%;outline:none;transition:all .15s;
+}
+.input-math:focus{border-color:var(--sage);box-shadow:0 0 0 4px var(--sage-bg);}
+
+/* ══════════════════════════════════════
+   SECTION N: CONTEST CARD + BROWSE
+══════════════════════════════════════ */
+
+.contest-card{padding:26px;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);width:360px;}
+.contest-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);}
+.contest-title{font-family:var(--ff-display);font-size:22px;color:var(--ink);margin-bottom:6px;line-height:1.2;}
+.contest-desc{font-size:14px;font-weight:300;color:var(--ink3);line-height:1.6;margin-bottom:20px;}
+.contest-stats{display:flex;gap:20px;padding-top:16px;border-top:1px solid rgba(0,0,0,.06);}
+.cstat-val{font-family:var(--ff-ui);font-size:19px;font-weight:600;color:var(--ink);}
+.cstat-label{font-family:var(--ff-mono);font-size:9px;letter-spacing:.12em;color:var(--ink5);text-transform:uppercase;}
+
+/* ══════════════════════════════════════
+   SECTION O: EMPTY STATES
+══════════════════════════════════════ */
+
+.empty{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:12px;padding:52px 36px;text-align:center;
+}
+.empty-doodle{
+  width:100px;height:70px;border:2px dashed rgba(184,96,78,.25);border-radius:var(--r);
+  display:flex;align-items:center;justify-content:center;margin-bottom:8px;
+}
+.empty-doodle p{font-family:var(--ff-mono);font-size:9px;letter-spacing:.1em;color:rgba(184,96,78,.4);}
+.empty-title{font-family:var(--ff-display);font-size:21px;color:var(--ink2);}
+.empty-body{font-size:14px;font-weight:300;color:var(--ink4);max-width:240px;line-height:1.55;}
+
+/* ══════════════════════════════════════
+   SECTION P: MODALS
+══════════════════════════════════════ */
+
+.modal-bg{
+  width:460px;height:300px;background:rgba(230,225,218,.55);
+  border-radius:var(--r-xl);display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(4px);position:relative;overflow:hidden;
+}
+.modal{padding:36px;width:380px;text-align:center;}
+.modal-title{font-family:var(--ff-display);font-size:24px;color:var(--ink);margin-bottom:10px;}
+.modal-body{font-size:14px;font-weight:300;color:var(--ink3);line-height:1.65;margin-bottom:22px;}
+.modal-actions{display:flex;gap:10px;justify-content:center;}
+
+/* ══════════════════════════════════════
+   SECTION Q: RICH PROBLEM EXAMPLES
+   (Real contest-level math, KaTeX rendered)
+══════════════════════════════════════ */
+
+.rich-prob{padding:36px 40px;max-width:680px;}
+.rp-eyebrow{display:flex;align-items:center;gap:10px;margin-bottom:18px;}
+.rp-num{font-family:var(--ff-mono);font-size:10px;letter-spacing:.14em;color:var(--ink5);background:rgba(0,0,0,.04);padding:4px 10px;border-radius:6px;}
+.rp-title{font-family:var(--ff-display);font-size:24px;color:var(--ink);margin-bottom:6px;letter-spacing:-.01em;}
+.rp-story{font-family:var(--ff-display);font-style:italic;font-size:14px;color:var(--ink4);margin-bottom:22px;line-height:1.55;padding-left:14px;border-left:2px solid var(--ink5);}
+.rp-body{font-size:15.5px;font-weight:300;color:var(--ink2);line-height:1.80;margin-bottom:18px;}
+.rp-body strong{font-weight:500;color:var(--ink);}
+.rp-math{
+  padding:18px 24px;background:rgba(0,0,0,.03);border:1px solid rgba(0,0,0,.07);
+  border-left:3px solid var(--ink4);border-radius:0 var(--r) var(--r) 0;
+  margin:18px 0;overflow-x:auto;
+}
+.rp-note{
+  font-size:13px;font-weight:300;color:var(--ink4);font-style:italic;
+  padding:10px 14px;background:rgba(0,0,0,.03);border-radius:var(--r);
+  border-left:2px solid var(--ink5);margin-top:14px;
+}
+
+/* Animation helpers */
+@keyframes fade-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.fade-in{animation:fade-in .5s ease forwards;}
+.fade-in-d{animation:fade-in .5s ease .15s forwards;opacity:0;}
+.fade-in-d2{animation:fade-in .5s ease .3s forwards;opacity:0;}
+
+</style>
+</head>
+<body>
+
+<div class="blobs">
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+</div>
+
+<!-- Sidebar nav -->
+<div class="sidebar">
+  <a href="#landing">↑ Landing</a>
+  <a href="#problems">Problems</a>
+  <a href="#problem-view">Problem View</a>
+  <a href="#competition">Competition</a>
+  <a href="#lore">Lore Reveal</a>
+  <a href="#profile">Profile</a>
+  <a href="#leaderboard">Leaderboard</a>
+  <a href="#blog">Blog</a>
+  <a href="#nav">Nav</a>
+  <a href="#progress">Progress</a>
+  <a href="#toasts">Toasts</a>
+  <a href="#skeletons">Skeletons</a>
+  <a href="#forms">Forms</a>
+  <a href="#rich-math">Rich Math</a>
+  <a href="#misc">Misc</a>
+</div>
+
+<div class="wrap">
+
+  <!-- ─── PAGE HEADER ─── -->
+  <div class="g page-hd fade-in">
+    <h1>AXIOM - <em>Client UI</em> Collection</h1>
+    <p>Full production-ready UI reference. All math examples are real contest-level problems. Glassmorphism × hand-drawn doodle integration. Built for the Jade City problem style.</p>
+    <span class="chip">Next.js 16</span>
+    <span class="chip">React 19</span>
+    <span class="chip">Tailwind CSS v4</span>
+    <span class="chip">KaTeX</span>
+    <span class="chip">Instrument Serif + DM Sans</span>
+  </div>
+
+  <!-- ══════════════════════════════════
+       A. LANDING / HERO
+  ══════════════════════════════════ -->
+  <div class="sec" id="landing">
+    <p class="sec-label">A - Landing · Hero · CTA</p>
+    <div class="grid">
+
+      <div class="g hero-card fade-in">
+        <p class="hero-eyebrow">SEASON II · THE RECKONING · APRIL 2025</p>
+        <h1 class="hero-title">Master the Art of<br><em>Mathematical Combat.</em></h1>
+        <p class="hero-sub">Train for the April team contest. Solve real competition problems, unlock story lore, and climb the Conclave rankings.</p>
+        <div class="hero-actions">
+          <button class="btn btn-ink btn-lg">Enter the Arena</button>
+          <button class="btn btn-glass btn-lg">Browse Problems</button>
+        </div>
+        <!-- Doodle slot annotation -->
+        <div style="position:absolute;top:20px;right:20px;border:2px dashed rgba(107,148,120,.25);border-radius:10px;padding:8px 12px;background:rgba(107,148,120,.03);">
+          <p style="font-family:var(--ff-mono);font-size:9px;letter-spacing:.1em;color:rgba(107,148,120,.45);">✏ DOODLE SLOT<br>hero corner flourish</p>
+        </div>
+      </div>
+
+      <!-- Stats strip -->
+      <div style="display:flex;flex-direction:column;gap:12px;min-width:200px;">
+        <div class="g" style="padding:22px 24px;">
+          <div class="stat-val">248</div>
+          <div class="stat-label">Problems in vault</div>
+        </div>
+        <div class="g" style="padding:22px 24px;">
+          <div class="stat-val">1,204</div>
+          <div class="stat-label">Registered users</div>
+        </div>
+        <div class="g" style="padding:22px 24px;">
+          <div class="stat-val">48</div>
+          <div class="stat-label">Days to April contest</div>
+          <div style="margin-top:10px;">
+            <div class="prog-bar-wrap" style="height:5px;">
+              <div class="prog-fill prog-rose" style="width:65%;height:5px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       B. PROBLEM BROWSER
+  ══════════════════════════════════ -->
+  <div class="sec" id="problems">
+    <p class="sec-label">B - Problem Browser · List View · Card View · Filters</p>
+
+    <!-- Filter bar -->
+    <div class="g" style="padding:16px 20px;margin-bottom:14px;max-width:860px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <div class="search-wrap" style="flex:1;min-width:180px;">
+        <svg class="search-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="input input-search" placeholder="Search problems, topics, lore…" style="width:100%;" />
+      </div>
+      <select class="select" style="width:140px;">
+        <option>All Topics</option>
+        <option>Number Theory</option>
+        <option>Combinatorics</option>
+        <option>Geometry</option>
+        <option>Algebra</option>
+        <option>Inequalities</option>
+      </select>
+      <select class="select" style="width:120px;">
+        <option>Difficulty</option>
+        <option>Easy</option>
+        <option>Medium</option>
+        <option>Hard</option>
+        <option>Expert</option>
+      </select>
+      <select class="select" style="width:130px;">
+        <option>All Contests</option>
+        <option>Jade City</option>
+        <option>Devil Mountain</option>
+        <option>Weekly Trial</option>
+      </select>
+      <span class="tag" style="margin-left:auto;white-space:nowrap;">248 results</span>
+    </div>
+
+    <!-- List view table -->
+    <div class="g" style="max-width:860px;overflow:hidden;margin-bottom:24px;">
+      <div style="padding:14px 20px 12px;border-bottom:1px solid rgba(0,0,0,.06);display:flex;align-items:center;gap:14px;">
+        <span style="font-family:var(--ff-mono);font-size:10px;letter-spacing:.14em;color:var(--ink5);width:30px;text-align:center;">#</span>
+        <span style="font-family:var(--ff-mono);font-size:10px;letter-spacing:.14em;color:var(--ink5);flex:1;">TITLE</span>
+        <span style="font-family:var(--ff-mono);font-size:10px;letter-spacing:.14em;color:var(--ink5);width:130px;">TOPIC</span>
+        <span style="font-family:var(--ff-mono);font-size:10px;letter-spacing:.14em;color:var(--ink5);width:48px;text-align:right;">RATE</span>
+        <span style="font-family:var(--ff-mono);font-size:10px;letter-spacing:.14em;color:var(--ink5);width:58px;text-align:center;">XP</span>
+      </div>
+
+      <!-- Solved row -->
+      <div class="prob-row solved">
+        <span class="prob-num">001</span>
+        <div class="diff-dot diff-e"></div>
+        <span class="prob-title">The Residue of Forgotten Sums</span>
+        <span class="prob-topic tag">Number Theory</span>
+        <span class="prob-rate">72%</span>
+        <span class="prob-xp">+80 XP</span>
+        <div class="solved-icon">✓</div>
+      </div>
+      <div class="prob-row solved">
+        <span class="prob-num">002</span>
+        <div class="diff-dot diff-e"></div>
+        <span class="prob-title">The Demon Hunter's Outfit</span>
+        <span class="prob-topic tag">Combinatorics</span>
+        <span class="prob-rate">68%</span>
+        <span class="prob-xp">+80 XP</span>
+        <div class="solved-icon">✓</div>
+      </div>
+      <div class="prob-row">
+        <span class="prob-num">003</span>
+        <div class="diff-dot diff-m"></div>
+        <span class="prob-title">The Carriage Fee Distribution</span>
+        <span class="prob-topic tag">Combinatorics</span>
+        <span class="prob-rate">41%</span>
+        <span class="prob-xp">+160 XP</span>
+        <div style="width:18px;"></div>
+      </div>
+      <div class="prob-row">
+        <span class="prob-num">004</span>
+        <div class="diff-dot diff-m"></div>
+        <span class="prob-title">Doors of the Enchanted Forest</span>
+        <span class="prob-topic tag">Number Theory</span>
+        <span class="prob-rate">38%</span>
+        <span class="prob-xp">+160 XP</span>
+        <div style="width:18px;"></div>
+      </div>
+      <div class="prob-row">
+        <span class="prob-num">005</span>
+        <div class="diff-dot diff-h"></div>
+        <span class="prob-title">The Double Death Ritual</span>
+        <span class="prob-topic tag tag-rose">Geometry</span>
+        <span class="prob-rate">14%</span>
+        <span class="prob-xp" style="color:var(--rose);background:var(--rose-bg);">+280 XP</span>
+        <div style="width:18px;"></div>
+      </div>
+      <div class="prob-row">
+        <span class="prob-num">006</span>
+        <div class="diff-dot diff-x"></div>
+        <span class="prob-title">The Homothety Conjecture</span>
+        <span class="prob-topic tag tag-violet">Geometry</span>
+        <span class="prob-rate">4%</span>
+        <span class="prob-xp" style="color:var(--violet);background:var(--violet-bg);">+500 XP</span>
+        <div style="width:18px;"></div>
+      </div>
+      <div class="prob-row">
+        <span class="prob-num">007</span>
+        <div class="diff-dot diff-m"></div>
+        <span class="prob-title">The Fibonacci Modular Sequence</span>
+        <span class="prob-topic tag tag-slate">Algebra</span>
+        <span class="prob-rate">29%</span>
+        <span class="prob-xp">+160 XP</span>
+        <div style="width:18px;"></div>
+      </div>
+    </div>
+
+    <!-- Card grid view -->
+    <div class="grid">
+      <div class="g prob-card">
+        <div class="prob-card-meta">
+          <div class="diff-dot diff-m"></div>
+          <span class="tag">Combinatorics</span>
+          <span class="tag" style="margin-left:auto;">#003</span>
+        </div>
+        <div class="prob-card-title">The Carriage Fee Distribution</div>
+        <div class="math-preview">$\sum_{i=1}^{4} p_i = 8,\ p_i \in \{1,2,3\}$</div>
+        <div class="prob-card-excerpt">4 demon hunters, each with one $1, $2, $3 coin. How many ways to collectively pay exactly $8?</div>
+        <div class="prob-card-footer">
+          <span style="font-size:12px;color:var(--ink5);">41% solve rate</span>
+          <span class="tag tag-amber">+160 XP</span>
+        </div>
+      </div>
+
+      <div class="g prob-card">
+        <div class="prob-card-meta">
+          <div class="diff-dot diff-h"></div>
+          <span class="tag tag-rose">Geometry</span>
+          <span class="tag" style="margin-left:auto;">#005</span>
+        </div>
+        <div class="prob-card-title">The Double Death Ritual</div>
+        <div class="math-preview">$(P_2P_3P_4)$ circumcircle, $r=10$, $P_3A=13$</div>
+        <div class="prob-card-excerpt">Circumcircle, tangent small circle, homothety. Find $AB$ in lowest form $a/b$, compute $a+b$.</div>
+        <div class="prob-card-footer">
+          <span style="font-size:12px;color:var(--ink5);">14% solve rate</span>
+          <span class="tag" style="color:var(--rose);background:var(--rose-bg);">+280 XP</span>
+        </div>
+      </div>
+
+      <div class="g prob-card">
+        <div class="prob-card-meta">
+          <div class="diff-dot diff-x"></div>
+          <span class="tag tag-violet">Geometry</span>
+          <span class="tag" style="margin-left:auto;">#006</span>
+        </div>
+        <div class="prob-card-title">The Homothety Conjecture</div>
+        <div class="math-preview">$\triangle BP_3P_4 \sim \triangle P_4P_3A$, Power of a Point</div>
+        <div class="prob-card-excerpt">Expert-level olympiad geometry. Prove the similarity, apply Power of a Point to extract the length.</div>
+        <div class="prob-card-footer">
+          <span style="font-size:12px;color:var(--ink5);">4% solve rate</span>
+          <span class="tag" style="color:var(--violet);background:var(--violet-bg);">+500 XP</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       C. PROBLEM VIEW (FULL LAYOUT)
+  ══════════════════════════════════ -->
+  <div class="sec" id="problem-view">
+    <p class="sec-label">C - Problem View · Full Layout · Answer Panel · Hints</p>
+
+    <div class="prob-layout">
+
+      <!-- Left: statement -->
+      <div class="prob-main">
+
+        <!-- Problem nav -->
+        <div class="g prob-nav">
+          <div class="prob-nav-dot solved" title="P1 - Solved">1</div>
+          <div class="prob-nav-dot solved" title="P2 - Solved">2</div>
+          <div class="prob-nav-dot attempted" title="P3 - Attempted">3</div>
+          <div class="prob-nav-dot current" title="P4 - Current">4</div>
+          <div class="prob-nav-dot default" title="P5 - Locked">5</div>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+            <span class="tag tag-sage">2 Solved</span>
+            <span class="tag tag-amber">1 Attempted</span>
+          </div>
+        </div>
+
+        <!-- Problem statement - Doors of the Enchanted Forest -->
+        <div class="g prob-statement">
+          <div class="prob-contest-tag">
+            <span class="chapter">JADE CITY · CH. 4</span>
+            <div class="diff-dot diff-m"></div>
+            <span class="tag">Number Theory</span>
+            <span class="tag tag-amber" style="margin-left:auto;">+160 XP</span>
+          </div>
+
+          <div class="prob-title-main">Doors of the Enchanted Forest</div>
+          <div class="prob-lore-line">"On the way to Devil Mountain, you encounter an enchanted forest. The entrance is protected by the demon's magic."</div>
+
+          <div class="prob-body">
+            There are <strong>100 doors</strong> numbered 1 to 100 from left to right. All doors remain <strong>closed</strong> at the beginning. Toggling a door means: if it is open, close it; if it is closed, open it.<br><br>
+            For each round $i$ where $1 \le i \le 100$, you toggle every $i^{\text{th}}$ door. More precisely:
+          </div>
+
+          <div class="math-block">
+            <div class="math-block-label">Formal Definition</div>
+            $$\text{Toggle door } d \text{ in round } i \iff i \mid d$$
+          </div>
+
+          <div class="prob-body">
+            A door is <strong>"safe"</strong> if and only if it is open after all 100 rounds. What is the <strong>sum of the indices</strong> of all safe doors?
+          </div>
+
+          <div class="prob-note">
+            Note: The answer is a positive integer. Express it as an exact value.
+          </div>
+
+          <!-- Doodle slot for diagram -->
+          <div style="margin-top:20px;">
+            <div class="diagram-doodle-slot" style="min-height:100px;">
+              <p>✏ DOODLE SLOT<br>100 doors in a row · demon's enchanted corridor<br>mix-blend: multiply · opacity 0.15</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Solution approach hints (after solving) -->
+        <div class="g" style="padding:22px 26px;opacity:.65;">
+          <div class="lbl" style="margin-bottom:10px;">Key insight - visible after solving</div>
+          <div class="prob-body" style="font-size:14px;">Door $d$ is toggled exactly once per divisor. It ends open iff it has an <em>odd</em> number of divisors - which happens iff $d$ is a perfect square. So sum the perfect squares $\le 100$:</div>
+          <div class="math-block" style="margin:12px 0;">
+            $$\sum_{k=1}^{10} k^2 = \frac{10 \cdot 11 \cdot 21}{6} = 385$$
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right: answer + hints -->
+      <div class="prob-side">
+
+        <!-- Timer -->
+        <div class="g" style="padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div class="live-dot"></div>
+            <span style="font-family:var(--ff-mono);font-size:10px;letter-spacing:.1em;color:var(--ink4);">CONTEST LIVE</span>
+          </div>
+          <div class="contest-timer" style="padding:6px 14px;font-size:18px;gap:2px;background:transparent;">
+            <span>38</span><span class="timer-sep">:</span><span>22</span><span class="timer-sep">:</span><span id="s1">47</span>
+          </div>
+          <div class="top-bar-wrap" style="width:80px;height:2px;border-radius:100px;background:rgba(0,0,0,.07);">
+            <div class="top-bar-fill" style="width:62%;"></div>
+          </div>
+        </div>
+
+        <!-- Answer panel -->
+        <div class="g answer-panel">
+          <div class="answer-panel-title">
+            Your Answer
+            <span class="answer-type-indicator">Integer</span>
+          </div>
+          <input class="ans-input" placeholder="enter integer" id="main-ans" />
+          <div class="ans-format-hint">Enter an exact integer · no spaces · no commas</div>
+          <div class="attempts-row">
+            <div class="attempt-pip"></div>
+            <div class="attempt-pip"></div>
+            <div class="attempt-pip empty"></div>
+            <span style="font-family:var(--ff-mono);font-size:10px;color:var(--ink5);margin-left:6px;">2 of 3 remaining</span>
+          </div>
+          <button class="btn btn-ink" style="width:100%;justify-content:center;" id="main-submit" onclick="checkAnswer()">Submit Answer</button>
+          <div id="verdict-wrap" style="margin-top:12px;display:none;">
+            <div class="g" id="verdict-card" style="padding:14px 16px;display:flex;align-items:center;gap:10px;">
+              <div id="verdict-icon" style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;"></div>
+              <div>
+                <div id="verdict-title" style="font-family:var(--ff-ui);font-size:13px;font-weight:500;"></div>
+                <div id="verdict-sub" style="font-size:12px;font-weight:300;color:var(--ink4);"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hints panel -->
+        <div class="g hint-panel">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <div style="font-family:var(--ff-ui);font-size:12px;font-weight:600;letter-spacing:.1em;color:var(--ink4);text-transform:uppercase;">Hints</div>
+            <span style="font-family:var(--ff-mono);font-size:10px;color:var(--amber);">−20 XP each</span>
+          </div>
+          <div class="hint-item" onclick="this.classList.toggle('revealed')">
+            <span class="hint-num">H1</span>
+            <div class="hint-content">
+              <div class="hint-title">Think about when a door ends up open</div>
+              <div class="hint-text">A door is toggled once for each round $i$ that divides its number. Count the number of divisors.</div>
+            </div>
+            <span class="hint-cost">−20 XP</span>
+          </div>
+          <div class="hint-item" onclick="this.classList.toggle('revealed')">
+            <span class="hint-num">H2</span>
+            <div class="hint-content">
+              <div class="hint-title">Which numbers have an odd number of divisors?</div>
+              <div class="hint-text">Most divisors come in pairs $(d, n/d)$. The only numbers where this pairing fails are perfect squares - the square root pairs with itself.</div>
+            </div>
+            <span class="hint-cost">−20 XP</span>
+          </div>
+          <div class="hint-item" onclick="this.classList.toggle('revealed')">
+            <span class="hint-num">H3</span>
+            <div class="hint-content">
+              <div class="hint-title">Apply the sum of squares formula</div>
+              <div class="hint-text">Use $\sum_{k=1}^{n} k^2 = \dfrac{n(n+1)(2n+1)}{6}$ with $n = 10$.</div>
+            </div>
+            <span class="hint-cost">−20 XP</span>
+          </div>
+        </div>
+
+        <!-- Quick stats -->
+        <div class="g" style="padding:18px 20px;">
+          <div class="lbl" style="margin-bottom:12px;">Problem Stats</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="font-size:13px;font-weight:300;color:var(--ink3);width:90px;">Solve rate</span>
+              <div class="prog-bar-wrap" style="flex:1;height:5px;">
+                <div class="prog-fill prog-amber" style="width:38%;height:5px;"></div>
+              </div>
+              <span style="font-family:var(--ff-mono);font-size:11px;color:var(--ink4);width:30px;text-align:right;">38%</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="font-size:13px;font-weight:300;color:var(--ink3);width:90px;">Median time</span>
+              <span style="font-family:var(--ff-mono);font-size:12px;color:var(--ink3);">12 min</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="font-size:13px;font-weight:300;color:var(--ink3);width:90px;">Total solves</span>
+              <span style="font-family:var(--ff-mono);font-size:12px;color:var(--ink3);">186</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       D. COMPETITION CONTAINERS (THEMES)
+  ══════════════════════════════════ -->
+  <div class="sec" id="competition">
+    <p class="sec-label">D - Competition Containers · Jade City + Other Themes · Doodle Integration</p>
+
+    <!-- JADE CITY FULL CONTEST VIEW -->
+    <div class="theme-jade" style="margin-bottom:18px;">
+      <div class="theme-jade-doodle"></div>
+      <div class="theme-jade-overlay"></div>
+      <div class="theme-jade-content">
+
+        <!-- Contest header -->
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:28px;">
+          <div>
+            <div class="jade-eyebrow">JADE CITY CONTEST · TESTING ROUND 1 · NOV 27 2024</div>
+            <div class="jade-title">The Demon Hunter's Trial</div>
+            <div class="jade-sub">5 problems across your journey from the Imperial Palace to Devil Mountain. The answers weave a hidden story.</div>
+          </div>
+          <div class="jade-glass" style="padding:16px 22px;border-radius:var(--r-lg);">
+            <div class="lbl" style="color:rgba(150,220,160,.5);margin-bottom:10px;">Time Remaining</div>
+            <div class="countdown">
+              <div class="cd-block" style="background:rgba(255,255,255,.05);border-color:rgba(150,220,160,.15);">
+                <span class="cd-val" style="color:rgba(200,240,200,.9);">00</span>
+                <span class="cd-unit" style="color:rgba(150,200,160,.5);">HRS</span>
+              </div>
+              <span class="cd-sep" style="color:rgba(150,200,160,.3);">:</span>
+              <div class="cd-block" style="background:rgba(255,255,255,.05);border-color:rgba(150,220,160,.15);">
+                <span class="cd-val" style="color:rgba(200,240,200,.9);">47</span>
+                <span class="cd-unit" style="color:rgba(150,200,160,.5);">MIN</span>
+              </div>
+              <span class="cd-sep" style="color:rgba(150,200,160,.3);">:</span>
+              <div class="cd-block" style="background:rgba(255,255,255,.05);border-color:rgba(150,220,160,.15);">
+                <span class="cd-val" style="color:rgba(200,240,200,.9);" id="s2">18</span>
+                <span class="cd-unit" style="color:rgba(150,200,160,.5);">SEC</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chapter stepper -->
+        <div class="story-stepper">
+          <div class="story-step">
+            <div class="step-circle done">✓</div>
+            <div class="step-label">The Palace<br>Test</div>
+          </div>
+          <div class="step-connector"></div>
+          <div class="story-step">
+            <div class="step-circle done">✓</div>
+            <div class="step-label">Choosing<br>the Outfit</div>
+          </div>
+          <div class="step-connector"></div>
+          <div class="story-step">
+            <div class="step-circle current">3</div>
+            <div class="step-label">Carriage<br>to the Mountain</div>
+          </div>
+          <div class="step-connector"></div>
+          <div class="story-step">
+            <div class="step-circle locked">4</div>
+            <div class="step-label">Enchanted<br>Forest</div>
+          </div>
+          <div class="step-connector"></div>
+          <div class="story-step">
+            <div class="step-circle locked">5</div>
+            <div class="step-label">Double Death<br>Ritual</div>
+          </div>
+        </div>
+
+        <!-- Current problem block -->
+        <div class="jade-glass" style="padding:28px 32px;margin-bottom:16px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+            <span style="font-family:var(--ff-mono);font-size:10px;letter-spacing:.16em;color:rgba(150,220,160,.6);background:rgba(150,220,160,.08);padding:4px 10px;border-radius:6px;">PROBLEM 3 / 5</span>
+            <span style="font-family:var(--ff-mono);font-size:10px;letter-spacing:.1em;color:rgba(184,133,58,.7);background:rgba(184,133,58,.08);padding:4px 10px;border-radius:6px;">COMBINATORICS · MEDIUM</span>
+          </div>
+          <div style="font-family:var(--ff-display);font-size:22px;color:rgba(200,240,200,.92);margin-bottom:8px;">The Carriage Fee Distribution</div>
+          <div style="font-family:var(--ff-display);font-style:italic;font-size:14px;color:rgba(150,200,160,.55);margin-bottom:18px;padding-left:12px;border-left:2px solid rgba(150,220,160,.2);">"As you are headed to Devil Mountain, you and your three demon hunter friends want to pay for the carriage fee."</div>
+          <div style="font-size:15px;font-weight:300;color:rgba(200,230,210,.75);line-height:1.75;margin-bottom:18px;">
+            All of you have exactly one $1, $2, and $3 coin. Each of you wants to pitch in exactly one coin to the total carriage fee, which is $<strong style="color:rgba(200,240,200,.92);">8</strong>. How many ways can you and your friends pay for the carriage?
+          </div>
+          <!-- Answer input in dark theme -->
+          <div style="display:flex;gap:12px;align-items:center;">
+            <input style="background:rgba(255,255,255,.07);border:2px solid rgba(150,220,160,.2);border-radius:var(--r-lg);padding:16px 18px;font-family:var(--ff-mono);font-size:24px;font-weight:300;color:rgba(200,240,200,.9);text-align:center;letter-spacing:.08em;width:200px;outline:none;transition:all .15s;" placeholder="answer" />
+            <button class="jade-btn-primary" style="padding:16px 28px;font-size:14px;flex:1;">Submit →</button>
+          </div>
+        </div>
+
+        <!-- Doodle drop zone -->
+        <div class="jade-doodle-zone">
+          <p>✏ DOODLE SLOT - Jade City elements: imperial dragons · jade pillars · Chinese cloud motifs<br>Export as SVG · mix-blend-mode: screen · opacity 0.08–0.15</p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Other theme previews -->
+    <div class="grid">
+
+      <!-- Murder Mystery theme -->
+      <div style="border-radius:var(--r-xl);overflow:hidden;position:relative;background:linear-gradient(155deg,#12101e,#181428,#0f0d1a);width:340px;padding:28px;">
+        <div style="position:absolute;inset:0;background-image:radial-gradient(ellipse at 30% 20%,rgba(120,80,180,.08),transparent 50%);pointer-events:none;"></div>
+        <div style="position:relative;z-index:2;">
+          <div style="font-family:var(--ff-mono);font-size:9px;letter-spacing:.22em;color:rgba(160,130,220,.6);margin-bottom:10px;">MURDER MYSTERY</div>
+          <div style="font-family:var(--ff-display);font-size:24px;color:rgba(220,210,250,.9);margin-bottom:6px;">The Poisoned Chalice</div>
+          <div style="font-size:13px;font-weight:300;color:rgba(170,150,220,.5);margin-bottom:20px;">Combinatorics in the candlelit manor.</div>
+          <div style="background:rgba(255,255,255,.05);border:1px solid rgba(160,130,220,.12);border-radius:var(--r);padding:16px;">
+            <div style="font-size:14px;font-weight:300;color:rgba(200,190,240,.7);line-height:1.65;">In how many ways can the 8 suspects be seated around a circular table such that the detective sits neither next to the murderer nor the alibi witness?</div>
+          </div>
+          <div style="margin-top:14px;border:2px dashed rgba(160,130,220,.18);border-radius:var(--r);padding:10px;text-align:center;">
+            <p style="font-family:var(--ff-mono);font-size:9px;letter-spacing:.1em;color:rgba(160,130,220,.35);">✏ DOODLE SLOT<br>candles · magnifying glass · silhouettes</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Space / Cosmic theme -->
+      <div style="border-radius:var(--r-xl);overflow:hidden;position:relative;background:linear-gradient(155deg,#080c18,#0c1022,#0a0e1c);width:340px;padding:28px;">
+        <div style="position:absolute;inset:0;background-image:radial-gradient(circle at 70% 30%,rgba(80,120,220,.07),transparent 45%),radial-gradient(circle at 20% 70%,rgba(60,80,180,.05),transparent 40%);pointer-events:none;"></div>
+        <div style="position:relative;z-index:2;">
+          <div style="font-family:var(--ff-mono);font-size:9px;letter-spacing:.22em;color:rgba(120,160,240,.6);margin-bottom:10px;">COSMIC THEOREM</div>
+          <div style="font-family:var(--ff-display);font-size:24px;color:rgba(180,210,255,.9);margin-bottom:6px;">The Orbital Conjecture</div>
+          <div style="font-size:13px;font-weight:300;color:rgba(120,160,220,.5);margin-bottom:20px;">Number theory across the void.</div>
+          <div style="background:rgba(80,120,220,.04);border:1px solid rgba(120,160,240,.12);border-radius:var(--r);padding:16px;">
+            <div style="font-size:14px;font-weight:300;color:rgba(180,210,255,.65);line-height:1.65;">$n$ planets orbit a star. Each pair is connected by a gravitational arc. Find all $n$ such that the total arcs equal a perfect square.</div>
+          </div>
+          <div style="margin-top:14px;border:2px dashed rgba(120,160,240,.15);border-radius:var(--r);padding:10px;text-align:center;">
+            <p style="font-family:var(--ff-mono);font-size:9px;letter-spacing:.1em;color:rgba(120,160,240,.35);">✏ DOODLE SLOT<br>star charts · orbits · constellations</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       E. LORE REVEAL MODAL
+  ══════════════════════════════════ -->
+  <div class="sec" id="lore">
+    <p class="sec-label">E - Lore Reveal · Post-Solve Modal · XP Reward · Story Fragment</p>
+    <div class="grid">
+
+      <!-- Jade City lore reveal -->
+      <div class="lore-modal-wrap">
+        <div class="lore-modal-particles">
+          <div class="lore-particle" style="width:80px;height:80px;background:radial-gradient(circle,rgba(150,220,160,.2),transparent 70%);top:10%;left:15%;animation-duration:5s;"></div>
+          <div class="lore-particle" style="width:50px;height:50px;background:radial-gradient(circle,rgba(200,180,80,.15),transparent 70%);top:60%;right:20%;animation-duration:7s;animation-delay:1s;"></div>
+          <div class="lore-particle" style="width:120px;height:120px;background:radial-gradient(circle,rgba(100,160,120,.1),transparent 70%);bottom:15%;left:40%;animation-duration:9s;animation-delay:2s;"></div>
+        </div>
+        <div class="lore-modal">
+          <div class="lore-orb">🜃</div>
+          <div class="lore-solved-label">PROBLEM 4 SOLVED</div>
+          <div class="lore-title">The Forest Yields</div>
+          <div class="lore-text">"The enchanted doors swing open - the 10 perfect portals reveal the path through the forest. Only those who understand the nature of divisors may pass."</div>
+          <div class="lore-xp">+160 XP</div>
+          <div class="lore-meta-note">The answer 385 = 5 × 7 × 11. Three primes. The demon hunters note this with unease - 4 will always return.</div>
+          <div class="lore-actions">
+            <button class="jade-btn-ghost">Back to Vault</button>
+            <button class="jade-btn-primary">Problem 5 →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Compact XP toast (optimistic) -->
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="lbl">Optimistic - shown instantly on submit</div>
+        <div class="toast t-success">
+          <div class="toast-icon">✓</div>
+          <div>
+            <div class="toast-title">Correct! Answer: 385</div>
+            <div class="toast-body">The Enchanted Forest is solved. Lore fragment unlocked.</div>
+          </div>
+        </div>
+        <div class="toast t-xp">
+          <div class="toast-icon">⬡</div>
+          <div>
+            <div class="toast-title">+160 XP - Archon II climbing</div>
+            <div class="toast-body">2,840 → 3,000 XP · 500 from Archon I</div>
+          </div>
+        </div>
+        <div class="toast t-error">
+          <div class="toast-icon">✕</div>
+          <div>
+            <div class="toast-title">Incorrect - 2 attempts left</div>
+            <div class="toast-body">Check your formula. The safe doors are perfect squares.</div>
+          </div>
+        </div>
+        <div class="toast t-info">
+          <div class="toast-icon">!</div>
+          <div>
+            <div class="toast-title">Contest ends in 5 minutes</div>
+            <div class="toast-body">2 problems unsolved. You have P4 and P5 remaining.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       F. USER PROFILE
+  ══════════════════════════════════ -->
+  <div class="sec" id="profile">
+    <p class="sec-label">F - User Profile · Stats · Rating Graph · Activity · Submissions</p>
+    <div class="grid">
+
+      <!-- Profile hero -->
+      <div class="g profile-hero">
+        <div class="profile-top">
+          <div class="avatar">V</div>
+          <div>
+            <div class="profile-name">Veridius</div>
+            <div class="profile-handle">@veridius · joined Oct 2024</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+              <span class="rank-badge rank-archon">⬡ ARCHON II</span>
+              <span class="tag tag-slate">Geometry specialist</span>
+            </div>
+          </div>
+        </div>
+        <div class="stat-grid">
+          <div class="g stat-block">
+            <div style="display:flex;align-items:baseline;gap:6px;">
+              <div class="stat-val">63</div>
+              <span class="delta-up stat-delta">+14</span>
+            </div>
+            <div class="stat-label">Solved</div>
+          </div>
+          <div class="g stat-block">
+            <div class="stat-val">2,840</div>
+            <div class="stat-label">Total XP</div>
+          </div>
+          <div class="g stat-block">
+            <div style="display:flex;align-items:baseline;gap:6px;">
+              <div class="stat-val">17</div>
+              <span class="delta-down stat-delta">−2</span>
+            </div>
+            <div class="stat-label">Global Rank</div>
+          </div>
+          <div class="g stat-block">
+            <div class="stat-val">4</div>
+            <div class="stat-label">Contests</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:14px;flex:1;min-width:300px;">
+
+        <!-- Rating over time graph -->
+        <div class="g rating-graph-wrap">
+          <div class="rating-graph-title">Rating History</div>
+          <div class="rating-graph-placeholder">
+            <div class="graph-bar" style="height:30%;"></div>
+            <div class="graph-bar" style="height:45%;"></div>
+            <div class="graph-bar" style="height:40%;"></div>
+            <div class="graph-bar" style="height:60%;"></div>
+            <div class="graph-bar" style="height:55%;"></div>
+            <div class="graph-bar" style="height:70%;"></div>
+            <div class="graph-bar" style="height:65%;"></div>
+            <div class="graph-bar" style="height:80%;"></div>
+            <div class="graph-bar" style="height:75%;"></div>
+            <div class="graph-bar" style="height:90%;"></div>
+            <div class="graph-bar" style="height:88%;"></div>
+            <div class="graph-bar" style="height:95%;"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:8px;">
+            <span style="font-family:var(--ff-mono);font-size:10px;color:var(--ink5);">Oct 24</span>
+            <span style="font-family:var(--ff-mono);font-size:10px;color:var(--ink5);">Feb 25</span>
+          </div>
+          <div style="text-align:center;margin-top:4px;font-family:var(--ff-mono);font-size:10px;color:var(--ink5);">↑ Recharts will render here in production</div>
+        </div>
+
+        <!-- Activity heatmap -->
+        <div class="g" style="padding:20px 22px;">
+          <div style="font-family:var(--ff-ui);font-size:13px;font-weight:500;margin-bottom:14px;">Activity - last 16 weeks</div>
+          <div class="heatmap">
+            <!-- Generate varied activity -->
+            <div class="heatmap-cell"></div><div class="heatmap-cell hm-1"></div><div class="heatmap-cell hm-2"></div><div class="heatmap-cell"></div><div class="heatmap-cell hm-3"></div><div class="heatmap-cell hm-1"></div><div class="heatmap-cell"></div>
+            <div class="heatmap-cell hm-2"></div><div class="heatmap-cell"></div><div class="heatmap-cell hm-4"></div><div class="heatmap-cell hm-2"></div><div class="heatmap-cell hm-1"></div><div class="heatmap-cell"></div><div class="heatmap-cell hm-3"></div>
+            <div class="heatmap-cell hm-1"></div><div class="heatmap-cell hm-4"></div><div class="heatmap-cell hm-3"></div><div class="heatmap-cell hm-2"></div><div class="heatmap-cell"></div><div class="heatmap-cell hm-1"></div><div class="heatmap-cell hm-4"></div>
+            <div class="heatmap-cell"></div><div class="heatmap-cell hm-2"></div><div class="heatmap-cell hm-1"></div><div class="heatmap-cell hm-3"></div><div class="heatmap-cell hm-4"></div><div class="heatmap-cell hm-2"></div><div class="heatmap-cell hm-1"></div>
+            <div class="heatmap-cell hm-3"></div><div class="heatmap-cell"></div><div class="heatmap-cell hm-2"></div><div class="heatmap-cell"></div><div class="heatmap-cell hm-1"></div><div class="heatmap-cell hm-4"></div><div class="heatmap-cell hm-3"></div>
+            <div class="heatmap-cell hm-2"></div><div class="heatmap-cell hm-4"></div><div class="heatmap-cell"></div><div class="heatmap-cell hm-3"></div><div class="heatmap-cell hm-2"></div><div class="heatmap-cell"></div><div class="heatmap-cell hm-1"></div>
+            <div class="heatmap-cell"></div><div class="heatmap-cell hm-1"></div><div class="heatmap-cell hm-4"></div><div class="heatmap-cell hm-2"></div><div class="heatmap-cell hm-3"></div><div class="heatmap-cell hm-1"></div><div class="heatmap-cell hm-4"></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:10px;">
+            <span style="font-family:var(--ff-mono);font-size:9px;color:var(--ink5);">Less</span>
+            <div class="heatmap-cell"></div><div class="heatmap-cell hm-1"></div><div class="heatmap-cell hm-2"></div><div class="heatmap-cell hm-3"></div><div class="heatmap-cell hm-4"></div>
+            <span style="font-family:var(--ff-mono);font-size:9px;color:var(--ink5);">More</span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Submissions table -->
+    <div class="g" style="margin-top:14px;overflow:hidden;max-width:760px;">
+      <div style="padding:16px 24px 14px;border-bottom:1px solid rgba(0,0,0,.06);font-family:var(--ff-ui);font-size:14px;font-weight:500;">Recent Submissions</div>
+      <div class="sub-row">
+        <span class="verdict-chip v-correct">✓ Correct</span>
+        <div style="flex:1;"><div style="font-family:var(--ff-ui);font-size:14px;font-weight:500;">Doors of the Enchanted Forest</div><div style="font-size:12px;color:var(--ink5);">Answer: 385</div></div>
+        <span class="tag">Number Theory</span>
+        <span style="font-family:var(--ff-mono);font-size:11px;color:var(--amber);">+160 XP</span>
+        <span style="font-family:var(--ff-mono);font-size:10px;color:var(--ink5);">2 min ago</span>
+      </div>
+      <div class="sub-row">
+        <span class="verdict-chip v-wrong">✕ Wrong</span>
+        <div style="flex:1;"><div style="font-family:var(--ff-ui);font-size:14px;font-weight:500;">The Carriage Fee Distribution</div><div style="font-size:12px;color:var(--ink5);">Answer: 17 (wrong)</div></div>
+        <span class="tag">Combinatorics</span>
+        <span style="font-family:var(--ff-mono);font-size:11px;color:var(--ink5);">−</span>
+        <span style="font-family:var(--ff-mono);font-size:10px;color:var(--ink5);">18 min ago</span>
+      </div>
+      <div class="sub-row">
+        <span class="verdict-chip v-correct">✓ Correct</span>
+        <div style="flex:1;"><div style="font-family:var(--ff-ui);font-size:14px;font-weight:500;">The Demon Hunter's Outfit</div><div style="font-size:12px;color:var(--ink5);">Answer: 18</div></div>
+        <span class="tag">Combinatorics</span>
+        <span style="font-family:var(--ff-mono);font-size:11px;color:var(--amber);">+80 XP</span>
+        <span style="font-family:var(--ff-mono);font-size:10px;color:var(--ink5);">1 hr ago</span>
+      </div>
+      <div class="sub-row opt-pending" style="opacity:.6;">
+        <span class="verdict-chip v-pending"><div class="spin spin-dk" style="width:10px;height:10px;"></div> Pending</span>
+        <div style="flex:1;"><div style="font-family:var(--ff-ui);font-size:14px;font-weight:500;">The Double Death Ritual</div><div style="font-size:12px;color:var(--ink5);">Checking…</div></div>
+        <span class="tag tag-rose">Geometry</span>
+        <span style="font-family:var(--ff-mono);font-size:11px;color:var(--ink5);">-</span>
+        <span style="font-family:var(--ff-mono);font-size:10px;color:var(--ink5);">Just now</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       G. LEADERBOARD
+  ══════════════════════════════════ -->
+  <div class="sec" id="leaderboard">
+    <p class="sec-label">G - Leaderboard · Filters · Live Updates · Your Position</p>
+
+    <div class="g lb-card" style="max-width:600px;">
+      <div class="lb-head">
+        <div style="font-family:var(--ff-display);font-size:20px;color:var(--ink);">The Conclave</div>
+        <div class="lb-filters">
+          <button class="lb-filter active">All Time</button>
+          <button class="lb-filter">This Week</button>
+          <button class="lb-filter">Contest</button>
+        </div>
+      </div>
+      <div class="lb-row">
+        <span class="lb-rank gold">1</span>
+        <div class="avatar-sm avatar">T</div>
+        <div style="flex:1;"><div class="lb-name">Thalia Morvaine</div><div class="lb-sub-info">Archon I · 147 solved</div></div>
+        <span class="tag tag-sage" style="margin-right:8px;">+320</span>
+        <span class="lb-score">12,840</span>
+      </div>
+      <div class="lb-row">
+        <span class="lb-rank silver">2</span>
+        <div class="avatar-sm avatar">E</div>
+        <div style="flex:1;"><div class="lb-name">Eryndas Quin</div><div class="lb-sub-info">Archon I · 134 solved</div></div>
+        <span class="tag tag-sage" style="margin-right:8px;">+80</span>
+        <span class="lb-score">11,520</span>
+      </div>
+      <div class="lb-row">
+        <span class="lb-rank bronze">3</span>
+        <div class="avatar-sm avatar">S</div>
+        <div style="flex:1;"><div class="lb-name">Solvyn Crest</div><div class="lb-sub-info">Archon II · 128 solved</div></div>
+        <span class="delta-down stat-delta" style="margin-right:8px;">−40</span>
+        <span class="lb-score">10,280</span>
+      </div>
+      <div class="lb-row" style="opacity:.5;">
+        <span class="lb-rank">⋯</span>
+        <div style="flex:1;"></div>
+      </div>
+      <div class="lb-row me">
+        <span class="lb-rank">17</span>
+        <div class="avatar-sm avatar">V</div>
+        <div style="flex:1;"><div class="lb-name" style="color:var(--sage);">You · Veridius</div><div class="lb-sub-info">Archon II · 63 solved</div></div>
+        <span class="tag tag-sage" style="margin-right:8px;">+160</span>
+        <span class="lb-score" style="color:var(--sage);">2,840</span>
+      </div>
+      <div class="lb-row opt-row">
+        <span class="lb-rank">18</span>
+        <div class="avatar-sm avatar">C</div>
+        <div style="flex:1;"><div class="lb-name">Calix Stone</div><div class="lb-sub-info">Seeker III · 61 solved</div></div>
+        <span style="font-family:var(--ff-mono);font-size:10px;color:var(--ink5);margin-right:8px;">-</span>
+        <span class="lb-score">2,720</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       H. BLOG
+  ══════════════════════════════════ -->
+  <div class="sec" id="blog">
+    <p class="sec-label">H - Blog · Article Cards · Author · Doodle Cover Images</p>
+    <div class="grid">
+
+      <div class="g blog-card">
+        <div class="blog-img-placeholder">
+          <div class="blog-doodle-zone">
+            <p>✏ DOODLE SLOT<br>blog cover illustration</p>
+          </div>
+        </div>
+        <div class="blog-meta">
+          <span class="tag tag-sage">Contest Guide</span>
+          <span class="blog-date">Feb 12, 2025</span>
+        </div>
+        <div class="blog-title">Homothety in Competition Geometry: A Primer</div>
+        <div class="blog-excerpt">The Double Death Ritual problem uses a beautiful homothety argument. Here's how to spot and apply this technique in olympiad geometry.</div>
+        <div class="blog-footer">
+          <div class="blog-author">
+            <div class="avatar avatar-xs">K</div>
+            <span style="font-size:12px;color:var(--ink4);">Kevin Xu</span>
+          </div>
+          <span class="blog-read-time">8 min read</span>
+        </div>
+      </div>
+
+      <div class="g blog-card">
+        <div class="blog-img-placeholder" style="background:linear-gradient(135deg,var(--amber-bg),var(--rose-bg));">
+          <div class="blog-doodle-zone">
+            <p>✏ DOODLE SLOT<br>combinatorics illustration</p>
+          </div>
+        </div>
+        <div class="blog-meta">
+          <span class="tag tag-amber">Technique</span>
+          <span class="blog-date">Jan 28, 2025</span>
+        </div>
+        <div class="blog-title">Dynamic Programming for Counting Problems</div>
+        <div class="blog-excerpt">The carriage fee problem is a clean DP example. We walk through state definition, base cases, transitions, and common pitfalls.</div>
+        <div class="blog-footer">
+          <div class="blog-author">
+            <div class="avatar avatar-xs">R</div>
+            <span style="font-size:12px;color:var(--ink4);">Ricky Chen</span>
+          </div>
+          <span class="blog-read-time">6 min read</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       I. NAV
+  ══════════════════════════════════ -->
+  <div class="sec" id="nav">
+    <p class="sec-label">I - Navigation · Active States · XP Counter</p>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+
+      <div class="g nav-glass" style="max-width:860px;">
+        <div class="nav-logo">Axi<em>om</em></div>
+        <ul class="nav-links">
+          <li><span class="nav-link active">Problems</span></li>
+          <li><span class="nav-link">Contests</span></li>
+          <li><span class="nav-link">Leaderboard</span></li>
+          <li><span class="nav-link">Blog</span></li>
+        </ul>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="xp-counter">
+            <span class="rank-badge rank-archon" style="padding:3px 8px;font-size:9px;">ARCHON II</span>
+            <span class="xp-val">2,840</span>
+            <span class="xp-label">XP</span>
+          </div>
+          <div class="avatar" style="width:34px;height:34px;font-size:13px;">V</div>
+        </div>
+      </div>
+
+      <!-- In-contest nav bar -->
+      <div class="theme-jade" style="border-radius:var(--r-lg);padding:0;">
+        <div class="theme-jade-overlay" style="border-radius:var(--r-lg);"></div>
+        <div style="position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:13px 24px;max-width:860px;gap:12px;">
+          <div class="jade-title" style="font-size:16px;">Jade City · Round 1</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="prob-nav-dot done" style="background:rgba(150,220,160,.15);color:rgba(180,240,180,.8);border:1.5px solid rgba(150,220,160,.25);">1</div>
+            <div class="prob-nav-dot done" style="background:rgba(150,220,160,.15);color:rgba(180,240,180,.8);border:1.5px solid rgba(150,220,160,.25);">2</div>
+            <div class="prob-nav-dot current" style="background:rgba(150,220,160,.2);color:rgba(200,255,200,.95);border:1.5px solid rgba(150,220,160,.5);">3</div>
+            <div class="prob-nav-dot default" style="background:rgba(255,255,255,.06);color:rgba(255,255,255,.3);border-color:rgba(255,255,255,.1);">4</div>
+            <div class="prob-nav-dot default" style="background:rgba(255,255,255,.06);color:rgba(255,255,255,.3);border-color:rgba(255,255,255,.1);">5</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;font-family:var(--ff-mono);font-size:14px;color:rgba(200,240,200,.8);">
+            <div class="live-dot" style="background:rgba(180,240,180,.8);"></div>
+            <span id="s3">47</span>:<span id="s3m">22</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       J. PROGRESS & TIMERS
+  ══════════════════════════════════ -->
+  <div class="sec" id="progress">
+    <p class="sec-label">J - Progress · XP Bars · Illusion Loading · Countdown · Top Bar</p>
+
+    <div class="g" style="padding:32px;max-width:580px;">
+
+      <div class="lbl" style="margin-bottom:8px;">Page-level top bar</div>
+      <div class="top-bar-wrap" style="background:rgba(0,0,0,.07);margin-bottom:24px;">
+        <div class="top-bar-fill" style="width:68%;"></div>
+      </div>
+
+      <div class="lbl" style="margin-bottom:8px;">XP to next rank</div>
+      <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:20px;">
+        <div style="display:flex;justify-content:space-between;">
+          <span style="font-size:13px;font-weight:300;color:var(--ink3);">Archon II</span>
+          <span style="font-family:var(--ff-mono);font-size:12px;color:var(--ink3);">2,840 / 3,500</span>
+        </div>
+        <div class="prog-bar-wrap" style="height:8px;">
+          <div class="prog-fill prog-sage" style="width:81%;height:8px;"></div>
+        </div>
+        <span style="font-size:12px;font-weight:300;color:var(--ink5);text-align:right;">660 XP to Archon I</span>
+      </div>
+
+      <div class="lbl" style="margin-bottom:8px;">Per-topic breakdown</div>
+      <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:13px;font-weight:300;color:var(--ink3);width:110px;">Number Theory</span>
+          <div class="prog-bar-wrap" style="flex:1;height:5px;"><div class="prog-fill prog-sage" style="width:72%;height:5px;"></div></div>
+          <span style="font-family:var(--ff-mono);font-size:11px;color:var(--ink4);width:28px;text-align:right;">72%</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:13px;font-weight:300;color:var(--ink3);width:110px;">Combinatorics</span>
+          <div class="prog-bar-wrap" style="flex:1;height:5px;"><div class="prog-fill prog-slate" style="width:58%;height:5px;"></div></div>
+          <span style="font-family:var(--ff-mono);font-size:11px;color:var(--ink4);width:28px;text-align:right;">58%</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:13px;font-weight:300;color:var(--ink3);width:110px;">Geometry</span>
+          <div class="prog-bar-wrap" style="flex:1;height:5px;"><div class="prog-fill prog-amber" style="width:31%;height:5px;"></div></div>
+          <span style="font-family:var(--ff-mono);font-size:11px;color:var(--ink4);width:28px;text-align:right;">31%</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:13px;font-weight:300;color:var(--ink3);width:110px;">Algebra</span>
+          <div class="prog-bar-wrap" style="flex:1;height:5px;"><div class="prog-fill prog-rose" style="width:45%;height:5px;"></div></div>
+          <span style="font-family:var(--ff-mono);font-size:11px;color:var(--ink4);width:28px;text-align:right;">45%</span>
+        </div>
+      </div>
+
+      <div class="lbl" style="margin-bottom:8px;">Indeterminate (server processing)</div>
+      <div class="prog-indeterminate" style="height:4px;margin-bottom:20px;"></div>
+
+      <div class="lbl" style="margin-bottom:12px;">Countdown timer</div>
+      <div class="countdown">
+        <div class="cd-block"><span class="cd-val">00</span><span class="cd-unit">hrs</span></div>
+        <span class="cd-sep">:</span>
+        <div class="cd-block"><span class="cd-val">47</span><span class="cd-unit">min</span></div>
+        <span class="cd-sep">:</span>
+        <div class="cd-block"><span class="cd-val" id="cd-s">42</span><span class="cd-unit">sec</span></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       K. TOASTS & OPTIMISTIC UI
+  ══════════════════════════════════ -->
+  <div class="sec" id="toasts">
+    <p class="sec-label">K - Toasts · Optimistic UI · Rollback States</p>
+    <div class="grid">
+      <div style="display:flex;flex-direction:column;gap:10px;max-width:340px;">
+        <div class="toast t-success">
+          <div class="toast-icon">✓</div>
+          <div><div class="toast-title">Correct! Answer: 44</div><div class="toast-body">The Double Death Ritual solved. +280 XP incoming.</div></div>
+        </div>
+        <div class="toast t-error">
+          <div class="toast-icon">✕</div>
+          <div><div class="toast-title">Incorrect - 1 attempt left</div><div class="toast-body">Hint: check if $P_3A \cdot AB = P_3P_4^2$ holds.</div></div>
+        </div>
+        <div class="toast t-xp">
+          <div class="toast-icon">⬡</div>
+          <div><div class="toast-title">Rank Up - Archon I</div><div class="toast-body">You've crossed 3,500 XP. Elite problems unlocked.</div></div>
+        </div>
+        <div class="toast t-info">
+          <div class="toast-icon">!</div>
+          <div><div class="toast-title">Contest starting in 5 min</div><div class="toast-body">Jade City Round 2 - register now.</div></div>
+        </div>
+      </div>
+
+      <div class="g" style="padding:24px;max-width:480px;">
+        <div class="lbl" style="margin-bottom:14px;">Optimistic UI - submit flow</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="skel skel-circ" style="width:20px;height:20px;"></div>
+            <span style="font-size:13px;font-weight:300;color:var(--ink3);">1. Click submit → button enters loading instantly</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:20px;height:20px;border-radius:50%;background:var(--amber-bg);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--amber);">⋯</div>
+            <span style="font-size:13px;font-weight:300;color:var(--ink3);">2. Optimistic verdict shown - awaiting server</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:20px;height:20px;border-radius:50%;background:var(--sage-bg);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--sage);">✓</div>
+            <span style="font-size:13px;font-weight:300;color:var(--ink3);">3a. Server confirms → XP added, lore revealed</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:20px;height:20px;border-radius:50%;background:var(--rose-bg);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--rose);">↺</div>
+            <span style="font-size:13px;font-weight:300;color:var(--ink3);">3b. Server rejects → state rolled back, error shown</span>
+          </div>
+          <div style="margin-top:8px;">
+            <button class="btn btn-ink" id="opt-btn" onclick="demoOptimistic()">Demo Submit Flow</button>
+          </div>
+          <div id="opt-state" style="font-family:var(--ff-mono);font-size:11px;color:var(--ink5);padding:8px;background:rgba(0,0,0,.03);border-radius:8px;display:none;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       L. SKELETON SCREENS
+  ══════════════════════════════════ -->
+  <div class="sec" id="skeletons">
+    <p class="sec-label">L - Skeleton Screens · Every Component · Gleam Animation</p>
+    <div class="grid">
+
+      <!-- Problem card skeleton -->
+      <div>
+        <div class="lbl">Problem card</div>
+        <div class="g prob-card">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+            <div class="skel skel-circ" style="width:9px;height:9px;flex-shrink:0;"></div>
+            <div class="skel skel-t" style="width:90px;"></div>
+            <div class="skel skel-t-sm" style="width:28px;margin-left:auto;"></div>
+          </div>
+          <div class="skel skel-t-lg" style="width:82%;margin-bottom:7px;"></div>
+          <div class="skel skel-t-lg" style="width:58%;margin-bottom:12px;"></div>
+          <div class="skel" style="height:36px;border-radius:8px;margin-bottom:12px;"></div>
+          <div class="skel skel-t" style="width:100%;margin-bottom:5px;"></div>
+          <div class="skel skel-t" style="width:80%;margin-bottom:16px;"></div>
+          <div style="display:flex;justify-content:space-between;">
+            <div class="skel skel-t-sm" style="width:70px;"></div>
+            <div class="skel skel-t-sm" style="width:50px;border-radius:100px!important;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Problem list row skeleton -->
+      <div>
+        <div class="lbl">Problem list rows</div>
+        <div class="g" style="overflow:hidden;max-width:520px;">
+          <div class="prob-row" style="cursor:default;">
+            <div class="skel skel-circ" style="width:22px;height:22px;"></div>
+            <div class="skel skel-circ" style="width:9px;height:9px;flex-shrink:0;"></div>
+            <div class="skel skel-t" style="flex:1;"></div>
+            <div class="skel skel-t-sm" style="width:80px;"></div>
+            <div class="skel skel-t-sm" style="width:28px;"></div>
+            <div class="skel skel-t-sm" style="width:44px;border-radius:100px!important;"></div>
+          </div>
+          <div class="prob-row" style="cursor:default;">
+            <div class="skel skel-circ" style="width:22px;height:22px;"></div>
+            <div class="skel skel-circ" style="width:9px;height:9px;flex-shrink:0;"></div>
+            <div class="skel skel-t" style="flex:1;max-width:70%;"></div>
+            <div class="skel skel-t-sm" style="width:80px;"></div>
+            <div class="skel skel-t-sm" style="width:28px;"></div>
+            <div class="skel skel-t-sm" style="width:44px;border-radius:100px!important;"></div>
+          </div>
+          <div class="prob-row" style="cursor:default;">
+            <div class="skel skel-circ" style="width:22px;height:22px;"></div>
+            <div class="skel skel-circ" style="width:9px;height:9px;flex-shrink:0;"></div>
+            <div class="skel skel-t" style="flex:1;max-width:55%;"></div>
+            <div class="skel skel-t-sm" style="width:80px;"></div>
+            <div class="skel skel-t-sm" style="width:28px;"></div>
+            <div class="skel skel-t-sm" style="width:44px;border-radius:100px!important;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile skeleton -->
+      <div>
+        <div class="lbl">Profile card</div>
+        <div class="g" style="padding:28px;max-width:320px;">
+          <div style="display:flex;gap:14px;align-items:center;margin-bottom:20px;">
+            <div class="skel skel-circ" style="width:56px;height:56px;flex-shrink:0;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:7px;">
+              <div class="skel skel-t-lg" style="width:65%;"></div>
+              <div class="skel skel-t-sm" style="width:45%;"></div>
+              <div class="skel skel-t-sm" style="width:55%;border-radius:100px!important;"></div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div class="g" style="padding:16px;">
+              <div class="skel skel-t-lg" style="width:50%;margin-bottom:6px;"></div>
+              <div class="skel skel-t-sm" style="width:70%;"></div>
+            </div>
+            <div class="g" style="padding:16px;">
+              <div class="skel skel-t-lg" style="width:60%;margin-bottom:6px;"></div>
+              <div class="skel skel-t-sm" style="width:65%;"></div>
+            </div>
+            <div class="g" style="padding:16px;">
+              <div class="skel skel-t-lg" style="width:40%;margin-bottom:6px;"></div>
+              <div class="skel skel-t-sm" style="width:80%;"></div>
+            </div>
+            <div class="g" style="padding:16px;">
+              <div class="skel skel-t-lg" style="width:45%;margin-bottom:6px;"></div>
+              <div class="skel skel-t-sm" style="width:60%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Leaderboard skeleton -->
+      <div>
+        <div class="lbl">Leaderboard</div>
+        <div class="g lb-card" style="max-width:440px;">
+          <div style="padding:16px 22px;border-bottom:1px solid rgba(0,0,0,.05);display:flex;justify-content:space-between;">
+            <div class="skel skel-t-lg" style="width:120px;"></div>
+            <div style="display:flex;gap:6px;">
+              <div class="skel skel-btn" style="width:70px;height:28px;border-radius:100px!important;"></div>
+              <div class="skel skel-btn" style="width:70px;height:28px;border-radius:100px!important;"></div>
+            </div>
+          </div>
+          <div class="lb-row">
+            <div class="skel skel-circ" style="width:20px;height:20px;"></div>
+            <div class="skel skel-circ" style="width:32px;height:32px;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
+              <div class="skel skel-t" style="width:45%;"></div>
+              <div class="skel skel-t-sm" style="width:28%;"></div>
+            </div>
+            <div class="skel skel-t" style="width:44px;"></div>
+          </div>
+          <div class="lb-row">
+            <div class="skel skel-circ" style="width:20px;height:20px;"></div>
+            <div class="skel skel-circ" style="width:32px;height:32px;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
+              <div class="skel skel-t" style="width:38%;"></div>
+              <div class="skel skel-t-sm" style="width:22%;"></div>
+            </div>
+            <div class="skel skel-t" style="width:44px;"></div>
+          </div>
+          <div class="lb-row">
+            <div class="skel skel-circ" style="width:20px;height:20px;"></div>
+            <div class="skel skel-circ" style="width:32px;height:32px;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
+              <div class="skel skel-t" style="width:52%;"></div>
+              <div class="skel skel-t-sm" style="width:32%;"></div>
+            </div>
+            <div class="skel skel-t" style="width:44px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contest card skeleton -->
+      <div>
+        <div class="lbl">Contest card</div>
+        <div class="g contest-card">
+          <div class="skel skel-t-sm" style="width:80px;border-radius:100px!important;margin-bottom:16px;"></div>
+          <div class="skel skel-t-lg" style="width:72%;margin-bottom:8px;"></div>
+          <div class="skel skel-t-lg" style="width:52%;margin-bottom:16px;"></div>
+          <div class="skel skel-t" style="width:100%;margin-bottom:5px;"></div>
+          <div class="skel skel-t" style="width:88%;margin-bottom:22px;"></div>
+          <div style="display:flex;gap:20px;padding-top:16px;border-top:1px solid rgba(0,0,0,.05);">
+            <div style="display:flex;flex-direction:column;gap:5px;"><div class="skel skel-t-lg" style="width:36px;"></div><div class="skel skel-t-sm" style="width:55px;"></div></div>
+            <div style="display:flex;flex-direction:column;gap:5px;"><div class="skel skel-t-lg" style="width:28px;"></div><div class="skel skel-t-sm" style="width:50px;"></div></div>
+            <div style="display:flex;flex-direction:column;gap:5px;"><div class="skel skel-t-lg" style="width:32px;"></div><div class="skel skel-t-sm" style="width:45px;"></div></div>
+          </div>
+          <div class="skel skel-btn" style="width:100%;margin-top:18px;"></div>
+        </div>
+      </div>
+
+      <!-- Problem statement skeleton -->
+      <div>
+        <div class="lbl">Problem statement (full)</div>
+        <div class="g prob-statement" style="max-width:400px;">
+          <div style="display:flex;gap:8px;margin-bottom:20px;">
+            <div class="skel skel-t-sm" style="width:90px;border-radius:6px!important;"></div>
+            <div class="skel skel-t-sm" style="width:70px;border-radius:6px!important;"></div>
+            <div class="skel skel-t-sm" style="width:50px;border-radius:100px!important;margin-left:auto;"></div>
+          </div>
+          <div class="skel skel-t-lg" style="width:80%;margin-bottom:7px;"></div>
+          <div class="skel skel-t" style="width:60%;margin-bottom:20px;"></div>
+          <div class="skel skel-t" style="width:100%;margin-bottom:5px;"></div>
+          <div class="skel skel-t" style="width:100%;margin-bottom:5px;"></div>
+          <div class="skel skel-t" style="width:78%;margin-bottom:18px;"></div>
+          <div class="skel" style="height:64px;border-radius:var(--r);margin-bottom:18px;"></div>
+          <div class="skel skel-t" style="width:100%;margin-bottom:5px;"></div>
+          <div class="skel skel-t" style="width:88%;margin-bottom:5px;"></div>
+          <div class="skel skel-t" style="width:55%;"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       M. FORMS & AUTH
+  ══════════════════════════════════ -->
+  <div class="sec" id="forms">
+    <p class="sec-label">M - Forms · Auth · Inputs · Validation</p>
+    <div class="grid">
+
+      <div class="g form-card">
+        <div style="font-family:var(--ff-display);font-size:24px;margin-bottom:22px;">Sign In</div>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div class="input-group">
+            <label class="input-label">Username</label>
+            <input class="input" placeholder="archon_veridius" />
+          </div>
+          <div class="input-group">
+            <label class="input-label">Password</label>
+            <input class="input" type="password" placeholder="••••••••" />
+          </div>
+          <div class="input-group">
+            <label class="input-label">Email (error state)</label>
+            <input class="input input-err" value="bad-email@" />
+            <span class="input-hint err">Please enter a valid email address.</span>
+          </div>
+          <div class="input-group">
+            <label class="input-label">Username (success state)</label>
+            <input class="input input-ok" value="veridius" />
+            <span class="input-hint ok">Username available ✓</span>
+          </div>
+          <button class="btn btn-ink" style="width:100%;justify-content:center;margin-top:4px;">Sign In</button>
+          <div style="text-align:center;font-size:13px;font-weight:300;color:var(--ink4);">No account? <span style="color:var(--sage);cursor:pointer;text-decoration:underline;">Register</span></div>
+        </div>
+      </div>
+
+      <div class="g form-card">
+        <div style="font-family:var(--ff-display);font-size:24px;margin-bottom:22px;">Submit Answer</div>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <input class="input-math" placeholder="enter integer" />
+          <div style="font-family:var(--ff-mono);font-size:11px;color:var(--ink5);text-align:center;">Exact integer · no spaces or commas</div>
+          <div style="display:flex;gap:10px;">
+            <button class="btn btn-ink" style="flex:1;justify-content:center;">Submit</button>
+            <button class="btn btn-ghost btn-sm">Skip</button>
+          </div>
+          <div class="lbl" style="margin-top:4px;">States</div>
+          <input class="input-math" value="385" style="border-color:var(--sage);box-shadow:0 0 0 3px var(--sage-bg);" readonly />
+          <input class="input-math" value="999" style="border-color:var(--rose);box-shadow:0 0 0 3px var(--rose-bg);" readonly />
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       N. CONTEST CARDS
+  ══════════════════════════════════ -->
+  <div class="sec">
+    <p class="sec-label">N - Contest Cards · Browse · Register · Live</p>
+    <div class="grid">
+
+      <div class="g contest-card">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:14px;">
+          <div class="live-dot"></div>
+          <span style="font-family:var(--ff-mono);font-size:10px;letter-spacing:.12em;color:var(--rose);">LIVE NOW</span>
+        </div>
+        <div class="contest-title">Speed Drill: Number Theory</div>
+        <div class="contest-desc">6 number theory sprints. Divisors, modular arithmetic, perfect numbers. 47 contestants racing live.</div>
+        <div class="contest-stats">
+          <div style="display:flex;flex-direction:column;gap:3px;"><div class="cstat-val">47</div><div class="cstat-label">Live</div></div>
+          <div style="display:flex;flex-direction:column;gap:3px;"><div class="cstat-val">6</div><div class="cstat-label">Problems</div></div>
+          <div style="display:flex;flex-direction:column;gap:3px;"><div class="cstat-val">12<span style="font-size:14px;"> min</span></div><div class="cstat-label">Remaining</div></div>
+        </div>
+        <button class="btn btn-ink" style="width:100%;justify-content:center;margin-top:18px;">Join Live</button>
+      </div>
+
+      <div class="g contest-card">
+        <div style="margin-bottom:14px;"><span class="tag tag-amber">APR 18 · 48 DAYS</span></div>
+        <div class="contest-title">The Grand Reckoning</div>
+        <div class="contest-desc">Season II finale. Team contest, 4 problems, 60 minutes. The lore climax of the Jade City arc.</div>
+        <div class="contest-stats">
+          <div style="display:flex;flex-direction:column;gap:3px;"><div class="cstat-val">312</div><div class="cstat-label">Registered</div></div>
+          <div style="display:flex;flex-direction:column;gap:3px;"><div class="cstat-val">4</div><div class="cstat-label">Problems</div></div>
+          <div style="display:flex;flex-direction:column;gap:3px;"><div class="cstat-val">60<span style="font-size:14px;"> min</span></div><div class="cstat-label">Duration</div></div>
+        </div>
+        <button class="btn btn-sage" style="width:100%;justify-content:center;margin-top:18px;">Register Team</button>
+      </div>
+
+      <div class="g contest-card" style="opacity:.7;">
+        <div style="margin-bottom:14px;"><span class="tag">WEEKLY TRIAL · TOMORROW</span></div>
+        <div class="contest-title">The Weekly Trial</div>
+        <div class="contest-desc">5 mixed problems. All topics. 90 minutes. Rank points on the line.</div>
+        <div class="contest-stats">
+          <div style="display:flex;flex-direction:column;gap:3px;"><div class="cstat-val">-</div><div class="cstat-label">Registered</div></div>
+          <div style="display:flex;flex-direction:column;gap:3px;"><div class="cstat-val">5</div><div class="cstat-label">Problems</div></div>
+          <div style="display:flex;flex-direction:column;gap:3px;"><div class="cstat-val">90<span style="font-size:14px;"> min</span></div><div class="cstat-label">Duration</div></div>
+        </div>
+        <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:18px;">Remind Me</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       O. EMPTY STATES
+  ══════════════════════════════════ -->
+  <div class="sec">
+    <p class="sec-label">O - Empty States · Doodle Illustration Slots</p>
+    <div class="grid">
+      <div class="g" style="width:280px;"><div class="empty"><div class="empty-doodle"><p>✏ DOODLE</p></div><div class="empty-title">No problems yet</div><div class="empty-body">Problems will appear here when the contest begins.</div><button class="btn btn-ghost btn-sm" style="margin-top:4px;">Browse Vault</button></div></div>
+      <div class="g" style="width:280px;"><div class="empty"><div class="empty-doodle"><p>✏ DOODLE</p></div><div class="empty-title">No submissions</div><div class="empty-body">Solve a problem to see your history here.</div><button class="btn btn-ink btn-sm" style="margin-top:4px;">Go to Problems</button></div></div>
+      <div class="g" style="width:280px;"><div class="empty"><div class="empty-doodle"><p>✏ DOODLE</p></div><div class="empty-title">No live contests</div><div class="empty-body">The Weekly Trial starts tomorrow at 7pm.</div><button class="btn btn-ghost btn-sm" style="margin-top:4px;">View Schedule</button></div></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       P. MODALS
+  ══════════════════════════════════ -->
+  <div class="sec">
+    <p class="sec-label">P - Modals · Confirm · Lore · Warning</p>
+    <div class="grid">
+      <div class="modal-bg">
+        <div class="g-strong modal">
+          <div class="modal-title">Submit this answer?</div>
+          <div class="modal-body">You're about to submit <strong>385</strong> for "Doors of the Enchanted Forest." You have 1 attempt remaining after this.</div>
+          <div class="modal-actions">
+            <button class="btn btn-ghost btn-sm">Cancel</button>
+            <button class="btn btn-ink btn-sm">Submit</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-bg">
+        <div class="g-strong modal">
+          <div style="font-size:28px;margin-bottom:12px;animation:gentle-float 3s ease-in-out infinite;">🜃</div>
+          <div style="font-family:var(--ff-mono);font-size:9px;letter-spacing:.2em;color:var(--sage);margin-bottom:8px;">LORE UNLOCKED</div>
+          <div class="modal-title">The Forest Yields</div>
+          <div class="modal-body" style="font-style:italic;">"The enchanted portals reveal the perfect path - only those who see square numbers in every door may pass."</div>
+          <div style="font-family:var(--ff-mono);font-size:26px;color:var(--amber);margin-bottom:18px;">+160 XP</div>
+          <div class="modal-actions">
+            <button class="btn btn-ghost btn-sm">Back</button>
+            <button class="btn btn-ink btn-sm">Next Problem →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       Q. RICH MATH EXAMPLES (Real Problems)
+  ══════════════════════════════════ -->
+  <div class="sec" id="rich-math">
+    <p class="sec-label">Q - Rich Math Rendering · KaTeX · Real Contest Problems from Jade City</p>
+    <div class="grid">
+
+      <!-- Problem 4: Doors -->
+      <div class="g rich-prob">
+        <div class="rp-eyebrow">
+          <span class="rp-num">#004 · JADE CITY</span>
+          <div class="diff-dot diff-m"></div>
+          <span class="tag tag-amber">Number Theory</span>
+        </div>
+        <div class="rp-title">Doors of the Enchanted Forest</div>
+        <div class="rp-story">"You encounter an enchanted forest. 100 doors stand before you, sealed by the demon's magic."</div>
+        <div class="rp-body">
+          There are 100 doors numbered $1$ to $100$. All are closed initially. In round $i$, for $1 \le i \le 100$, you toggle every $i^{\text{th}}$ door. A door is <strong>safe</strong> if open at the end. Find the sum of indices of all safe doors.
+        </div>
+        <div class="rp-math">
+          $$\sum_{\substack{d=1 \\ \tau(d) \text{ odd}}}^{100} d = \sum_{k=1}^{10} k^2 = \frac{10 \cdot 11 \cdot 21}{6} = 385$$
+        </div>
+        <div class="rp-note">Note: $\tau(d)$ denotes the number of positive divisors of $d$. Only perfect squares have $\tau(d)$ odd.</div>
+      </div>
+
+      <!-- Problem 5: Circumcircle geometry -->
+      <div class="g rich-prob">
+        <div class="rp-eyebrow">
+          <span class="rp-num">#005 · JADE CITY</span>
+          <div class="diff-dot diff-h"></div>
+          <span class="tag tag-rose">Geometry</span>
+        </div>
+        <div class="rp-title">The Double Death Ritual</div>
+        <div class="rp-story">"You and your friends must stand at precise positions to cast the "Double Death" spell and defeat the demon."</div>
+        <div class="rp-body">
+          Let $M$ be the center of circumcircle $(P_2P_3P_4)$ with radius $10$. Given $P_2P_3 = P_4P_3$ and $\angle P_2P_3P_4 = 90°$. Let $P_1$ be the center of a circle tangent to line $P_2P_4$ at $A$ and internally tangent to $(P_2P_3P_4)$ at $B$. Given $P_3A = 13$, find $AB = \tfrac{a}{b}$ in lowest terms, and compute $a + b$.
+        </div>
+        <div class="rp-math">
+          $$\triangle BP_3P_4 \sim \triangle P_4P_3A \implies \frac{BP_3}{P_3P_4} = \frac{P_4P_3}{P_3A}$$
+          $$AB = \frac{P_3P_4^2}{P_3A} - P_3A = \frac{(20/\sqrt{2})^2}{13} - 13 = \frac{200}{13} - 13 = \frac{31}{13}$$
+          $$a + b = 31 + 13 = \boxed{44}$$
+        </div>
+        <div class="rp-note">The answer 44 = "double death" (四四) in Chinese - the title's hidden meaning.</div>
+      </div>
+
+      <!-- Extra: Hard combinatorics -->
+      <div class="g rich-prob">
+        <div class="rp-eyebrow">
+          <span class="rp-num">#003 · JADE CITY</span>
+          <div class="diff-dot diff-m"></div>
+          <span class="tag tag-slate">Combinatorics / DP</span>
+        </div>
+        <div class="rp-title">The Carriage Fee Distribution</div>
+        <div class="rp-story">"Four demon hunters, each with one $1, $2, and $3 coin - how many ways to split the $8 carriage fee?"</div>
+        <div class="rp-body">
+          Four players each choose a coin from $\{1, 2, 3\}$. How many ordered tuples $(p_1, p_2, p_3, p_4)$ satisfy $p_1 + p_2 + p_3 + p_4 = 8$?
+        </div>
+        <div class="rp-math">
+          $$\text{Let } dp_{i,j} = \#\text{ways first }i\text{ players sum to }j$$
+          $$dp_{i,j} = dp_{i-1,j-1} + dp_{i-1,j-2} + dp_{i-1,j-3}$$
+          $$dp_{4,8} = dp_{3,7} + dp_{3,6} + dp_{3,5} = 6 + 7 + 6 = \boxed{19}$$
+        </div>
+        <div class="rp-note">3 + 8 + 5 = 16 = 4². The number 4 (death) appears again in the answer structure.</div>
+      </div>
+
+      <!-- Bonus: Algebra problem example -->
+      <div class="g rich-prob">
+        <div class="rp-eyebrow">
+          <span class="rp-num">BONUS · PRACTICE</span>
+          <div class="diff-dot diff-h"></div>
+          <span class="tag tag-amber">Algebra</span>
+        </div>
+        <div class="rp-title">The Scribe's Polynomial</div>
+        <div class="rp-story">"A scribe encoded a message in the roots of a polynomial. Decode the number of real roots to read the message."</div>
+        <div class="rp-body">
+          Let $f(x) = x^2 + bx + c$ where $b, c \in \mathbb{Z}$. Find the number of integer pairs $(b, c)$ such that $f(f(x)) = 0$ has exactly <strong>3 distinct real roots</strong>.
+        </div>
+        <div class="rp-math">
+          $$f(f(x)) = 0 \implies f(x) = r_1 \text{ or } f(x) = r_2$$
+          \text{where } r_1, r_2 \text{ are roots of } f.
+          $$\text{For exactly 3 real roots: one } f(x)=r_i \text{ has a double root}$$
+          $$\Rightarrow \Delta = b^2 - 4c = 0 \text{ and } r_1 = r_2 \text{ (one real root of } f)$$
+        </div>
+        <div class="rp-note">This is an AMC/AIME level problem. The complete solution uses Vieta's formulas + discriminant analysis.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       R. MISC COMPONENTS
+  ══════════════════════════════════ -->
+  <div class="sec" id="misc">
+    <p class="sec-label">R - Misc · Buttons All States · Color Palette · Doodle Guide</p>
+
+    <div class="grid">
+
+      <!-- All buttons -->
+      <div class="g" style="padding:28px;max-width:680px;">
+        <div class="lbl" style="margin-bottom:12px;">All button variants</div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px;">
+          <button class="btn btn-ink">Submit Answer</button>
+          <button class="btn btn-glass">View Hints</button>
+          <button class="btn btn-sage">Join Contest</button>
+          <button class="btn btn-ghost">Cancel</button>
+          <button class="btn btn-danger">Report</button>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:18px;">
+          <button class="btn btn-ink btn-xs">Tiny</button>
+          <button class="btn btn-ink btn-sm">Small</button>
+          <button class="btn btn-ink">Default</button>
+          <button class="btn btn-ink btn-lg">Large</button>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px;">
+          <button class="btn btn-ink btn-loading"><div class="spin"></div> Checking…</button>
+          <button class="btn btn-glass btn-loading"><div class="spin spin-dk"></div> Saving…</button>
+          <button class="btn btn-sage btn-loading"><div class="spin"></div> Joining…</button>
+          <button class="btn btn-ink" id="flash-btn" onclick="flashOptimistic()">✓ Optimistic Flash</button>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <div class="btn-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+          <div class="btn-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+          <div class="btn-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+          <div class="btn-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+        </div>
+      </div>
+
+      <!-- Color palette -->
+      <div class="g" style="padding:28px;">
+        <div class="lbl" style="margin-bottom:14px;">Color palette</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <div style="text-align:center;"><div style="width:48px;height:48px;border-radius:10px;background:#eeeae3;border:1px solid rgba(0,0,0,.1);"></div><div style="font-family:var(--ff-mono);font-size:9px;color:var(--ink5);margin-top:4px;">--bg</div></div>
+          <div style="text-align:center;"><div style="width:48px;height:48px;border-radius:10px;background:#18160f;"></div><div style="font-family:var(--ff-mono);font-size:9px;color:var(--ink5);margin-top:4px;">--ink</div></div>
+          <div style="text-align:center;"><div style="width:48px;height:48px;border-radius:10px;background:#6b9478;"></div><div style="font-family:var(--ff-mono);font-size:9px;color:var(--ink5);margin-top:4px;">--sage</div></div>
+          <div style="text-align:center;"><div style="width:48px;height:48px;border-radius:10px;background:#b8604e;"></div><div style="font-family:var(--ff-mono);font-size:9px;color:var(--ink5);margin-top:4px;">--rose</div></div>
+          <div style="text-align:center;"><div style="width:48px;height:48px;border-radius:10px;background:#b8853a;"></div><div style="font-family:var(--ff-mono);font-size:9px;color:var(--ink5);margin-top:4px;">--amber</div></div>
+          <div style="text-align:center;"><div style="width:48px;height:48px;border-radius:10px;background:#5878a0;"></div><div style="font-family:var(--ff-mono);font-size:9px;color:var(--ink5);margin-top:4px;">--slate</div></div>
+          <div style="text-align:center;"><div style="width:48px;height:48px;border-radius:10px;background:#7b6aab;"></div><div style="font-family:var(--ff-mono);font-size:9px;color:var(--ink5);margin-top:4px;">--violet</div></div>
+        </div>
+        <div style="margin-top:18px;">
+          <div class="lbl" style="margin-bottom:10px;">Glass layers</div>
+          <div style="display:flex;gap:8px;">
+            <div style="text-align:center;"><div style="width:70px;height:36px;border-radius:8px;background:rgba(255,255,255,.68);border:1px solid rgba(255,255,255,.52);"></div><div style="font-family:var(--ff-mono);font-size:9px;color:var(--ink5);margin-top:4px;">68% · base</div></div>
+            <div style="text-align:center;"><div style="width:70px;height:36px;border-radius:8px;background:rgba(255,255,255,.82);border:1px solid rgba(255,255,255,.65);"></div><div style="font-family:var(--ff-mono);font-size:9px;color:var(--ink5);margin-top:4px;">82% · hover</div></div>
+            <div style="text-align:center;"><div style="width:70px;height:36px;border-radius:8px;background:rgba(255,255,255,.90);border:1px solid rgba(255,255,255,.78);"></div><div style="font-family:var(--ff-mono);font-size:9px;color:var(--ink5);margin-top:4px;">90% · modal</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Doodle guide -->
+      <div style="padding:20px 24px;max-width:520px;border-radius:var(--r-lg);border:1px dashed rgba(184,96,78,.3);background:rgba(184,96,78,.03);">
+        <div style="font-family:var(--ff-mono);font-size:9px;letter-spacing:.16em;color:var(--rose);margin-bottom:12px;">✏ DOODLE INTEGRATION GUIDE</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div><div class="lbl" style="margin-bottom:5px;">Light themes (default)</div><div style="font-size:13px;font-weight:300;color:var(--ink3);line-height:1.6;">SVG, transparent bg<br>mix-blend: multiply<br>opacity: 0.10–0.22<br>dark ink strokes</div></div>
+          <div><div class="lbl" style="margin-bottom:5px;">Dark themes (Jade/Mystery)</div><div style="font-size:13px;font-weight:300;color:var(--ink3);line-height:1.6;">SVG or PNG<br>mix-blend: screen<br>opacity: 0.06–0.18<br>white/light strokes</div></div>
+          <div><div class="lbl" style="margin-bottom:5px;">Best placements</div><div style="font-size:13px;font-weight:300;color:var(--ink3);line-height:1.6;">Corner flourishes<br>Background textures<br>Empty state art<br>Blog cover images<br>Problem diagrams</div></div>
+          <div><div class="lbl" style="margin-bottom:5px;">Next.js</div><div style="font-size:13px;font-weight:300;color:var(--ink3);line-height:1.6;">/public/doodles/<br>next/image fill prop<br>aria-hidden="true"<br>pointer-events:none</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /wrap -->
+
+<script>
+// Countdown seconds
+let s=47,s2=18,cds=42,s3=47;
+setInterval(()=>{
+  s=(s-1+60)%60;s2=(s2-1+60)%60;cds=(cds-1+60)%60;s3=(s3-1+60)%60;
+  const e=document.getElementById('s1');if(e)e.textContent=String(s).padStart(2,'0');
+  const e2=document.getElementById('s2');if(e2)e2.textContent=String(s2).padStart(2,'0');
+  const e3=document.getElementById('cd-s');if(e3)e3.textContent=String(cds).padStart(2,'0');
+  const e4=document.getElementById('s3');if(e4)e4.textContent=String(s3).padStart(2,'0');
+},1000);
+
+// Answer check for problem view demo
+function checkAnswer(){
+  const v=document.getElementById('main-ans').value.trim();
+  const w=document.getElementById('verdict-wrap');
+  const c=document.getElementById('verdict-card');
+  const ic=document.getElementById('verdict-icon');
+  const tt=document.getElementById('verdict-title');
+  const ts=document.getElementById('verdict-sub');
+  const inp=document.getElementById('main-ans');
+  w.style.display='block';
+  if(v==='385'){
+    inp.classList.add('correct');inp.classList.remove('wrong');
+    c.style.background='var(--sage-bg)';c.style.border='1px solid var(--sage-border)';
+    ic.style.background='var(--sage)';ic.style.color='white';ic.textContent='✓';
+    tt.style.color='var(--sage)';tt.textContent='Correct! Answer: 385';
+    ts.textContent='+160 XP · Lore fragment unlocked';
+  } else if(v){
+    inp.classList.add('wrong');inp.classList.remove('correct');
+    c.style.background='var(--rose-bg)';c.style.border='1px solid var(--rose-border)';
+    ic.style.background='var(--rose)';ic.style.color='white';ic.textContent='✕';
+    tt.style.color='var(--rose)';tt.textContent='Incorrect';
+    ts.textContent='Hint: think about which doors have an odd number of divisors.';
+    setTimeout(()=>{inp.classList.remove('wrong');},1200);
+  }
+}
+document.getElementById('main-ans').addEventListener('keydown',e=>{if(e.key==='Enter')checkAnswer();});
+
+// Optimistic demo
+function demoOptimistic(){
+  const btn=document.getElementById('opt-btn');
+  const state=document.getElementById('opt-state');
+  state.style.display='block';
+  btn.innerHTML='<div class="spin"></div> Submitting…';
+  btn.style.opacity='.7';btn.style.pointerEvents='none';
+  state.textContent='→ Instant: optimistic verdict shown to user';state.style.color='var(--amber)';
+  setTimeout(()=>{
+    state.textContent='→ Server confirmed: XP added, lore unlocked';state.style.color='var(--sage)';
+    btn.innerHTML='✓ Submitted';btn.style.opacity='1';
+  },1200);
+  setTimeout(()=>{
+    btn.innerHTML='Demo Submit Flow';btn.style.pointerEvents='auto';
+    state.style.display='none';
+  },3500);
+}
+
+// Optimistic flash button
+function flashOptimistic(){
+  const b=document.getElementById('flash-btn');
+  b.style.background='var(--sage)';b.style.transform='scale(1.03)';
+  setTimeout(()=>{b.style.background='';b.style.transform='';},500);
+}
+</script>
+
+</body>
+</html>

@@ -76,78 +76,147 @@ export default async function StandingsPage(props: { params: Promise<{ id: strin
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <h1 className="text-3xl font-bold">Standings: {contest.title}</h1>
-                <Link href={`/contests/${contest.id}`} className="btn btn-outline">Back to Contest</Link>
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: '1200px', margin: '0 auto', padding: '48px 1.75rem 80px' }}>
+
+            {/* Page header */}
+            <div className="fade-in" style={{ marginBottom: '36px' }}>
+                <Link href={`/contests/${contest.id}`} className="btn btn-ghost btn-sm" style={{ marginBottom: '20px' }}>
+                    ← Back to Contest
+                </Link>
+                <p className="sec-label" style={{ marginTop: '20px' }}>CONTEST STANDINGS</p>
+                <h1 style={{
+                    fontFamily: 'var(--ff-display)', fontStyle: 'italic',
+                    fontSize: 'clamp(26px,3.5vw,40px)', fontWeight: 400, color: 'var(--ink)',
+                    lineHeight: 1.15, letterSpacing: '-0.01em', marginTop: '8px',
+                }}>
+                    {contest.title}
+                </h1>
             </div>
 
-            <div className="card overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead className="bg-muted/50">
-                            <tr className="border-b">
-                                <th className="p-3 pl-4">Rank</th>
-                                <th className="p-3">User</th>
-                                <th className="p-3 font-bold">Total Score</th>
-                                {contest.problems.map((p: any, i: number) => (
-                                    <th key={p.id} className="p-3 text-center min-w-[80px]">
-                                        <div className="text-xs uppercase text-muted-foreground">Problem</div>
-                                        #{i + 1}
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {standings.map((row: any, i: number) => (
-                                <tr key={row.user.id} className="border-b hover:bg-muted/30 transition-colors">
-                                    <td className="p-3 pl-4 font-bold text-muted-foreground">#{i + 1}</td>
-                                    <td className="p-3 font-medium">
-                                        <Link href={`/user/${row.user.username}`} className="hover:text-primary hover:underline">
+            {/* Standings table */}
+            {standings.length === 0 ? (
+                <div className="g fade-in-d">
+                    <div className="empty">
+                        <div className="empty-title">No participants yet</div>
+                        <div className="empty-body">Standings will appear once users register and make submissions.</div>
+                    </div>
+                </div>
+            ) : (
+                <div className="g fade-in-d" style={{ overflow: 'auto', padding: 0 }}>
+
+                    {/* Column headers */}
+                    <div style={{
+                        display: 'grid',
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        gridTemplateColumns: `48px 1fr 88px${contest.problems.map((_: any) => ' 76px').join('')}`,
+                        padding: '10px 20px',
+                        borderBottom: '1px solid rgba(0,0,0,0.07)',
+                        fontFamily: 'var(--ff-mono)', fontSize: '9px', letterSpacing: '0.14em',
+                        color: 'var(--ink5)', textTransform: 'uppercase',
+                        background: 'rgba(0,0,0,0.02)',
+                    }}>
+                        <span>#</span>
+                        <span>SOLVER</span>
+                        <span style={{ textAlign: 'right', paddingRight: '6px' }}>SCORE</span>
+                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                        {contest.problems.map((_: any, i: number) => (
+                            <span key={i} style={{ textAlign: 'center' }}>P{i + 1}</span>
+                        ))}
+                    </div>
+
+                    {/* Data rows */}
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                    {standings.map((row: any, i: number) => {
+                        const rank = i + 1;
+                        const rankColor =
+                            rank === 1 ? '#b87a28' :
+                            rank === 2 ? '#7a90a8' :
+                            rank === 3 ? '#a06848' : 'var(--ink4)';
+                        const initials = (row.user.username as string).slice(0, 2).toUpperCase();
+
+                        return (
+                            <div
+                                key={row.user.id}
+                                className="lb-row"
+                                style={{
+                                    display: 'grid',
+                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                    gridTemplateColumns: `48px 1fr 88px${contest.problems.map((_: any) => ' 76px').join('')}`,
+                                    padding: '11px 20px',
+                                    borderBottom: '1px solid rgba(0,0,0,0.04)',
+                                    alignItems: 'center',
+                                    animation: `fade-in 0.4s ${i * 0.03}s both`,
+                                }}
+                            >
+                                {/* Rank */}
+                                <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '13px', fontWeight: 500, color: rankColor }}>
+                                    #{rank}
+                                </span>
+
+                                {/* User */}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <div className="avatar avatar-sm" style={{
+                                        background: rank <= 3 ? 'rgba(184,133,58,0.12)' : 'rgba(107,148,120,0.10)',
+                                        flexShrink: 0,
+                                    }}>
+                                        {initials}
+                                    </div>
+                                    <div>
+                                        <Link href={`/user/${row.user.username}`} className="lb-name" style={{ textDecoration: 'none' }}>
                                             {row.user.username}
                                         </Link>
-                                        <div className="text-xs text-muted-foreground">{row.user.rating} Rating</div>
-                                    </td>
-                                    <td className="p-3 font-bold text-xl text-primary">{Math.round(row.score)}</td>
-                                    {contest.problems.map((p: any) => {
-                                        const pStat = row.problems[p.id];
-                                        if (!pStat) return <td key={p.id} className="p-3 text-center text-muted-foreground">-</td>;
+                                        <div className="lb-sub-info">{row.user.rating} rating</div>
+                                    </div>
+                                </div>
 
-                                        if (pStat.solved) return (
-                                            <td key={p.id} className="p-3 text-center">
-                                                <div className="font-bold text-green-600">+{Math.round(pStat.earned)}</div>
-                                                {pStat.attempts > 1 && (
-                                                    <div className="text-xs text-red-500">(-{pStat.attempts - 1})</div>
-                                                )}
-                                                {pStat.solveTime && (
-                                                    <div className="text-xs text-muted-foreground mt-1">
-                                                        {formatSolveTime(pStat.solveTime)}
-                                                    </div>
-                                                )}
-                                            </td>
-                                        );
+                                {/* Total score */}
+                                <span style={{
+                                    fontFamily: 'var(--ff-display)', fontStyle: 'italic',
+                                    fontSize: '20px', color: 'var(--ink)',
+                                    textAlign: 'right', paddingRight: '6px',
+                                }}>
+                                    {Math.round(row.score)}
+                                </span>
 
-                                        return (
-                                            <td key={p.id} className="p-3 text-center">
-                                                <div className="text-red-500 font-medium">
-                                                    -{pStat.attempts * 10}
+                                {/* Per-problem cells */}
+                                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                                {contest.problems.map((p: any) => {
+                                    const pStat = row.problems[p.id];
+
+                                    if (!pStat) return (
+                                        <span key={p.id} style={{ textAlign: 'center', fontFamily: 'var(--ff-mono)', fontSize: '12px', color: 'var(--ink5)' }}>-</span>
+                                    );
+
+                                    if (pStat.solved) return (
+                                        <div key={p.id} style={{ textAlign: 'center' }}>
+                                            <div style={{ fontFamily: 'var(--ff-mono)', fontSize: '12px', fontWeight: 600, color: 'var(--sage)' }}>
+                                                +{Math.round(pStat.earned)}
+                                            </div>
+                                            {pStat.attempts > 1 && (
+                                                <div style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', color: 'var(--rose)' }}>
+                                                    {pStat.attempts - 1}✗
                                                 </div>
-                                            </td>
-                                        );
-                                    })}
-                                </tr>
-                            ))}
-                            {standings.length === 0 && (
-                                <tr>
-                                    <td colSpan={3 + contest.problems.length} className="p-8 text-center text-muted-foreground">
-                                        No registered users yet.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+                                            )}
+                                            {pStat.solveTime && (
+                                                <div style={{ fontFamily: 'var(--ff-mono)', fontSize: '9px', color: 'var(--ink5)', marginTop: '1px' }}>
+                                                    {formatSolveTime(pStat.solveTime)}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+
+                                    return (
+                                        <div key={p.id} style={{ textAlign: 'center', fontFamily: 'var(--ff-mono)', fontSize: '12px', color: 'var(--rose)' }}>
+                                            −{pStat.attempts * 10}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        );
+                    })}
                 </div>
-            </div>
+            )}
+
         </div>
     )
 }

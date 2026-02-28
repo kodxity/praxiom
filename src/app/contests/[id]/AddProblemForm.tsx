@@ -34,13 +34,13 @@ export function AddProblemForm({ contestId }: { contestId: string }) {
     }
 
     return (
-        <form ref={formRef} onSubmit={onSubmit} className="space-y-3 p-4 border rounded-lg bg-card">
+        <form ref={formRef} onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <input name="title" placeholder="Problem Title" required className="input" />
-            <textarea name="statement" placeholder="Problem Statement" required className="input" rows={3} />
+            <textarea name="statement" placeholder="Problem Statement" required className="input" rows={4} style={{ resize: 'vertical' }} />
             <input name="correctAnswer" placeholder="Correct Answer" required className="input" />
-            <div className="flex items-center gap-2">
-                <input name="points" type="number" placeholder="Points" defaultValue={100} required className="input w-24" />
-                <button className="btn btn-primary flex-1">Add Problem</button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <input name="points" type="number" placeholder="Points" defaultValue={100} required className="input" style={{ width: '100px' }} />
+                <button className="btn btn-sage" style={{ flex: 1 }}>Add Problem</button>
             </div>
         </form>
     )

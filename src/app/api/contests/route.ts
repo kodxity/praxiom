@@ -9,7 +9,7 @@ export async function POST(req: Request) {
         return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const { title, description, startTime, endTime } = await req.json();
+    const { title, description, startTime, endTime, themeSlug, accentColor } = await req.json();
 
     const contest = await prisma.contest.create({
         data: {
@@ -17,7 +17,9 @@ export async function POST(req: Request) {
             description,
             startTime: new Date(startTime),
             endTime: new Date(endTime),
-            status: 'SCHEDULED' // Default
+            status: 'SCHEDULED',
+            themeSlug: themeSlug || 'global',
+            accentColor: accentColor || null,
         }
     });
 

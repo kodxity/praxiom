@@ -20,8 +20,18 @@ model User {
   submissions   Submission[]
   posts         BlogPost[]
   comments      Comment[]
+  votes         Vote[]
   ratingHistory RatingHistory[]
   registrations Registration[]
+}
+
+model Theme {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String
+  config    Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Registration {
@@ -43,6 +53,8 @@ model Contest {
   startTime   DateTime
   endTime     DateTime
   status      String   @default("SCHEDULED") // SCHEDULED, ACTIVE, ENDED
+  themeSlug   String   @default("global")
+  accentColor String?  // optional hex to override theme accent
 
   problems      Problem[]
   submissions   Submission[]
@@ -77,14 +89,16 @@ model Submission {
 }
 
 model BlogPost {
-  id        String    @id @default(cuid())
-  title     String
-  content   String
-  authorId  String
-  createdAt DateTime  @default(now())
+  id             String    @id @default(cuid())
+  title          String
+  content        String
+  authorId       String
+  isAnnouncement Boolean   @default(false)
+  createdAt      DateTime  @default(now())
 
   author   User      @relation(fields: [authorId], references: [id])
   comments Comment[]
+  votes    Vote[]
 }
 
 model Comment {
@@ -96,6 +110,19 @@ model Comment {
 
   post   BlogPost @relation(fields: [postId], references: [id])
   author User     @relation(fields: [authorId], references: [id])
+}
+
+model Vote {
+  id        String   @id @default(cuid())
+  type      String   // "UP" or "DOWN"
+  userId    String
+  postId    String
+  createdAt DateTime @default(now())
+
+  user User     @relation(fields: [userId], references: [id])
+  post BlogPost @relation(fields: [postId], references: [id])
+
+  @@unique([userId, postId])
 }
 
 model RatingHistory {

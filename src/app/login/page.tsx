@@ -1,29 +1,30 @@
-'use client';
+﻿'use client';
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { signIn } from 'next-auth/react';
+import { LogIn, AlertCircle, CheckCircle } from 'lucide-react';
 
 function LoginForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
     const registered = searchParams.get('registered');
 
     async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
+        setLoading(true);
+        setError('');
         const formData = new FormData(e.currentTarget);
         const username = formData.get('username') as string;
         const password = formData.get('password') as string;
 
-        const res = await signIn('credentials', {
-            username,
-            password,
-            redirect: false
-        });
+        const res = await signIn('credentials', { username, password, redirect: false });
 
         if (res?.error) {
-            setError(res.error);
+            setError('Invalid username or password.');
+            setLoading(false);
         } else {
             router.push('/');
             router.refresh();
@@ -31,27 +32,80 @@ function LoginForm() {
     }
 
     return (
-        <div className="max-w-md mx-auto mt-20 p-6 border rounded-lg shadow-sm bg-card">
-            <h1 className="text-2xl font-bold mb-6 text-center">Log In</h1>
-            {registered && (
-                <div className="p-3 mb-4 text-sm text-green-600 bg-green-50 rounded">
-                    Account created! Please wait for admin approval before logging in.
+        <div style={{ position: 'relative', zIndex: 1, minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1.75rem' }}>
+            <div className="g scale-in" style={{ width: '100%', maxWidth: '420px', padding: '40px 40px' }}>
+
+                {/* Wordmark */}
+                <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+                    <Link href="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'baseline', gap: '0' }}>
+                        <span style={{ fontFamily: 'var(--ff-display)', fontSize: '20px', fontStyle: 'italic', color: 'var(--sage)', marginRight: '3px' }}>Σ</span>
+                        <span style={{ fontFamily: 'var(--ff-display)', fontSize: '22px', fontWeight: 400, color: 'var(--ink)' }}>Praxi</span>
+                        <em style={{ fontFamily: 'var(--ff-display)', fontSize: '22px', fontStyle: 'italic', color: 'var(--sage)' }}>s</em>
+                    </Link>
+                    <h1 style={{ fontFamily: 'var(--ff-display)', fontSize: '28px', fontWeight: 400, color: 'var(--ink)', marginTop: '20px', marginBottom: '6px', lineHeight: 1.1 }}>
+                        Welcome back
+                    </h1>
+                    <p style={{ fontSize: '14px', color: 'var(--ink4)', fontWeight: 300 }}>Sign in to your account</p>
                 </div>
-            )}
-            {error && <div className="p-3 mb-4 text-sm text-red-500 bg-red-50 rounded">{error}</div>}
-            <form onSubmit={onSubmit} className="space-y-4">
-                <div>
-                    <label className="block text-sm font-medium mb-1">Username</label>
-                    <input name="username" required className="input" />
-                </div>
-                <div>
-                    <label className="block text-sm font-medium mb-1">Password</label>
-                    <input name="password" type="password" required className="input" />
-                </div>
-                <button type="submit" className="w-full btn btn-primary">Log In</button>
-            </form>
-            <div className="mt-4 text-center text-sm">
-                Don&apos;t have an account? <Link href="/register" className="text-primary hover:underline">Sign up</Link>
+
+                {registered && (
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', padding: '12px 14px', background: 'var(--sage-bg)', border: '1px solid var(--sage-border)', borderRadius: 'var(--r)', marginBottom: '20px' }}>
+                        <CheckCircle size={15} style={{ color: 'var(--sage)', flexShrink: 0, marginTop: '1px' }} />
+                        <span style={{ fontSize: '13px', color: 'var(--sage)', lineHeight: 1.5 }}>
+                            Account created. Please wait for admin approval before logging in.
+                        </span>
+                    </div>
+                )}
+
+                {error && (
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', padding: '12px 14px', background: 'var(--rose-bg)', border: '1px solid var(--rose-border)', borderRadius: 'var(--r)', marginBottom: '20px' }}>
+                        <AlertCircle size={15} style={{ color: 'var(--rose)', flexShrink: 0, marginTop: '1px' }} />
+                        <span style={{ fontSize: '13px', color: 'var(--rose)', lineHeight: 1.5 }}>{error}</span>
+                    </div>
+                )}
+
+                <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <label style={{ fontFamily: 'var(--ff-ui)', fontSize: '12px', fontWeight: 600, letterSpacing: '0.06em', color: 'var(--ink3)', textTransform: 'uppercase' }}>
+                            Username
+                        </label>
+                        <input name="username" required autoComplete="username" className="input" placeholder="your_handle" />
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <label style={{ fontFamily: 'var(--ff-ui)', fontSize: '12px', fontWeight: 600, letterSpacing: '0.06em', color: 'var(--ink3)', textTransform: 'uppercase' }}>
+                            Password
+                        </label>
+                        <input name="password" type="password" required autoComplete="current-password" className="input" placeholder="" />
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="btn btn-ink"
+                        style={{ width: '100%', justifyContent: 'center', marginTop: '6px', display: 'flex', gap: '8px', opacity: loading ? 0.7 : 1 }}
+                    >
+                        {loading ? (
+                            <>
+                                <span className="spin" style={{ width: '14px', height: '14px', borderWidth: '2px', borderColor: 'rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', display: 'inline-block' }} />
+                                Signing in
+                            </>
+                        ) : (
+                            <>
+                                <LogIn size={15} />
+                                Sign in
+                            </>
+                        )}
+                    </button>
+                </form>
+
+                <p style={{ textAlign: 'center', marginTop: '24px', fontSize: '13px', color: 'var(--ink4)' }}>
+                    No account yet?{' '}
+                    <Link href="/register" style={{ color: 'var(--sage)', fontWeight: 500, textDecoration: 'none' }}>
+                        Sign up free
+                    </Link>
+                </p>
+
             </div>
         </div>
     );
@@ -59,7 +113,7 @@ function LoginForm() {
 
 export default function LoginPage() {
     return (
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<div style={{ minHeight: '80vh' }} />}>
             <LoginForm />
         </Suspense>
     );
