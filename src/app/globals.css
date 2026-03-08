@@ -440,10 +440,12 @@ next-dev-overlay { cursor: none !important; }
 .cstat-label { font-family: var(--ff-mono); font-size: 9px; letter-spacing: 0.12em; color: var(--ink5); text-transform: uppercase; }
 
 /* ─── Problem rows (Section B) ─── */
-.prob-row { display: flex; align-items: center; gap: 14px; padding: 14px 20px; border-bottom: 1px solid rgba(0,0,0,0.05); transition: background 0.15s; cursor: pointer; }
-.prob-row:hover { background: rgba(255,255,255,0.35); }
+.prob-row { display: flex; align-items: center; gap: 14px; padding: 14px 20px; border-bottom: 1px solid rgba(0,0,0,0.05); transition: background 0.15s, box-shadow 0.15s; cursor: pointer; }
+.prob-row:hover { background: rgba(107,148,120,0.04); box-shadow: inset 3px 0 0 var(--sage); }
 .prob-row:last-child { border-bottom: none; }
 .prob-row.solved .prob-title { color: var(--ink4); }
+@keyframes live-ping { 0% { transform: scale(1); opacity: 0.8; } 75%,100% { transform: scale(2.2); opacity: 0; } }
+.live-ping { position: absolute; inset: 0; border-radius: 50%; background: var(--sage); animation: live-ping 1.4s cubic-bezier(0,0,0.2,1) infinite; }
 .prob-num   { font-family: var(--ff-mono); font-size: 11px; color: var(--ink5); width: 30px; text-align: center; flex-shrink: 0; }
 .prob-title { font-family: var(--ff-ui); font-size: 15px; font-weight: 500; color: var(--ink); flex: 1; }
 .prob-topic { font-family: var(--ff-mono); font-size: 10px; color: var(--ink4); width: 130px; flex-shrink: 0; }
@@ -463,7 +465,7 @@ next-dev-overlay { cursor: none !important; }
 /* ─── Problem nav dots (Section C) ─── */
 .prob-nav { padding: 16px 20px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .prob-nav-dot { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: var(--ff-mono); font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s; border: 1.5px solid transparent; flex-shrink: 0; }
-.prob-nav-dot.default  { background: rgba(0,0,0,0.05); color: var(--ink4); }
+.prob-nav-dot.default  { background: rgba(0,0,0,0.05); color: var(--ink2); }
 .prob-nav-dot.default:hover { background: rgba(0,0,0,0.09); color: var(--ink); }
 .prob-nav-dot.current  { background: var(--ink); color: white; border-color: var(--ink); }
 .prob-nav-dot.solved   { background: var(--sage-bg); color: var(--sage); border-color: var(--sage-border); }

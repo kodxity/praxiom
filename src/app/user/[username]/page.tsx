@@ -24,24 +24,48 @@ export default async function UserProfile(props: { params: Promise<{ username: s
 
     if (!user) notFound();
 
+    const isOwnProfile = session?.user?.username === user.username;
+    const isAdmin = session?.user?.isAdmin === true;
+    const canSeeSubmissions = isOwnProfile || isAdmin;
+
+    // Heatmap only needs last 112 days
+    const heatmapCutoff = new Date();
+    heatmapCutoff.setDate(heatmapCutoff.getDate() - 112);
+
+    // Fetch the viewer's own solved problem IDs so we can reveal answers they already know
+    let viewerSolvedProblemIds = new Set<string>();
+    if (session?.user?.id && !canSeeSubmissions) {
+        try {
+            const viewerSolves = await prisma.submission.findMany({
+                where: { userId: session.user.id, isCorrect: true },
+                select: { problemId: true },
+            });
+            viewerSolvedProblemIds = new Set(viewerSolves.map(s => s.problemId));
+        } catch { /* ignore */ }
+    }
+
+    let totalSolved = 0;
     try {
-        [submissions, allSubmissions] = await Promise.all([
-            // Recent detailed submissions (for the table)
+        const [detailedSubs, heatmapSubs, solvedCount] = await Promise.all([
+            // Always fetch submissions - answer is conditionally hidden in UI
             prisma.submission.findMany({
                 where: { userId: user.id },
                 orderBy: { createdAt: 'desc' },
                 take: 10,
-                include: { problem: { select: { title: true, points: true } } }
+                include: { problem: { select: { title: true, points: true } } },
             }),
-            // All submissions for heatmap (dates only)
+            // Heatmap: only last 112 days, dates only
             prisma.submission.findMany({
-                where: { userId: user.id },
-                select: { createdAt: true, isCorrect: true },
+                where: { userId: user.id, createdAt: { gte: heatmapCutoff } },
+                select: { createdAt: true },
             }),
+            // Total solved count (all-time, fast COUNT query)
+            prisma.submission.count({ where: { userId: user.id, isCorrect: true } }),
         ]);
+        submissions = detailedSubs;
+        allSubmissions = heatmapSubs;
+        totalSolved = solvedCount;
     } catch { /* DB unavailable */ }
-
-    const isOwnProfile = session?.user?.username === user.username;
 
     const graphData = user.ratingHistory.map((h: any) => ({
         date: h.createdAt.toLocaleDateString(),
@@ -55,9 +79,6 @@ export default async function UserProfile(props: { params: Promise<{ username: s
     const maxRating = Math.max(1200, ...user.ratingHistory.map((r: any) => r.newRating));
     const rank = getRankLabel(user.rating);
     const initials = user.username[0].toUpperCase();
-    const totalSolved = allSubmissions.filter((s: any) => s.isCorrect).length;
-    const totalXP = submissions.reduce((acc: number, s: any) => acc + (s.isCorrect ? (s.problem?.points ?? 0) : 0), 0);
-
     // Heatmap: 16 weeks × 7 days = 112 cells, newest day = today
     const today = new Date(); today.setHours(23, 59, 59, 999);
     const DAYS = 112;
@@ -182,14 +203,23 @@ export default async function UserProfile(props: { params: Promise<{ username: s
                                         {sub.isCorrect ? '✓ Correct' : '✕ Wrong'}
                                     </span>
                                     <div style={{ flex: 1 }}>
-                                        <div style={{ fontFamily: 'var(--ff-ui)', fontSize: '14px', fontWeight: 500, color: 'var(--ink)' }}>
-                                            {sub.problem?.title ?? 'Problem'}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <span style={{ fontFamily: 'var(--ff-ui)', fontSize: '14px', fontWeight: 500, color: 'var(--ink)' }}>
+                                                {sub.problem?.title ?? 'Problem'}
+                                            </span>
+                                            {sub.isUpsolve && (
+                                                <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '9px', letterSpacing: '0.1em', padding: '1px 6px', borderRadius: '99px', background: 'var(--amber-bg, rgba(180,140,60,0.1))', border: '1px solid var(--amber-border, rgba(180,140,60,0.25))', color: 'var(--amber)', whiteSpace: 'nowrap' }}>
+                                                    UPSOLVE
+                                                </span>
+                                            )}
                                         </div>
+                                        {(canSeeSubmissions || viewerSolvedProblemIds.has(sub.problemId)) && (
                                         <div style={{ fontSize: '12px', color: 'var(--ink5)', fontFamily: 'var(--ff-mono)' }}>
                                             Answer: {sub.answer}
                                         </div>
+                                        )}
                                     </div>
-                                    {sub.isCorrect && sub.problem?.points ? (
+                                    {sub.isCorrect && sub.problem?.points && !sub.isUpsolve ? (
                                         <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '11px', color: 'var(--amber)', whiteSpace: 'nowrap' }}>
                                             +{sub.problem.points} XP
                                         </span>

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { BookOpen } from 'lucide-react';
+import { VoteButtons } from '@/components/VoteButtons';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,6 +20,7 @@ export default async function BlogPage() {
         include: {
           author: { select: { username: true, isAdmin: true } },
           _count: { select: { comments: true } },
+          votes: { select: { type: true, userId: true } },
         },
       }),
       prisma.blogPost.findMany({
@@ -27,6 +29,7 @@ export default async function BlogPage() {
         include: {
           author: { select: { username: true, isAdmin: true } },
           _count: { select: { comments: true } },
+          votes: { select: { type: true, userId: true } },
         },
       }),
     ]);
@@ -63,6 +66,9 @@ export default async function BlogPage() {
           <div>
             {announcements.map((post: any, i: number) => {
               const date = new Date(post.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+              const upvotes = post.votes.filter((v: any) => v.type === 'UP').length;
+              const downvotes = post.votes.filter((v: any) => v.type === 'DOWN').length;
+              const userVote = post.votes.find((v: any) => v.userId === session?.user?.id)?.type ?? null;
               return (
                 <div key={post.id} className="blog-announce-row fade-in" style={{ animationDelay: `${i * 0.04}s` }}>
                   <Link href={`/posts/${post.id}`} style={{ textDecoration: 'none', flex: 1, minWidth: 0 }}>
@@ -77,6 +83,7 @@ export default async function BlogPage() {
                       </div>
                     </div>
                   </Link>
+                  <VoteButtons postId={post.id} initialUpvotes={upvotes} initialDownvotes={downvotes} initialUserVote={userVote} size="sm" />
                   <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '11px', color: 'var(--ink5)', whiteSpace: 'nowrap', flexShrink: 0 }}>{date}</span>
                   {session?.user?.isAdmin && (
                     <Link href={`/admin/posts/${post.id}/edit`} style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', color: 'var(--ink5)', textDecoration: 'none', padding: '4px 9px', borderRadius: '6px', border: '1px solid var(--border)', flexShrink: 0, whiteSpace: 'nowrap' }}>
@@ -124,6 +131,9 @@ export default async function BlogPage() {
               .replace(/\n+/g, ' ').trim();
             const excerpt = stripped.length > 180 ? stripped.slice(0, 180).trimEnd() + '…' : stripped;
             const initials = (post.author.username?.[0] ?? '?').toUpperCase();
+            const upvotes = post.votes.filter((v: any) => v.type === 'UP').length;
+            const downvotes = post.votes.filter((v: any) => v.type === 'DOWN').length;
+            const userVote = post.votes.find((v: any) => v.userId === session?.user?.id)?.type ?? null;
             return (
               <div
                 key={post.id}
@@ -146,9 +156,12 @@ export default async function BlogPage() {
                   {excerpt}
                 </p>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '12px', borderTop: '1px solid var(--glass-border)' }}>
-                  <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', color: 'var(--ink5)' }}>
-                    {post._count.comments} comment{post._count.comments !== 1 ? 's' : ''}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', color: 'var(--ink5)' }}>
+                      {post._count.comments} comment{post._count.comments !== 1 ? 's' : ''}
+                    </span>
+                    <VoteButtons postId={post.id} initialUpvotes={upvotes} initialDownvotes={downvotes} initialUserVote={userVote} size="sm" />
+                  </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     {session?.user?.isAdmin && (
                       <Link href={`/admin/posts/${post.id}/edit`} style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', color: 'var(--ink5)', letterSpacing: '0.06em', textDecoration: 'none', padding: '3px 8px', borderRadius: '5px', border: '1px solid var(--border)' }}>

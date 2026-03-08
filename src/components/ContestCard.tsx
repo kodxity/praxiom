@@ -147,6 +147,7 @@ interface Props {
   past?: boolean
   isAdmin?: boolean
   animDelay?: number
+  isRegistered?: boolean
 }
 
 function dateDiff(from: Date, to: Date) {
@@ -163,7 +164,7 @@ function shortDate(d: Date) {
   return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-export function ContestCard({ contest, active, past, isAdmin, animDelay = 0 }: Props) {
+export function ContestCard({ contest, active, past, isAdmin, animDelay = 0, isRegistered = false }: Props) {
   const participants = contest._count?.registrations ?? 0
   const problemCount = contest._count?.problems ?? 0
   const duration = durationMinutes(new Date(contest.startTime), new Date(contest.endTime))
@@ -251,7 +252,7 @@ export function ContestCard({ contest, active, past, isAdmin, animDelay = 0 }: P
               transition: 'all 0.15s',
             }}
           >
-            {active ? 'Join Live →' : past ? 'View Results' : 'Register →'}
+            {active && isRegistered ? 'Open →' : active ? 'Join Live →' : past ? 'View Results' : isRegistered ? 'Open →' : 'Register →'}
           </Link>
 
           {isAdmin && (
@@ -317,7 +318,7 @@ export function ContestCard({ contest, active, past, isAdmin, animDelay = 0 }: P
         className={`btn ${active ? 'btn-ink' : past ? 'btn-glass' : 'btn-sage'}`}
         style={{ width: '100%', justifyContent: 'center', marginTop: '18px', display: 'flex' }}
       >
-        {active ? 'Join Live' : past ? 'View Results' : 'Register'}
+        {active && isRegistered ? 'Open' : active ? 'Join Live' : past ? 'View Results' : isRegistered ? 'Open' : 'Register'}
       </Link>
 
       {isAdmin && (

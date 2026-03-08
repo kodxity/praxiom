@@ -81,6 +81,7 @@ model Submission {
   problemId String
   answer    String
   isCorrect Boolean
+  isUpsolve Boolean  @default(false)
   createdAt DateTime @default(now())
 
   user    User    @relation(fields: [userId], references: [id])

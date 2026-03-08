@@ -37,14 +37,20 @@ export function MarkdownContent({ content, className, style }: Props) {
               {children}
             </blockquote>
           ),
-          code: ({ inline, children, ...props }: any) =>
-            inline ? (
-              <code style={{ fontFamily: 'var(--ff-mono)', fontSize: '0.88em', background: 'rgba(107,148,120,0.10)', borderRadius: '4px', padding: '1px 6px', color: 'var(--sage)' }}>{children}</code>
-            ) : (
-              <pre style={{ fontFamily: 'var(--ff-mono)', fontSize: '13px', background: 'rgba(0,0,0,0.04)', borderRadius: '10px', padding: '16px 20px', overflow: 'auto', margin: '1.2em 0', lineHeight: 1.6 }}>
-                <code>{children}</code>
-              </pre>
-            ),
+          // react-markdown v10 removed the `inline` prop - split into `pre` (outer shell)
+          // and `code` (inner) so block code never nests a <pre> inside <p>.
+          pre: ({ children }: any) => (
+            <pre style={{ fontFamily: 'var(--ff-mono)', fontSize: '13px', background: 'rgba(0,0,0,0.04)', borderRadius: '10px', padding: '16px 20px', overflow: 'auto', margin: '1.2em 0', lineHeight: 1.6 }}>
+              {children}
+            </pre>
+          ),
+          code: ({ children, className }: any) => {
+            // Block code has a language class; inline code does not
+            const isBlock = !!className || (typeof children === 'string' && children.includes('\n'));
+            return isBlock
+              ? <code className={className} style={{ fontFamily: 'var(--ff-mono)', fontSize: '13px' }}>{children}</code>
+              : <code style={{ fontFamily: 'var(--ff-mono)', fontSize: '0.88em', background: 'rgba(107,148,120,0.10)', borderRadius: '4px', padding: '1px 6px', color: 'var(--sage)' }}>{children}</code>;
+          },
           ul: ({ children }) => <ul style={{ margin: '0.8em 0 1em 1.4em', listStyleType: 'disc', color: 'var(--ink2)' }}>{children}</ul>,
           ol: ({ children }) => <ol style={{ margin: '0.8em 0 1em 1.6em', listStyleType: 'decimal', color: 'var(--ink2)' }}>{children}</ol>,
           li: ({ children }) => <li style={{ marginBottom: '0.3em', lineHeight: 1.7 }}>{children}</li>,

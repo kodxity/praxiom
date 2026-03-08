@@ -133,7 +133,7 @@ export function ProblemsClient({ problems, solvedIds }: ProblemsClientProps) {
                         return (
                             <Link
                                 key={problem.id}
-                                href={`/contests/${problem.contestId}`}
+                                href={`/contests/${problem.contestId}/problems/${problem.id}`}
                                 className="prob-row"
                                 style={{
                                     display: 'grid',

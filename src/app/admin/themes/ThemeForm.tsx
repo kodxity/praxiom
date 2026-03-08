@@ -224,7 +224,7 @@ export function ThemeForm({ initial, slug: editSlug, onDone }: ThemeFormProps) {
 
           {/* Images */}
           <div style={{ paddingTop: '4px', borderTop: '1px solid var(--border)' }}>
-            <p style={{ fontFamily: MONO, fontSize: '10px', letterSpacing: '0.14em', color: 'var(--ink5)', textTransform: 'uppercase', marginBottom: '14px' }}>Images (SVG or PNG — leave blank for none)</p>
+            <p style={{ fontFamily: MONO, fontSize: '10px', letterSpacing: '0.14em', color: 'var(--ink5)', textTransform: 'uppercase', marginBottom: '14px' }}>Images (SVG or PNG - leave blank for none)</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div>
                 <label style={LABEL}>Hero Image Path / URL</label>

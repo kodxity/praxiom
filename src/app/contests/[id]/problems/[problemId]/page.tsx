@@ -1,8 +1,10 @@
 import { prisma } from '@/lib/db';
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import Link from 'next/link';
+import UpsolvePanel from './UpsolvePanel';
+import ActiveSubmitPanel from './ActiveSubmitPanel';
 
 function getPointsLabel(pts: number) {
     if (pts <= 80)  return { label: 'E', title: 'Easy',   cls: 'diff-e' };
@@ -21,6 +23,8 @@ export default async function ProblemViewPage(props: { params: Promise<{ id: str
     let problem: any = null;
     let submissions: any[] = [];
     let allProblems: any[] = [];
+    let isRegistered = false;
+    let userSolvedIds = new Set<string>();
 
     try {
         contest = await prisma.contest.findUnique({
@@ -39,15 +43,23 @@ export default async function ProblemViewPage(props: { params: Promise<{ id: str
 
         allProblems = await prisma.problem.findMany({
             where: { contestId: params.id },
-            orderBy: { points: 'asc' },
+            orderBy: { id: 'asc' },
             select: { id: true, title: true, points: true },
         });
 
         if (session?.user?.id) {
-            submissions = await prisma.submission.findMany({
-                where: { userId: session.user.id, problemId: params.problemId },
+            const allContestSubs = await prisma.submission.findMany({
+                where: { userId: session.user.id, contestId: params.id },
                 orderBy: { createdAt: 'desc' },
             });
+            submissions = allContestSubs.filter((s: any) => s.problemId === params.problemId);
+            userSolvedIds = new Set(
+                allContestSubs.filter((s: any) => s.isCorrect && !s.isUpsolve).map((s: any) => s.problemId)
+            );
+            const reg = await prisma.registration.findUnique({
+                where: { userId_contestId: { userId: session.user.id, contestId: params.id } },
+            });
+            isRegistered = !!reg;
         }
     } catch {
         notFound();
@@ -57,33 +69,38 @@ export default async function ProblemViewPage(props: { params: Promise<{ id: str
     const isPast = now > contest.endTime;
     const isActive = now >= contest.startTime && now <= contest.endTime;
 
-    // Only allow viewing problem detail for past contests (active is handled by ProblemsList)
-    if (isActive) {
-        redirect(`/contests/${params.id}`);
-    }
-
     const diff = getPointsLabel(problem.points);
     const problemIndex = allProblems.findIndex((p: any) => p.id === params.problemId);
     const letter = String.fromCharCode(65 + problemIndex);
 
     // Solved by user?
     const userSolved = submissions.some((s: any) => s.isCorrect);
+    // Attempts split by context
+    const activeAttempts = submissions.filter((s: any) => !s.isUpsolve).length;
+    const upsolveAttempts = submissions.filter((s: any) => s.isUpsolve).length;
 
-    // Total correct submissions (across all users)
+    // Total attempts (across all users)
     const totalAttempts = problem._count.submissions;
 
-    // Style helpers - CSS vars are remapped per-theme by ContestShell
-    const cardStyle     = {};
+    // Sequential locking: problem is locked if any earlier problem is unsolved (active contests only)
+    const firstUnsolvedIdx = allProblems.findIndex((p: any) => !userSolvedIds.has(p.id));
+    const isLocked = isActive && isRegistered && firstUnsolvedIdx !== -1 && problemIndex > firstUnsolvedIdx;
+    const prevProblem = problemIndex > 0 ? allProblems[problemIndex - 1] : null;
+    const prevLetter = problemIndex > 0 ? String.fromCharCode(65 + problemIndex - 1) : '';
+
+    // Next problem for transition screen
+    const nextProblem = problemIndex < allProblems.length - 1 ? allProblems[problemIndex + 1] : null;
+    const nextProblemId = (isActive && isRegistered && nextProblem) ? nextProblem.id : undefined;
+    const nextProblemLetter = nextProblem ? String.fromCharCode(65 + problemIndex + 1) : undefined;
+
     const labelColor    = 'var(--ink5)';
     const titleColor    = 'var(--ink)';
     const bodyColor     = 'var(--ink2)';
     const crumbStyle    = { color: 'var(--ink5)', textDecoration: 'none' as const };
     const crumbLast     = 'var(--ink3)';
-    const navDotCurrent = {};
-    const navDotDefault = {};
 
     return (
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '36px 1.75rem 80px' }}>
+        <div style={{ maxWidth: '860px', margin: '0 auto', padding: '36px 1.75rem 80px' }}>
 
             {/* Breadcrumb */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px', fontFamily: 'var(--ff-mono)', fontSize: '11px', color: labelColor }}>
@@ -94,156 +111,184 @@ export default async function ProblemViewPage(props: { params: Promise<{ id: str
                 <span style={{ color: crumbLast }}>{letter}. {problem.title}</span>
             </div>
 
-            <div className="prob-layout">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
-                {/* ── Main panel ── */}
-                <div className="prob-main">
-
-                    {/* Problem nav dots */}
-                    <div className="g prob-nav" style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', ...cardStyle }}>
-                        {allProblems.map((p: any, idx: number) => {
-                            const isCurrent = p.id === params.problemId;
+                {/* Problem nav dots */}
+                <div className="g prob-nav" style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                    {allProblems.map((p: any, idx: number) => {
+                        const isCurrent = p.id === params.problemId;
+                        const dotLocked = isActive && isRegistered && firstUnsolvedIdx !== -1 && idx > firstUnsolvedIdx;
+                        if (dotLocked && !isCurrent) {
                             return (
-                                <Link
+                                <div
                                     key={p.id}
-                                    href={`/contests/${params.id}/problems/${p.id}`}
-                                    title={`${String.fromCharCode(65 + idx)}. ${p.title}`}
-                                    className={`prob-nav-dot ${isCurrent ? 'current' : 'default'}`}
-                                    style={{ textDecoration: 'none', ...(isCurrent ? navDotCurrent : navDotDefault) }}
+                                    title={`🔒 ${String.fromCharCode(65 + idx)}. ${p.title}`}
+                                    className="prob-nav-dot default"
+                                    style={{ opacity: 0.35, cursor: 'not-allowed', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                                 >
                                     {String.fromCharCode(65 + idx)}
-                                </Link>
+                                </div>
                             );
-                        })}
-                        <span style={{ marginLeft: '8px', fontFamily: 'var(--ff-mono)', fontSize: '10px', color: labelColor }}>
-                            Problem {letter} of {allProblems.length}
-                        </span>
-                    </div>
-
-                    {/* Problem statement */}
-                    <div className="g prob-statement" style={{ padding: '28px 32px', ...cardStyle }}>
-
-                        {/* Contest tag row */}
-                        <div className="prob-contest-tag" style={{ marginBottom: '16px' }}>
-                            <span className="chapter">{problem.contest.title}</span>
-                            <div className={`diff-dot ${diff.cls}`} title={diff.title} style={{ display: 'inline-block', verticalAlign: 'middle', margin: '0 6px' }} />
-                            <span className="tag">{diff.title}</span>
-                            <span className="tag" style={{ marginLeft: '6px' }}>+{problem.points} XP</span>
-                        </div>
-
-                        {/* Title */}
-                        <h1 className="prob-title-main" style={{ fontFamily: 'var(--ff-display)', fontStyle: 'italic', fontSize: 'clamp(22px, 3vw, 32px)', letterSpacing: '-0.02em', color: titleColor, fontWeight: 400, marginBottom: '24px', lineHeight: 1.15 }}>
-                            {letter}. {problem.title}
-                        </h1>
-
-                        {/* Statement body */}
-                        <div className="prob-body" style={{ fontFamily: 'var(--ff-body)', fontSize: '15px', lineHeight: 1.82, color: bodyColor, fontWeight: 300, whiteSpace: 'pre-wrap' }}>
-                            {problem.statement}
-                        </div>
-
-
-
-                    </div>
+                        }
+                        return (
+                            <Link
+                                key={p.id}
+                                href={`/contests/${params.id}/problems/${p.id}`}
+                                title={`${String.fromCharCode(65 + idx)}. ${p.title}`}
+                                className={`prob-nav-dot ${isCurrent ? 'current' : 'default'}`}
+                                style={{ textDecoration: 'none' }}
+                            >
+                                {String.fromCharCode(65 + idx)}
+                            </Link>
+                        );
+                    })}
+                    <span style={{ marginLeft: '8px', fontFamily: 'var(--ff-mono)', fontSize: '10px', color: labelColor }}>
+                        Problem {letter} of {allProblems.length}
+                    </span>
                 </div>
 
-                {/* ── Side panel ── */}
-                <div className="prob-side">
+                {/* Problem statement */}
+                <div className="g prob-statement" style={{ padding: '28px 32px' }}>
 
-                    {/* Contest info */}
-                    <div className="g" style={{ padding: '18px 20px', ...cardStyle }}>
-                        <p style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', letterSpacing: '0.14em', color: labelColor, textTransform: 'uppercase', marginBottom: '10px' }}>Contest</p>
-                        <div style={{ fontFamily: 'var(--ff-ui)', fontWeight: 600, fontSize: '14px', color: titleColor, marginBottom: '4px' }}>{problem.contest.title}</div>
-                        <div style={{ fontFamily: 'var(--ff-mono)', fontSize: '11px', color: labelColor }}>
-                            Ended {new Date(contest.endTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                        </div>
+                    {/* Contest tag row */}
+                    <div className="prob-contest-tag" style={{ marginBottom: '16px' }}>
+                        <span className="chapter">{problem.contest.title}</span>
+                        <div className={`diff-dot ${diff.cls}`} title={diff.title} style={{ display: 'inline-block', verticalAlign: 'middle', margin: '0 6px' }} />
+                        <span className="tag">{diff.title}</span>
+                        <span className="tag" style={{ marginLeft: '6px' }}>+{problem.points} XP</span>
                     </div>
 
-                    {/* Answer reveal (past contests only) */}
-                    {isPast && (
-                        <div className="g answer-panel" style={{ padding: '20px 22px' }}>
-                            <p style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', letterSpacing: '0.14em', color: labelColor, textTransform: 'uppercase', marginBottom: '14px' }}>
-                                Answer
-                                <span className="answer-type-indicator">Revealed</span>
-                            </p>
+                    {/* Title */}
+                    <h1 className="prob-title-main" style={{ fontFamily: 'var(--ff-display)', fontStyle: 'italic', fontSize: 'clamp(22px, 3vw, 32px)', letterSpacing: '-0.02em', color: titleColor, fontWeight: 400, marginBottom: '24px', lineHeight: 1.15 }}>
+                        {letter}. {problem.title}
+                    </h1>
 
-                            {/* User's status */}
-                            {session && (
-                                <div style={{
-                                    display: 'inline-flex', alignItems: 'center', gap: '6px',
-                                    padding: '4px 10px', borderRadius: '99px', marginBottom: '14px',
-                                    background: userSolved ? 'var(--sage-bg)' : 'rgba(184,96,78,0.08)',
-                                    border: `1px solid ${userSolved ? 'var(--sage-border)' : 'rgba(184,96,78,0.18)'}`,
-                                    fontFamily: 'var(--ff-mono)', fontSize: '10px',
-                                    color: userSolved ? 'var(--sage)' : 'var(--rose)',
-                                }}>
-                                    {userSolved ? '✓ You solved this' : `✗ You attempted this (${submissions.length} tries)`}
-                                </div>
-                            )}
+                    {/* Statement body */}
+                    <div className="prob-body" style={{ fontFamily: 'var(--ff-body)', fontSize: '15px', lineHeight: 1.82, color: bodyColor, fontWeight: 300, whiteSpace: 'pre-wrap' }}>
+                        {problem.statement}
+                    </div>
 
-                            {/* Answer box */}
-                            <div style={{
-                                padding: '16px 18px', borderRadius: 'var(--r-lg)',
-                                background: 'rgba(107,148,120,0.06)',
-                                border: '1px solid rgba(107,148,120,0.18)',
-                                fontFamily: 'var(--ff-mono)', fontSize: '20px', fontWeight: 400,
-                                color: 'var(--sage)',
-                                textAlign: 'center', letterSpacing: '0.08em',
-                            }}>
-                                {problem.correctAnswer}
+                </div>
+
+                {/* Active contest - submit panel */}
+                {isActive && session && isRegistered && isLocked && (
+                    <div className="g" style={{ padding: '20px 24px', textAlign: 'center' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', padding: '12px 0' }}>
+                            <div style={{ fontSize: '28px' }}>🔒</div>
+                            <div style={{ fontFamily: 'var(--ff-display)', fontStyle: 'italic', fontSize: '20px', color: 'var(--ink)' }}>Level Locked</div>
+                            <div style={{ fontFamily: 'var(--ff-body)', fontSize: '14px', color: 'var(--ink4)', maxWidth: '300px' }}>
+                                Solve {prevLetter ? `${prevLetter}. ${prevProblem?.title}` : 'the previous problem'} first to unlock this level.
                             </div>
-
-                            <p className="ans-format-hint" style={{ marginTop: '8px', textAlign: 'center', color: labelColor }}>
-                                This was the correct answer for this problem.
-                            </p>
+                            {prevProblem && (
+                                <Link href={`/contests/${params.id}/problems/${prevProblem.id}`} style={{ padding: '8px 20px', borderRadius: 'var(--r)', background: 'var(--sage)', color: '#fff', fontFamily: 'var(--ff-ui)', fontSize: '13px', fontWeight: 600, textDecoration: 'none', marginTop: '4px' }}>
+                                    ← Go to {prevLetter}
+                                </Link>
+                            )}
                         </div>
-                    )}
+                    </div>
+                )}
+                {isActive && session && isRegistered && !isLocked && (
+                    <ActiveSubmitPanel
+                        contestId={params.id}
+                        problemId={params.problemId}
+                        initialSolved={userSolved}
+                        initialAttempts={activeAttempts}
+                        labelColor={labelColor}
+                        xpPoints={problem.points}
+                        problemTitle={problem.title}
+                        nextProblemId={nextProblemId}
+                        nextProblemLetter={nextProblemLetter}
+                    />
+                )}
+                {isActive && session && !isRegistered && (
+                    <div className="g" style={{ padding: '20px 24px', textAlign: 'center' }}>
+                        <p style={{ fontFamily: 'var(--ff-body)', fontSize: '14px', color: 'var(--ink3)' }}>
+                            <Link href={`/contests/${params.id}`} style={{ color: 'var(--sage)' }}>Register for this contest</Link> to submit answers.
+                        </p>
+                    </div>
+                )}
+                {isActive && !session && (
+                    <div className="g" style={{ padding: '20px 24px', textAlign: 'center' }}>
+                        <p style={{ fontFamily: 'var(--ff-body)', fontSize: '14px', color: 'var(--ink3)' }}>
+                            <Link href="/login" style={{ color: 'var(--sage)' }}>Sign in</Link> and register to submit during this contest.
+                        </p>
+                    </div>
+                )}
+
+                {/* Upsolve / Answer panel (past contests only) */}
+                {isPast && session && (
+                    <UpsolvePanel
+                        contestId={params.id}
+                        problemId={params.problemId}
+                        correctAnswer={problem.correctAnswer}
+                        initialSolved={userSolved}
+                        initialAttempts={upsolveAttempts}
+                        labelColor={labelColor}
+                    />
+                )}
+
+                {/* Past contest - not logged in */}
+                {isPast && !session && (
+                    <div className="g" style={{ padding: '20px 24px', textAlign: 'center' }}>
+                        <p style={{ fontFamily: 'var(--ff-body)', fontSize: '14px', color: 'var(--ink3)', marginBottom: '12px' }}>
+                            <Link href="/login" style={{ color: 'var(--sage)' }}>Sign in</Link> to upsolve this problem.
+                        </p>
+                    </div>
+                )}
+
+                {/* Bottom row: stats + navigation */}
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'stretch' }}>
 
                     {/* Stats */}
-                    <div className="g" style={{ padding: '18px 20px', ...cardStyle }}>
-                        <p style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', letterSpacing: '0.14em', color: labelColor, textTransform: 'uppercase', marginBottom: '14px' }}>Stats</p>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div className="g" style={{ padding: '16px 20px', flex: 1 }}>
+                        <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
                             <div style={{ textAlign: 'center' }}>
-                                <div style={{ fontFamily: 'var(--ff-display)', fontStyle: 'italic', fontSize: '28px', color: titleColor }}>{totalAttempts}</div>
+                                <div style={{ fontFamily: 'var(--ff-display)', fontStyle: 'italic', fontSize: '26px', color: titleColor }}>{totalAttempts}</div>
                                 <div style={{ fontFamily: 'var(--ff-mono)', fontSize: '9px', letterSpacing: '0.1em', color: labelColor, textTransform: 'uppercase' }}>Attempts</div>
                             </div>
                             <div style={{ textAlign: 'center' }}>
-                                <div style={{ fontFamily: 'var(--ff-display)', fontStyle: 'italic', fontSize: '28px', color: 'var(--sage)' }}>{problem.points}</div>
+                                <div style={{ fontFamily: 'var(--ff-display)', fontStyle: 'italic', fontSize: '26px', color: 'var(--sage)' }}>{problem.points}</div>
                                 <div style={{ fontFamily: 'var(--ff-mono)', fontSize: '9px', letterSpacing: '0.1em', color: labelColor, textTransform: 'uppercase' }}>Points</div>
+                            </div>
+                            <div style={{ marginLeft: 'auto', fontFamily: 'var(--ff-mono)', fontSize: '11px', color: labelColor }}>
+                                {isActive ? 'Ends' : 'Ended'} {new Date(contest.endTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                             </div>
                         </div>
                     </div>
 
-                    {/* Navigation arrows */}
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                        {problemIndex > 0 && (
+                    {/* Prev / Next buttons */}
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        {problemIndex > 0 ? (
                             <Link
                                 href={`/contests/${params.id}/problems/${allProblems[problemIndex - 1].id}`}
                                 style={{
-                                    flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    padding: '10px', borderRadius: 'var(--r)', fontSize: '13px',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    padding: '10px 18px', borderRadius: 'var(--r)', fontSize: '13px',
                                     fontFamily: 'var(--ff-ui)', fontWeight: 500, textDecoration: 'none',
                                     background: 'transparent', border: '1px solid var(--border)', color: 'var(--ink3)',
+                                    height: '100%',
                                 }}
                             >
                                 ← Prev
                             </Link>
-                        )}
-                        {problemIndex < allProblems.length - 1 && (
+                        ) : <div style={{ width: '80px' }} />}
+                        {problemIndex < allProblems.length - 1 ? (
                             <Link
                                 href={`/contests/${params.id}/problems/${allProblems[problemIndex + 1].id}`}
                                 style={{
-                                    flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    padding: '10px', borderRadius: 'var(--r)', fontSize: '13px',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    padding: '10px 18px', borderRadius: 'var(--r)', fontSize: '13px',
                                     fontFamily: 'var(--ff-ui)', fontWeight: 500, textDecoration: 'none',
                                     background: 'transparent', border: '1px solid var(--border)', color: 'var(--ink3)',
+                                    height: '100%',
                                 }}
                             >
                                 Next →
                             </Link>
-                        )}
+                        ) : <div style={{ width: '80px' }} />}
                     </div>
-
                 </div>
+
             </div>
         </div>
     );

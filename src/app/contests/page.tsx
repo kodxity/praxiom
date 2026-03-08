@@ -40,6 +40,18 @@ export default async function ContestsPage() {
     const isAdmin = session?.user?.isAdmin || false
     const hasAny = activeContests.length + upcomingContests.length + pastContests.length > 0
 
+    // Fetch which contests this user is registered for
+    let registeredIds = new Set<string>()
+    if (session?.user?.id) {
+        try {
+            const regs = await prisma.registration.findMany({
+                where: { userId: session.user.id },
+                select: { contestId: true },
+            })
+            registeredIds = new Set(regs.map((r: any) => r.contestId))
+        } catch { /* ignore */ }
+    }
+
     return (
         <div style={{ position: 'relative', zIndex: 1, maxWidth: '1360px', margin: '0 auto', padding: '48px 1.75rem 80px' }}>
 
@@ -83,7 +95,7 @@ export default async function ContestsPage() {
                     <p className="sec-label">Live Now</p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
                         {activeContests.map((c: any, i: number) => (
-                            <ContestCard key={c.id} contest={c} active isAdmin={isAdmin} animDelay={i * 0.08} />
+                            <ContestCard key={c.id} contest={c} active isAdmin={isAdmin} animDelay={i * 0.08} isRegistered={registeredIds.has(c.id)} />
                         ))}
                     </div>
                 </section>
@@ -95,7 +107,7 @@ export default async function ContestsPage() {
                     <p className="sec-label">Upcoming</p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
                         {upcomingContests.map((c: any, i: number) => (
-                            <ContestCard key={c.id} contest={c} isAdmin={isAdmin} animDelay={i * 0.08} />
+                            <ContestCard key={c.id} contest={c} isAdmin={isAdmin} animDelay={i * 0.08} isRegistered={registeredIds.has(c.id)} />
                         ))}
                     </div>
                 </section>
@@ -107,7 +119,7 @@ export default async function ContestsPage() {
                     <p className="sec-label">Past Contests</p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
                         {pastContests.map((c: any, i: number) => (
-                            <ContestCard key={c.id} contest={c} past isAdmin={isAdmin} animDelay={i * 0.06} />
+                            <ContestCard key={c.id} contest={c} past isAdmin={isAdmin} animDelay={i * 0.06} isRegistered={registeredIds.has(c.id)} />
                         ))}
                     </div>
                 </section>

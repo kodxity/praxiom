@@ -24,8 +24,30 @@ export async function POST(req: Request) {
     if (!contest) return new NextResponse("Contest not found", { status: 404 });
 
     const now = new Date();
-    if (!session.user.isAdmin && (now < contest.startTime || now > contest.endTime)) {
-        return new NextResponse("Contest is not active", { status: 403 });
+    // Block if contest hasn't started yet
+    if (!session.user.isAdmin && now < contest.startTime) {
+        return new NextResponse("Contest hasn't started yet", { status: 403 });
+    }
+
+    // Mark as upsolve if submitting after contest ended (not counted for ratings)
+    const isUpsolve = !session.user.isAdmin && now > contest.endTime;
+
+    if (!isUpsolve) {
+        // During contest: block resubmission if already solved
+        const existingContestSolve = await prisma.submission.findFirst({
+            where: { userId: session.user.id, problemId, isCorrect: true, isUpsolve: false },
+        });
+        if (existingContestSolve) {
+            return NextResponse.json({ id: existingContestSolve.id, isCorrect: true, isUpsolve: false, alreadySolved: true });
+        }
+    } else {
+        // Upsolving: allow even if solved during contest, but block duplicate upsolves
+        const existingUpsolveSolve = await prisma.submission.findFirst({
+            where: { userId: session.user.id, problemId, isCorrect: true, isUpsolve: true },
+        });
+        if (existingUpsolveSolve) {
+            return NextResponse.json({ id: existingUpsolveSolve.id, isCorrect: true, isUpsolve: true, alreadySolved: true });
+        }
     }
 
     const isCorrect = problem.correctAnswer.trim().toLowerCase() === answer.trim().toLowerCase();
@@ -36,12 +58,14 @@ export async function POST(req: Request) {
             contestId,
             problemId,
             answer,
-            isCorrect
+            isCorrect,
+            isUpsolve,
         }
     });
 
     return NextResponse.json({
         id: submission.id,
-        isCorrect: submission.isCorrect
+        isCorrect: submission.isCorrect,
+        isUpsolve: submission.isUpsolve,
     });
 }

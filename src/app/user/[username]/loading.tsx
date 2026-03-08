@@ -26,13 +26,22 @@ export default function UserProfileLoading() {
       </div>
 
       {/* Two-column layout */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '20px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '20px' }}>
 
         {/* Left: rating graph + submissions */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div className="g" style={{ padding: '24px 28px' }}>
             <div className="skel skel-t" style={{ width: '120px', marginBottom: '20px' }} />
             <div className="skel" style={{ height: '220px', borderRadius: 'var(--r)' }} />
+          </div>
+          {/* Activity heatmap: 16w × 7d = 112 cells */}
+          <div className="g" style={{ padding: '20px 24px' }}>
+            <div className="skel skel-t" style={{ width: '140px', marginBottom: '14px' }} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(16, 12px)', gap: '3px' }}>
+              {[...Array(112)].map((_, i) => (
+                <div key={i} className="skel" style={{ width: '12px', height: '12px', borderRadius: '2px' }} />
+              ))}
+            </div>
           </div>
           <div className="g" style={{ padding: '0', overflow: 'hidden' }}>
             <div style={{ padding: '18px 20px 14px', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>

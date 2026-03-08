@@ -69,8 +69,12 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
     const changes: Record<string, number> = {};
     participants.forEach((p: any) => changes[p.userId] = 0);
 
-    // Only compare if more than 1 participant
-    if (participants.length > 1) {
+    if (participants.length === 1) {
+        // Solo contest: award based on % of max possible score
+        const maxScore = contest.problems.reduce((acc: number, p: any) => acc + p.points, 0);
+        const pct = maxScore > 0 ? participants[0].score / maxScore : 0;
+        changes[participants[0].userId] = Math.round(30 * pct); // up to +30 for perfect score
+    } else {
         for (let i = 0; i < participants.length; i++) {
             for (let j = i + 1; j < participants.length; j++) {
                 const pA = participants[i];
@@ -101,7 +105,6 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
             }
         }
     }
-
     // Apply updates
     await prisma.$transaction(async (tx) => {
         for (const p of participants) {

@@ -9,6 +9,7 @@ import './globals.css';
 import { Providers } from '@/components/Providers';
 import { Navbar } from '@/components/Navbar';
 import { KaTeXLoader } from '@/components/KaTeXLoader';
+import { LiveContestBanner } from '@/components/LiveContestBanner';
 // import { CustomCursor } from '@/components/CustomCursor'; // disabled
 
 const instrumentSerif = Instrument_Serif({
@@ -66,6 +67,7 @@ export default function RootLayout({
           <KaTeXLoader />
           <div className="min-h-screen flex flex-col" style={{ position: 'relative', zIndex: 1 }}>
             <Navbar />
+            <LiveContestBanner />
             <main className="flex-1 w-full">
               {children}
             </main>

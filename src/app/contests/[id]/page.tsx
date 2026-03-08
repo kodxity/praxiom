@@ -1,19 +1,11 @@
 import { prisma } from '@/lib/db';
-import Link from 'next/link';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { notFound } from 'next/navigation';
 import { AddProblemForm } from './AddProblemForm';
-import { RegisterButton } from './RegisterButton';
 import { ProblemsList } from './ProblemsList';
 import { ContestHero } from '@/components/ContestHero';
-
-function getPointsLabel(pts: number) {
-    if (pts <= 80)  return { label: 'E', title: 'Easy',   cls: 'diff-e' };
-    if (pts <= 120) return { label: 'M', title: 'Medium', cls: 'diff-m' };
-    if (pts <= 200) return { label: 'H', title: 'Hard',   cls: 'diff-h' };
-    return              { label: 'X', title: 'Expert', cls: 'diff-x' };
-}
+import { EndContestButton } from './EndContestButton';
 
 
 export default async function ContestPage(props: { params: Promise<{ id: string }> }) {
@@ -27,8 +19,8 @@ export default async function ContestPage(props: { params: Promise<{ id: string 
         contest = await prisma.contest.findUnique({
             where: { id: params.id },
             include: {
-                problems: true,
-                registrations: { where: { userId: session?.user?.id } }
+                problems: { orderBy: { id: 'asc' } },
+                _count: { select: { registrations: true } },
             }
         });
     } catch {
@@ -54,7 +46,16 @@ export default async function ContestPage(props: { params: Promise<{ id: string 
         );
     }
 
-    const isRegistered = contest.registrations.length > 0;
+    // Check if current user is registered (separate check to not affect count)
+    let isRegistered = false;
+    if (session?.user?.id) {
+        try {
+            const reg = await prisma.registration.findUnique({
+                where: { userId_contestId: { userId: session.user.id, contestId: params.id } },
+            });
+            isRegistered = !!reg;
+        } catch { /* ignore */ }
+    }
 
     const now = new Date();
     const isActive = now >= contest.startTime && now <= contest.endTime;
@@ -71,6 +72,18 @@ export default async function ContestPage(props: { params: Promise<{ id: string 
         // DB unavailable
     }
 
+    // Compute locked problem IDs for sequential ordering (active contest + registered only)
+    let lockedIds: string[] = [];
+    if (isActive && isRegistered && session) {
+        const solvedIds = new Set(
+            submissions.filter((s: any) => s.isCorrect && !s.isUpsolve).map((s: any) => s.problemId)
+        );
+        const firstUnsolved = contest.problems.findIndex((p: any) => !solvedIds.has(p.id));
+        if (firstUnsolved !== -1) {
+            lockedIds = contest.problems.slice(firstUnsolved + 1).map((p: any) => p.id);
+        }
+    }
+
     return (
         <div>
             {/* Contest Hero - themed, full-width */}
@@ -81,7 +94,7 @@ export default async function ContestPage(props: { params: Promise<{ id: string 
                 startTime={contest.startTime}
                 endTime={contest.endTime}
                 problemCount={contest.problems.length}
-                participantCount={contest.registrations?.length ?? 0}
+                participantCount={contest._count.registrations}
                 isRegistered={isRegistered}
                 isActive={isActive}
                 isPast={isPast}
@@ -101,67 +114,12 @@ export default async function ContestPage(props: { params: Promise<{ id: string 
                         >
                             Problems
                         </h2>
-                        {session && isRegistered && isActive ? (
-                            <ProblemsList
-                                problems={contest.problems}
-                                contestId={contest.id}
-                                initialSubmissions={submissions}
-                            />
-                        ) : (
-                            <div className="g" style={{ overflow: 'hidden' }}>
-                                {contest.problems.map((problem: any, idx: number) => {
-                                    const diff = getPointsLabel(problem.points);
-                                    return (
-                                        <div
-                                            key={problem.id}
-                                            style={{
-                                                display: 'grid',
-                                                gridTemplateColumns: '28px 20px 1fr auto auto',
-                                                gap: '12px',
-                                                alignItems: 'center',
-                                                padding: '14px 20px',
-                                                borderBottom: '1px solid var(--border)',
-                                            }}
-                                        >
-                                            {/* Letter */}
-                                            <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '11px', color: 'var(--ink5)', fontWeight: 500 }}>
-                                                {String.fromCharCode(65 + idx)}.
-                                            </span>
-                                            {/* Diff dot */}
-                                            <div className={`diff-dot ${diff.cls}`} title={diff.title} />
-                                            {/* Title */}
-                                            <span style={{ fontFamily: 'var(--ff-ui)', fontWeight: 500, color: 'var(--ink)', fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                {problem.title}
-                                            </span>
-                                            {/* Points */}
-                                            <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '11px', color: 'var(--sage)', whiteSpace: 'nowrap', background: 'var(--sage-bg)', border: '1px solid var(--sage-border)', padding: '2px 8px', borderRadius: '99px' }}>
-                                                +{problem.points} XP
-                                            </span>
-                                            {/* Action cell — always one grid column */}
-                                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'flex-end' }}>
-                                                {!session && (
-                                                    <span style={{ fontSize: '11px', fontFamily: 'var(--ff-mono)', color: 'var(--ink5)', whiteSpace: 'nowrap' }}>Log in</span>
-                                                )}
-                                                {session && !isRegistered && !isPast && !session?.user?.isAdmin && (
-                                                    <span style={{ fontSize: '11px', fontFamily: 'var(--ff-mono)', color: 'var(--ink5)', whiteSpace: 'nowrap' }}>Register</span>
-                                                )}
-                                                {session && isRegistered && isUpcoming && !session?.user?.isAdmin && (
-                                                    <span style={{ fontSize: '11px', fontFamily: 'var(--ff-mono)', color: 'var(--ink5)', whiteSpace: 'nowrap' }}>Starts soon</span>
-                                                )}
-                                                {isPast && (
-                                                    <Link href={`/contests/${contest.id}/problems/${problem.id}`} className="btn btn-theme btn-sm">
-                                                        View
-                                                    </Link>
-                                                )}
-                                                {session?.user?.isAdmin && (
-                                                    <Link href={`/admin/contests/${contest.id}/problems/${problem.id}/edit`} style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', color: 'var(--sage)', background: 'var(--sage-bg)', border: '1px solid var(--sage-border)', borderRadius: '6px', padding: '3px 10px', textDecoration: 'none', whiteSpace: 'nowrap' }}>Edit</Link>
-                                                )}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
+                        <ProblemsList
+                            problems={contest.problems}
+                            contestId={contest.id}
+                            initialSubmissions={submissions}
+                            lockedIds={lockedIds}
+                        />
                     </div>
                 ) : (
                     <div
@@ -207,6 +165,10 @@ export default async function ContestPage(props: { params: Promise<{ id: string 
                             <div>
                                 <h3 style={{ fontFamily: 'var(--ff-ui)', fontWeight: 600, fontSize: '14px', color: 'var(--ink)', marginBottom: '12px', letterSpacing: '0.02em' }}>Add Problem</h3>
                                 <AddProblemForm contestId={contest.id} />
+                            </div>
+                            <div>
+                                <h3 style={{ fontFamily: 'var(--ff-ui)', fontWeight: 600, fontSize: '14px', color: 'var(--ink)', marginBottom: '8px', letterSpacing: '0.02em' }}>Manage</h3>
+                                {isActive && <EndContestButton contestId={contest.id} />}
                             </div>
                         </div>
                     </div>

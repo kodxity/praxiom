@@ -1,6 +1,8 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import { useTheme } from '@/context/ThemeContext'
 import { Calendar, Clock, Users, BookOpen } from 'lucide-react'
 import { Badge } from '@/components/Badge'
@@ -57,6 +59,19 @@ export function ContestHero({
 }: Props) {
   const theme = useTheme()
   const isDark = theme.navVariant === 'dark'
+  const router = useRouter()
+  const [registering, setRegistering] = useState(false)
+
+  async function handleRegister() {
+    if (registering) return
+    setRegistering(true)
+    try {
+      await fetch(`/api/contests/${contestId}/register`, { method: 'POST' })
+      router.refresh()
+    } finally {
+      setRegistering(false)
+    }
+  }
 
   if (isDark) {
     // ── Dark-themed hero (uses theme variables - works for any dark theme) ──
@@ -113,20 +128,28 @@ export function ContestHero({
               {/* Buttons */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                 {isLoggedIn && !isPast && !isRegistered && !isAdmin && (
-                  <Link href={`/contests/${contestId}`} style={{
+                  <button onClick={handleRegister} disabled={registering} style={{
                     display: 'inline-flex', alignItems: 'center', gap: '6px',
-                    padding: '12px 28px', borderRadius: '10px', textDecoration: 'none',
+                    padding: '12px 28px', borderRadius: '10px',
                     fontFamily: 'var(--ff-ui)', fontSize: '14px', fontWeight: 500,
                     background: theme.accentBg, border: `1px solid ${theme.accentBorder}`,
                     color: theme.textPrimary, transition: 'all 0.15s',
+                    cursor: registering ? 'wait' : 'pointer', opacity: registering ? 0.7 : 1,
                   }}>
-                    Register →
-                  </Link>
+                    {registering ? 'Registering…' : 'Register →'}
+                  </button>
                 )}
                 {isLoggedIn && !isPast && isRegistered && (
-                  <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', letterSpacing: '0.1em', color: theme.textAccent, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: theme.accent }} />Registered
-                  </span>
+                  <Link href={`/contests/${contestId}`} style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '6px',
+                    padding: '10px 20px', borderRadius: '10px', textDecoration: 'none',
+                    fontFamily: 'var(--ff-ui)', fontSize: '14px', fontWeight: 500,
+                    background: theme.accentBg, border: `1px solid ${theme.accentBorder}`,
+                    color: theme.textPrimary,
+                  }}>
+                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: theme.accent }} />
+                    In Progress
+                  </Link>
                 )}
                 <Link href={`/contests/${contestId}/standings`} style={{
                   display: 'inline-flex', alignItems: 'center', gap: '6px',
@@ -136,6 +159,15 @@ export function ContestHero({
                   color: theme.textSecondary, transition: 'all 0.15s',
                 }}>
                   Standings
+                </Link>
+                <Link href={`/contests/${contestId}/submissions`} style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '6px',
+                  padding: '10px 20px', borderRadius: '10px', textDecoration: 'none',
+                  fontFamily: 'var(--ff-ui)', fontSize: '14px', fontWeight: 400,
+                  background: 'rgba(255,255,255,0.06)', border: `1px solid ${theme.surfaceBorder}`,
+                  color: theme.textSecondary, transition: 'all 0.15s',
+                }}>
+                  Submissions
                 </Link>
                 {isAdmin && (
                   <Link href={`/admin/contests/${contestId}/edit`} style={{
@@ -253,8 +285,9 @@ export function ContestHero({
         {/* CTA buttons */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           {isLoggedIn && !isPast && !isRegistered && !isAdmin && (
-            <Link
-              href={`/contests/${contestId}`}
+            <button
+              onClick={handleRegister}
+              disabled={registering}
               className="btn"
               style={{
                 padding: '12px 28px',
@@ -262,15 +295,29 @@ export function ContestHero({
                 color: '#fff',
                 boxShadow: '0 4px 16px rgba(107,148,120,0.25)',
                 fontSize: '15px',
+                cursor: registering ? 'wait' : 'pointer',
+                opacity: registering ? 0.7 : 1,
               }}
             >
-              Register for Contest
-            </Link>
+              {registering ? 'Registering…' : 'Register for Contest'}
+            </button>
           )}
           {isLoggedIn && !isPast && isRegistered && (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '10px 18px', background: 'var(--sage-bg)', border: '1px solid var(--sage-border)', borderRadius: 'var(--r)', fontFamily: 'var(--ff-ui)', fontSize: '14px', fontWeight: 500, color: 'var(--sage)' }}>
-              ✓ Registered
-            </span>
+            <Link
+              href={`/contests/${contestId}`}
+              className="btn"
+              style={{
+                padding: '12px 28px',
+                background: 'var(--sage)',
+                color: '#fff',
+                fontSize: '15px',
+                textDecoration: 'none',
+                display: 'inline-flex', alignItems: 'center', gap: '8px',
+              }}
+            >
+              <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: 'rgba(255,255,255,0.7)', flexShrink: 0 }} />
+              In Progress
+            </Link>
           )}
           <Link
             href={`/contests/${contestId}/standings`}
