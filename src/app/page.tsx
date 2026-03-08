@@ -12,29 +12,26 @@ export default async function HomePage() {
   const session = await getServerSession(authOptions);
 
   let posts: any[] = [];
-  let problemCount = 248;
-  let userCount = 0;
-  let contestCount = 0;
+  let problemCount: number | null = null;
+  let userCount: number | null = null;
+  let contestCount: number | null = null;
 
   try {
-    [posts, problemCount, userCount, contestCount] = await Promise.all([
-      prisma.blogPost.findMany({
-        where: { isAnnouncement: true },
-        orderBy: { createdAt: 'desc' },
-        take: 20,
-        include: {
-          author: true,
-          _count: { select: { comments: true, votes: true } },
-          votes: true,
-        },
-      }),
-      prisma.problem.count(),
-      prisma.user.count(),
-      prisma.contest.count(),
-    ]) as any;
-  } catch {
-    // DB unavailable in local dev  use defaults
-  }
+    posts = await prisma.blogPost.findMany({
+      where: { isAnnouncement: true },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+      include: {
+        author: true,
+        _count: { select: { comments: true, votes: true } },
+        votes: true,
+      },
+    });
+  } catch { /* DB unavailable */ }
+
+  try { problemCount = await prisma.problem.count(); } catch { }
+  try { userCount = await prisma.user.count(); } catch { }
+  try { contestCount = await prisma.contest.count(); } catch { }
 
   return (
     <div style={{ position: 'relative', zIndex: 1 }}>
@@ -44,7 +41,7 @@ export default async function HomePage() {
         <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
 
           {/* Hero card */}
-          <div className="g fade-in" style={{ padding: '52px 52px', maxWidth: '820px', flex: '1 1 480px', position: 'relative', overflow: 'hidden' }}>
+          <div className="g fade-in" style={{ padding: 'clamp(24px, 4vw, 52px)', maxWidth: '820px', flex: '1 1 300px', position: 'relative', overflow: 'hidden' }}>
             {/* Radial glow */}
             <div aria-hidden="true" style={{ position: 'absolute', top: '-80px', right: '-80px', width: '360px', height: '360px', background: 'radial-gradient(circle,rgba(107,148,120,.14),transparent 68%)', borderRadius: '50%', pointerEvents: 'none', animation: 'glow-pulse 6s ease-in-out infinite' }} />
 
@@ -75,18 +72,18 @@ export default async function HomePage() {
           {/* Stats strip */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', minWidth: '200px' }}>
             <div className="g fade-in-d" style={{ padding: '22px 24px' }}>
-              <div style={{ fontFamily: 'var(--ff-display)', fontSize: '34px', color: 'var(--ink)', lineHeight: 1, marginBottom: '4px', animation: 'count-up 0.6s ease 0.3s both' }}>{problemCount || ''}</div>
+              <div style={{ fontFamily: 'var(--ff-display)', fontSize: '34px', color: 'var(--ink)', lineHeight: 1, marginBottom: '4px', animation: 'count-up 0.6s ease 0.3s both' }}>{problemCount ?? '—'}</div>
               <div style={{ fontFamily: 'var(--ff-mono)', fontSize: '9px', letterSpacing: '0.14em', color: 'var(--ink5)', textTransform: 'uppercase' }}>Problems in vault</div>
             </div>
             <div className="g fade-in-d2" style={{ padding: '22px 24px' }}>
-              <div style={{ fontFamily: 'var(--ff-display)', fontSize: '34px', color: 'var(--ink)', lineHeight: 1, marginBottom: '4px', animation: 'count-up 0.6s ease 0.45s both' }}>{userCount > 0 ? userCount.toLocaleString() : ''}</div>
+              <div style={{ fontFamily: 'var(--ff-display)', fontSize: '34px', color: 'var(--ink)', lineHeight: 1, marginBottom: '4px', animation: 'count-up 0.6s ease 0.45s both' }}>{userCount !== null ? userCount.toLocaleString() : '—'}</div>
               <div style={{ fontFamily: 'var(--ff-mono)', fontSize: '9px', letterSpacing: '0.14em', color: 'var(--ink5)', textTransform: 'uppercase' }}>Registered solvers</div>
             </div>
             <div className="g fade-in-d3" style={{ padding: '22px 24px' }}>
-              <div style={{ fontFamily: 'var(--ff-display)', fontSize: '34px', color: 'var(--ink)', lineHeight: 1, marginBottom: '4px', animation: 'count-up 0.6s ease 0.6s both' }}>{contestCount > 0 ? contestCount : ''}</div>
+              <div style={{ fontFamily: 'var(--ff-display)', fontSize: '34px', color: 'var(--ink)', lineHeight: 1, marginBottom: '4px', animation: 'count-up 0.6s ease 0.6s both' }}>{contestCount ?? '—'}</div>
               <div style={{ fontFamily: 'var(--ff-mono)', fontSize: '9px', letterSpacing: '0.14em', color: 'var(--ink5)', textTransform: 'uppercase', marginBottom: '10px' }}>Contests hosted</div>
               <div className="prog-bar-wrap" style={{ height: '5px' }}>
-                <div className="prog-fill prog-sage" style={{ width: contestCount > 0 ? `${Math.min((contestCount / 20) * 100, 100)}%` : '12%', height: '5px', transition: 'width 1s ease 0.8s' }} />
+                <div className="prog-fill prog-sage" style={{ width: contestCount !== null && contestCount > 0 ? `${Math.min((contestCount / 20) * 100, 100)}%` : '4%', height: '5px', transition: 'width 1s ease 0.8s' }} />
               </div>
             </div>
           </div>

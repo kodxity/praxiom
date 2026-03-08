@@ -180,14 +180,13 @@ export function ContestCard({ contest, active, past, isAdmin, animDelay = 0, isR
       <div
         className="fade-in"
         style={{
-          width: '360px',
+          width: 'min(360px, 100%)',
           borderRadius: 'var(--r-xl)',
           overflow: 'hidden',
           position: 'relative',
           background: t.bg,
           padding: '28px',
           animationDelay: `${animDelay}s`,
-          flexShrink: 0,
         }}
       >
         {/* Ambient glow overlay */}
@@ -272,7 +271,7 @@ export function ContestCard({ contest, active, past, isAdmin, animDelay = 0, isR
   return (
     <div
       className="g contest-card fade-in"
-      style={{ width: '360px', animationDelay: `${animDelay}s` }}
+      style={{ maxWidth: '360px', width: '100%', animationDelay: `${animDelay}s` }}
     >
       {/* Status */}
       <div style={{ marginBottom: '14px' }}>

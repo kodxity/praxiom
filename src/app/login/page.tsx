@@ -3,13 +3,14 @@ import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { signIn } from 'next-auth/react';
-import { LogIn, AlertCircle, CheckCircle } from 'lucide-react';
+import { LogIn, AlertCircle, CheckCircle, Eye, EyeOff } from 'lucide-react';
 
 function LoginForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [showPw, setShowPw] = useState(false);
     const registered = searchParams.get('registered');
 
     async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -33,7 +34,7 @@ function LoginForm() {
 
     return (
         <div style={{ position: 'relative', zIndex: 1, minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1.75rem' }}>
-            <div className="g scale-in" style={{ width: '100%', maxWidth: '420px', padding: '40px 40px' }}>
+            <div className="g scale-in" style={{ width: '100%', maxWidth: '420px', padding: 'clamp(24px, 5vw, 40px)' }}>
 
                 {/* Wordmark */}
                 <div style={{ textAlign: 'center', marginBottom: '32px' }}>
@@ -76,7 +77,18 @@ function LoginForm() {
                         <label style={{ fontFamily: 'var(--ff-ui)', fontSize: '12px', fontWeight: 600, letterSpacing: '0.06em', color: 'var(--ink3)', textTransform: 'uppercase' }}>
                             Password
                         </label>
-                        <input name="password" type="password" required autoComplete="current-password" className="input" placeholder="" />
+                        <div style={{ position: 'relative' }}>
+                            <input name="password" type={showPw ? 'text' : 'password'} required autoComplete="current-password" className="input" placeholder="" style={{ paddingRight: '40px' }} />
+                            <button
+                                type="button"
+                                tabIndex={-1}
+                                onClick={() => setShowPw(p => !p)}
+                                aria-label={showPw ? 'Hide password' : 'Show password'}
+                                style={{ position: 'absolute', right: '11px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: 'var(--ink5)', display: 'flex', alignItems: 'center', lineHeight: 0 }}
+                            >
+                                {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </button>
+                        </div>
                     </div>
 
                     <button

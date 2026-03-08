@@ -3,6 +3,11 @@ import { authOptions } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { buildCustomTheme } from '@/lib/contestThemes'
+import { z } from 'zod'
+
+const updateThemeSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(100, 'Name too long').trim().optional(),
+})
 
 export async function GET(_req: Request, props: { params: Promise<{ slug: string }> }) {
   const { slug } = await props.params
@@ -21,8 +26,13 @@ export async function PATCH(req: Request, props: { params: Promise<{ slug: strin
   if (!session?.user?.isAdmin) return new NextResponse('Unauthorized', { status: 401 })
   const { slug } = await props.params
   try {
-    const body = await req.json()
-    const config = buildCustomTheme({ ...body, slug })
+    let rawBody: unknown
+    try { rawBody = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }) }
+
+    const result = updateThemeSchema.safeParse(rawBody)
+    if (!result.success) return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 })
+
+    const config = buildCustomTheme({ ...(rawBody as Record<string, unknown>), slug })
     const theme = await prisma.theme.update({
       where: { slug },
       data: { name: config.name, config: config as any },

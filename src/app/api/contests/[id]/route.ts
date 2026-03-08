@@ -2,6 +2,17 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { z } from "zod";
+
+const updateContestSchema = z.object({
+    title: z.string().min(1, 'Title is required').max(200, 'Title too long').trim().optional(),
+    description: z.string().max(5000, 'Description too long').optional(),
+    startTime: z.string().optional(),
+    endTime: z.string().optional(),
+    themeSlug: z.string().regex(/^[a-z0-9-]*$/, 'Invalid theme slug').max(50).optional(),
+    accentColor: z.string().regex(/^(#[0-9A-Fa-f]{6})?$/, 'Invalid hex color').optional(),
+    status: z.enum(['SCHEDULED', 'ACTIVE', 'ENDED']).optional(),
+});
 
 export async function GET(_req: Request, props: { params: Promise<{ id: string }> }) {
     const params = await props.params;
@@ -23,8 +34,23 @@ export async function PATCH(req: Request, props: { params: Promise<{ id: string 
         return new NextResponse("Unauthorized", { status: 401 });
     }
     const params = await props.params;
-    const body = await req.json();
-    const { title, description, startTime, endTime, themeSlug, accentColor, status } = body;
+
+    let body: unknown;
+    try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }); }
+
+    const result = updateContestSchema.safeParse(body);
+    if (!result.success) {
+        return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 });
+    }
+    const { title, description, startTime, endTime, themeSlug, accentColor, status } = result.data;
+
+    // Validate dates if provided
+    let start: Date | undefined, end: Date | undefined;
+    if (startTime) { start = new Date(startTime); if (isNaN(start.getTime())) return NextResponse.json({ error: 'Invalid start time' }, { status: 400 }); }
+    if (endTime)   { end   = new Date(endTime);   if (isNaN(end.getTime()))   return NextResponse.json({ error: 'Invalid end time' },   { status: 400 }); }
+    if (start && end && start >= end) {
+        return NextResponse.json({ error: 'Start time must be before end time' }, { status: 400 });
+    }
 
     try {
         const contest = await prisma.contest.update({
@@ -32,8 +58,8 @@ export async function PATCH(req: Request, props: { params: Promise<{ id: string 
             data: {
                 ...(title !== undefined && { title }),
                 ...(description !== undefined && { description }),
-                ...(startTime !== undefined && { startTime: new Date(startTime) }),
-                ...(endTime !== undefined && { endTime: new Date(endTime) }),
+                ...(start !== undefined && { startTime: start }),
+                ...(end !== undefined && { endTime: end }),
                 ...(themeSlug !== undefined && { themeSlug }),
                 ...(accentColor !== undefined && { accentColor: accentColor || null }),
                 ...(status !== undefined && { status }),

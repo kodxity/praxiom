@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { CheckCircle, XCircle, Lock } from 'lucide-react';
+import CustomSelect from '@/components/CustomSelect';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function ProblemsList({ problems, contestId, initialSubmissions, lockedIds = [] }: { problems: any[], contestId: string, initialSubmissions: any[], lockedIds?: string[] }) {
@@ -56,13 +57,19 @@ export function ProblemsList({ problems, contestId, initialSubmissions, lockedId
                         style={{ width: '100%' }}
                     />
                 </div>
-                <select className="select" style={{ width: '120px' }} value={difficulty} onChange={e => setDifficulty(e.target.value)}>
-                    <option value="">Difficulty</option>
-                    <option>Easy</option>
-                    <option>Medium</option>
-                    <option>Hard</option>
-                    <option>Expert</option>
-                </select>
+                <CustomSelect
+                    value={difficulty}
+                    onChange={setDifficulty}
+                    options={[
+                        { value: '', label: 'Difficulty' },
+                        { value: 'Easy', label: 'Easy' },
+                        { value: 'Medium', label: 'Medium' },
+                        { value: 'Hard', label: 'Hard' },
+                        { value: 'Expert', label: 'Expert' },
+                    ]}
+                    placeholder="Difficulty"
+                    style={{ width: '120px' }}
+                />
                 <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', color: 'var(--ink5)', flexShrink: 0 }}>
                     {filtered.length}/{problems.length}
                 </span>

@@ -3,13 +3,29 @@
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
-import { LogOut } from 'lucide-react';
-import { useState } from 'react';
+import { LogOut, MessageCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+
+function useUnreadCount(hasGroup: boolean) {
+    const [count, setCount] = useState(0);
+    useEffect(() => {
+        if (!hasGroup) return;
+        const poll = () => fetch('/api/user/unread-messages').then(r => r.json()).then(d => setCount(d.count ?? 0)).catch(() => {});
+        poll();
+        const id = setInterval(poll, 15000);
+        return () => clearInterval(id);
+    }, [hasGroup]);
+    return count;
+}
 
 export function Navbar() {
     const { data: session } = useSession();
     const pathname = usePathname();
     const [isOpen, setIsOpen] = useState(false);
+
+    const groupId = session?.user?.groupId ?? null;
+    const unread = useUnreadCount(!!groupId);
+    const showChatIcon = !!groupId;
 
     const links = [
         { name: 'Home', href: '/' },
@@ -21,6 +37,11 @@ export function Navbar() {
 
     if (session?.user?.isAdmin) {
         links.push({ name: 'Admin', href: '/admin' });
+    }
+    if (session?.user?.isTeacher) {
+        links.push({ name: 'My Group', href: '/teacher' });
+    } else if (session?.user?.groupId) {
+        links.push({ name: 'My Group', href: `/groups/${session.user.groupId}` });
     }
 
     const navBg = {
@@ -87,6 +108,20 @@ export function Navbar() {
                                     {session.user.username}
                                 </span>
                             </div>
+                            {showChatIcon && (
+                                <Link
+                                    href={`/groups/${groupId}/chat`}
+                                    aria-label="Group chat"
+                                    style={{ position: 'relative', width: '34px', height: '34px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: pathname.startsWith(`/groups/${groupId}/chat`) ? 'var(--sage)' : mutedColor, background: pathname.startsWith(`/groups/${groupId}/chat`) ? 'rgba(107,148,120,0.1)' : 'transparent', transition: 'all 0.15s', textDecoration: 'none' }}
+                                >
+                                    <MessageCircle size={18} />
+                                    {unread > 0 && (
+                                        <span style={{ position: 'absolute', top: '2px', right: '2px', minWidth: '16px', height: '16px', borderRadius: '99px', background: 'var(--rose, #c03030)', color: 'white', fontFamily: 'var(--ff-mono)', fontSize: '9px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px', lineHeight: 1 }}>
+                                            {unread > 99 ? '99+' : unread}
+                                        </span>
+                                    )}
+                                </Link>
+                            )}
                             <Link
                                 href={`/user/${session.user.username}`}
                                 style={{
@@ -166,6 +201,17 @@ export function Navbar() {
                                 <Link href={`/user/${session.user.username}`} onClick={() => setIsOpen(false)} style={{ display: 'block', padding: '9px 14px', fontFamily: 'var(--ff-ui)', fontSize: '14px', textDecoration: 'none', color: textColor, borderRadius: '9px' }}>
                                     Profile ({session.user.username})
                                 </Link>
+                                {showChatIcon && (
+                                    <Link href={`/groups/${groupId}/chat`} onClick={() => setIsOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 14px', fontFamily: 'var(--ff-ui)', fontSize: '14px', textDecoration: 'none', color: textColor, borderRadius: '9px' }}>
+                                        <MessageCircle size={15} />
+                                        Group Chat
+                                        {unread > 0 && (
+                                            <span style={{ minWidth: '18px', height: '18px', borderRadius: '99px', background: 'var(--rose, #c03030)', color: 'white', fontFamily: 'var(--ff-mono)', fontSize: '10px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
+                                                {unread > 99 ? '99+' : unread}
+                                            </span>
+                                        )}
+                                    </Link>
+                                )}
                                 <button onClick={() => signOut({ callbackUrl: '/' })} style={{ display: 'block', padding: '9px 14px', fontFamily: 'var(--ff-ui)', fontSize: '14px', textAlign: 'left', background: 'transparent', border: 'none', cursor: 'pointer', color: mutedColor, borderRadius: '9px', width: '100%' }}>
                                     Sign out
                                 </button>

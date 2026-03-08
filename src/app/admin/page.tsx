@@ -12,9 +12,20 @@ export default async function AdminPage() {
     }
 
     const [pendingUsers, contests] = await Promise.all([
+        // Admin sees: pending teachers + pending students with no group (independent)
         prisma.user.findMany({
-            where: { isApproved: false },
-            orderBy: { createdAt: 'desc' }
+            where: {
+                isApproved: false,
+                OR: [
+                    { isTeacher: true },
+                    { groupId: null },
+                ],
+            },
+            orderBy: { createdAt: 'desc' },
+            include: {
+                school: { select: { shortName: true, district: true } },
+                taughtGroup: { select: { name: true } },
+            },
         }),
         prisma.contest.findMany({
             orderBy: { startTime: 'desc' },
@@ -37,7 +48,7 @@ export default async function AdminPage() {
                 </h1>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))', gap: '24px' }}>
 
                 {/* Quick Actions */}
                 <div className="g" style={{ padding: '28px 32px' }}>

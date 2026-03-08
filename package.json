@@ -7,7 +7,10 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
-    "seed:jade-city": "npx tsx prisma/seed-jade-city.ts"
+    "seed:jade-city": "npx tsx prisma/seed-jade-city.ts",
+    "seed:schools": "npx tsx prisma/seed-schools.ts",
+    "seed:na-schools": "npx tsx prisma/seed-na-schools.ts",
+    "enrich:domains": "npx tsx prisma/enrich-school-domains.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",

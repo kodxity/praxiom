@@ -5,6 +5,8 @@ declare module "next-auth" {
         id: string
         username: string
         isAdmin: boolean
+        isTeacher: boolean
+        groupId: string | null
     }
 
     interface Session {
@@ -12,6 +14,8 @@ declare module "next-auth" {
             id: string
             username: string
             isAdmin: boolean
+            isTeacher: boolean
+            groupId: string | null
         }
     }
 }

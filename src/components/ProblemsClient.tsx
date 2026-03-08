@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
+import CustomSelect from './CustomSelect';
 
 function getPointsLabel(pts: number) {
     if (pts <= 80)  return { label: 'E', title: 'Easy',   cls: 'diff-e' }
@@ -80,18 +81,27 @@ export function ProblemsClient({ problems, solvedIds }: ProblemsClientProps) {
                         style={{ width: '100%' }}
                     />
                 </div>
-                <select className="select" style={{ width: '140px' }} value={topic} onChange={e => setTopic(e.target.value)}>
-                    <option value="">All Topics</option>
-                    {TOPICS.map(t => <option key={t} value={t}>{t}</option>)}
-                </select>
-                <select className="select" style={{ width: '120px' }} value={difficulty} onChange={e => setDiff(e.target.value)}>
-                    <option value="">Difficulty</option>
-                    {DIFFICULTIES.map(d => <option key={d} value={d}>{d}</option>)}
-                </select>
-                <select className="select" style={{ width: '140px' }} value={contest} onChange={e => setContest(e.target.value)}>
-                    <option value="">All Contests</option>
-                    {contests.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
+                <CustomSelect
+                    value={topic}
+                    onChange={setTopic}
+                    options={[{ value: '', label: 'All Topics' }, ...TOPICS.map(t => ({ value: t, label: t }))]}
+                    placeholder="All Topics"
+                    style={{ width: '140px' }}
+                />
+                <CustomSelect
+                    value={difficulty}
+                    onChange={setDiff}
+                    options={[{ value: '', label: 'Difficulty' }, ...DIFFICULTIES.map(d => ({ value: d, label: d }))]}
+                    placeholder="Difficulty"
+                    style={{ width: '120px' }}
+                />
+                <CustomSelect
+                    value={contest}
+                    onChange={setContest}
+                    options={[{ value: '', label: 'All Contests' }, ...contests.map(c => ({ value: c, label: c }))]}
+                    placeholder="All Contests"
+                    style={{ width: '140px' }}
+                />
                 <span className="tag" style={{ marginLeft: 'auto', whiteSpace: 'nowrap' }}>
                     {filtered.length} result{filtered.length !== 1 ? 's' : ''}
                 </span>
@@ -107,6 +117,7 @@ export function ProblemsClient({ problems, solvedIds }: ProblemsClientProps) {
                 </div>
             ) : (
                 <div className="g" style={{ overflow: 'hidden' }}>
+                  <div style={{ overflowX: 'auto' }}>
 
                     {/* Table header */}
                     <div style={{
@@ -115,6 +126,7 @@ export function ProblemsClient({ problems, solvedIds }: ProblemsClientProps) {
                         gap: '12px', alignItems: 'center',
                         fontFamily: 'var(--ff-mono)', fontSize: '10px', letterSpacing: '0.12em',
                         color: 'var(--ink5)', textTransform: 'uppercase',
+                        minWidth: '560px',
                     }}>
                         <span>#</span>
                         <span />
@@ -146,6 +158,7 @@ export function ProblemsClient({ problems, solvedIds }: ProblemsClientProps) {
                                     animation: 'fade-in 0.4s both',
                                     animationDelay: `${idx * 0.025}s`,
                                     background: isSolved ? 'rgba(107,148,120,0.04)' : 'transparent',
+                                    minWidth: '560px',
                                 }}
                             >
                                 <span className="prob-num" style={{ color: 'var(--ink5)' }}>
@@ -171,6 +184,7 @@ export function ProblemsClient({ problems, solvedIds }: ProblemsClientProps) {
                         );
                     })}
 
+                  </div>
                 </div>
             )}
         </div>

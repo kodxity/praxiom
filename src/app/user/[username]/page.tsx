@@ -16,7 +16,12 @@ export default async function UserProfile(props: { params: Promise<{ username: s
     try {
         user = await prisma.user.findUnique({
             where: { username: params.username },
-            include: { ratingHistory: { orderBy: { createdAt: 'asc' } } }
+            include: {
+                ratingHistory: { orderBy: { createdAt: 'asc' } },
+                school: { select: { name: true, shortName: true, district: true } },
+                group: { select: { id: true, name: true } },
+                taughtGroup: { select: { id: true, name: true } },
+            }
         });
     } catch {
         // DB unavailable in local frontend dev
@@ -45,8 +50,9 @@ export default async function UserProfile(props: { params: Promise<{ username: s
     }
 
     let totalSolved = 0;
+    let totalXP = 0;
     try {
-        const [detailedSubs, heatmapSubs, solvedCount] = await Promise.all([
+        const [detailedSubs, heatmapSubs, solvedCount, xpSubs] = await Promise.all([
             // Always fetch submissions - answer is conditionally hidden in UI
             prisma.submission.findMany({
                 where: { userId: user.id },
@@ -61,10 +67,16 @@ export default async function UserProfile(props: { params: Promise<{ username: s
             }),
             // Total solved count (all-time, fast COUNT query)
             prisma.submission.count({ where: { userId: user.id, isCorrect: true } }),
+            // XP: sum of points from all correct submissions
+            prisma.submission.findMany({
+                where: { userId: user.id, isCorrect: true },
+                select: { problem: { select: { points: true } } },
+            }),
         ]);
         submissions = detailedSubs;
         allSubmissions = heatmapSubs;
         totalSolved = solvedCount;
+        totalXP = xpSubs.reduce((s: number, sub: any) => s + (sub.problem?.points ?? 0), 0);
     } catch { /* DB unavailable */ }
 
     const graphData = user.ratingHistory.map((h: any) => ({
@@ -115,6 +127,23 @@ export default async function UserProfile(props: { params: Promise<{ username: s
                             <span className={rank.cls}>⬡ {rank.label}</span>
                             <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '13px', fontWeight: 600, color: getRatingColor(user.rating) }}>{user.rating}</span>
                         </div>
+                        {/* Org badges */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginTop: '8px' }}>
+                            {user.school && (
+                                <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', padding: '2px 9px', borderRadius: '99px', background: 'rgba(88,120,160,0.1)', border: '1px solid rgba(88,120,160,0.2)', color: 'var(--slate, #5878a0)', letterSpacing: '0.04em' }}>
+                                    {user.school.shortName} · {user.school.district}
+                                </span>
+                            )}
+                            {(user.group || user.taughtGroup) && (() => {
+                                const g = user.group ?? user.taughtGroup;
+                                return (
+                                    <a href={`/groups/${g.id}`} style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', padding: '2px 9px', borderRadius: '99px', background: 'rgba(107,148,120,0.1)', border: '1px solid rgba(107,148,120,0.2)', color: 'var(--sage)', letterSpacing: '0.04em', textDecoration: 'none' }}>
+                                        {user.taughtGroup ? '📚 ' : ''}
+                                        {g.name}
+                                    </a>
+                                );
+                            })()}
+                        </div>
                     </div>
                     {isOwnProfile && (
                         <div style={{ flexShrink: 0 }}>
@@ -150,7 +179,7 @@ export default async function UserProfile(props: { params: Promise<{ username: s
                 </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '20px', alignItems: 'start' }}>
+            <div className="profile-2col">
 
                 {/* ── Left column: graph + heatmap + submissions ── */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -173,6 +202,7 @@ export default async function UserProfile(props: { params: Promise<{ username: s
                         <div style={{ fontFamily: 'var(--ff-ui)', fontSize: '13px', fontWeight: 500, color: 'var(--ink)', marginBottom: '14px' }}>
                             Activity - last 16 weeks
                         </div>
+                        <div className="heatmap-scroll">
                         <div className="heatmap">
                             {heatmapCells.map((cell) => (
                                 <div
@@ -181,6 +211,7 @@ export default async function UserProfile(props: { params: Promise<{ username: s
                                     title={`${cell.date}: ${cell.count} submission${cell.count !== 1 ? 's' : ''}`}
                                 />
                             ))}
+                        </div>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '10px' }}>
                             <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '9px', color: 'var(--ink5)' }}>Less</span>
@@ -237,6 +268,50 @@ export default async function UserProfile(props: { params: Promise<{ username: s
 
                 {/* ── Right column: rank info ── */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+                    {/* Level card */}
+                    <div className="g fade-in-d" style={{ padding: '22px 24px' }}>
+                        {(() => {
+                            const level = 1 + Math.floor(Math.sqrt(totalXP / 100));
+                            const currentThreshold = (level - 1) ** 2 * 100;
+                            const nextThreshold    = level ** 2 * 100;
+                            const progress = nextThreshold > currentThreshold
+                                ? (totalXP - currentThreshold) / (nextThreshold - currentThreshold)
+                                : 1;
+                            return (
+                                <>
+                                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '10px' }}>
+                                        <div>
+                                            <div style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', letterSpacing: '0.14em', color: 'var(--ink5)', textTransform: 'uppercase', marginBottom: '4px' }}>Level</div>
+                                            <div style={{ fontFamily: 'var(--ff-display)', fontSize: '36px', fontWeight: 400, color: 'var(--ink)', lineHeight: 1, letterSpacing: '-0.03em' }}>
+                                                {level}
+                                            </div>
+                                        </div>
+                                        <div style={{ textAlign: 'right' }}>
+                                            <div style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', letterSpacing: '0.14em', color: 'var(--ink5)', textTransform: 'uppercase', marginBottom: '4px' }}>Total XP</div>
+                                            <div style={{ fontFamily: 'var(--ff-mono)', fontSize: '18px', fontWeight: 600, color: 'var(--amber)' }}>
+                                                {totalXP.toLocaleString()}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {/* Progress bar */}
+                                    <div style={{ marginTop: '6px', marginBottom: '8px' }}>
+                                        <div style={{ height: '6px', borderRadius: '99px', background: 'rgba(0,0,0,0.07)', overflow: 'hidden' }}>
+                                            <div style={{ height: '100%', width: `${Math.min(100, progress * 100).toFixed(1)}%`, borderRadius: '99px', background: 'linear-gradient(90deg, var(--sage), var(--amber))', transition: 'width 0.5s ease' }} />
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '5px' }}>
+                                            <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', color: 'var(--ink5)' }}>
+                                                {totalXP - currentThreshold} / {nextThreshold - currentThreshold} XP to Lv.{level + 1}
+                                            </span>
+                                            <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', color: 'var(--ink5)' }}>
+                                                {Math.round(progress * 100)}%
+                                            </span>
+                                        </div>
+                                    </div>
+                                </>
+                            );
+                        })()}
+                    </div>
 
                     {/* Rank card */}
                     <div className="g fade-in-d" style={{ padding: '22px 24px' }}>
@@ -321,12 +396,20 @@ function getRatingColor(rating: number): string {
 }
 
 function timeAgo(date: Date): string {
-    const diff = Date.now() - new Date(date).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return 'just now';
-    if (mins < 60) return `${mins}m ago`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours}h ago`;
-    return `${Math.floor(hours / 24)}d ago`;
+    const diff   = Date.now() - new Date(date).getTime();
+    const secs   = Math.floor(diff / 1000);
+    const mins   = Math.floor(secs  / 60);
+    const hours  = Math.floor(mins  / 60);
+    const days   = Math.floor(hours / 24);
+    const weeks  = Math.floor(days  / 7);
+    const months = Math.floor(days  / 30);
+    const years  = Math.floor(days  / 365);
+    if (secs   < 60)  return `${secs}s ago`;
+    if (mins   < 60)  return `${mins}m ago`;
+    if (hours  < 24)  return `${hours}h ago`;
+    if (days   < 7)   return `${days}d ago`;
+    if (weeks  < 5)   return `${weeks}w ago`;
+    if (months < 12)  return `${months}mo ago`;
+    return `${years}y ago`;
 }
 

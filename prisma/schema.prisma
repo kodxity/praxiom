@@ -7,15 +7,50 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model School {
+  id          String     @id @default(cuid())
+  name        String
+  shortName   String
+  district    String     // "ECSD", "EPSB", "INDEPENDENT"
+  emailDomain String?    // e.g. "ecsd.net" — null means any email OK
+  createdAt   DateTime   @default(now())
+
+  users       User[]
+  groups      OrgGroup[]
+}
+
+model OrgGroup {
+  id        String   @id @default(cuid())
+  name      String
+  bio       String?
+  schoolId  String?
+  teacherId String   @unique
+  createdAt DateTime @default(now())
+
+  school   School?  @relation(fields: [schoolId], references: [id])
+  teacher  User     @relation("TeacherGroup", fields: [teacherId], references: [id])
+  members  User[]   @relation("GroupMembers")
+  messages GroupMessage[]
+}
+
 model User {
   id            String    @id @default(cuid())
   username      String    @unique
+  email         String?   @unique
+  displayName   String?
   password      String
   description   String?
   isAdmin       Boolean   @default(false)
+  isTeacher     Boolean   @default(false)
   isApproved    Boolean   @default(false)
   rating        Int       @default(1200)
   createdAt     DateTime  @default(now())
+  schoolId      String?
+  groupId       String?
+
+  school        School?   @relation(fields: [schoolId], references: [id])
+  group         OrgGroup? @relation("GroupMembers", fields: [groupId], references: [id])
+  taughtGroup   OrgGroup? @relation("TeacherGroup")
 
   submissions   Submission[]
   posts         BlogPost[]
@@ -23,6 +58,8 @@ model User {
   votes         Vote[]
   ratingHistory RatingHistory[]
   registrations Registration[]
+  sentMessages  GroupMessage[]
+  messageReads  GroupMessageRead[]
 }
 
 model Theme {
@@ -137,4 +174,27 @@ model RatingHistory {
 
   user    User    @relation(fields: [userId], references: [id])
   contest Contest @relation(fields: [contestId], references: [id])
+}
+
+model GroupMessage {
+  id        String   @id @default(cuid())
+  groupId   String
+  authorId  String
+  content   String
+  createdAt DateTime @default(now())
+
+  group  OrgGroup           @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  author User               @relation(fields: [authorId], references: [id])
+  reads  GroupMessageRead[]
+}
+
+model GroupMessageRead {
+  messageId String
+  userId    String
+  readAt    DateTime @default(now())
+
+  message GroupMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User         @relation(fields: [userId], references: [id])
+
+  @@id([messageId, userId])
 }

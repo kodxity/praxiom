@@ -3,6 +3,12 @@ import { authOptions } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { buildCustomTheme } from '@/lib/contestThemes'
+import { z } from 'zod'
+
+const createThemeSchema = z.object({
+  slug: z.string().min(1, 'Slug is required').max(50, 'Slug too long').regex(/^[a-z0-9-]+$/, 'Slug must be lowercase letters, numbers, and hyphens only'),
+  name: z.string().min(1, 'Name is required').max(100, 'Name too long').trim(),
+})
 
 export async function GET() {
   try {
@@ -19,12 +25,15 @@ export async function POST(req: Request) {
   if (!session?.user?.isAdmin) return new NextResponse('Unauthorized', { status: 401 })
 
   try {
-    const body = await req.json()
-    const { slug, name } = body
-    if (!slug || !name) return new NextResponse('slug and name are required', { status: 400 })
+    let rawBody: unknown
+    try { rawBody = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }) }
+
+    const result = createThemeSchema.safeParse(rawBody)
+    if (!result.success) return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 })
+    const { slug, name } = result.data
 
     // Build full config with derived fields and store
-    const config = buildCustomTheme({ ...body })
+    const config = buildCustomTheme({ ...(rawBody as Record<string, unknown>), slug, name })
 
     const theme = await prisma.theme.create({
       data: { slug, name, config: config as any },

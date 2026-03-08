@@ -136,8 +136,8 @@ next-dev-overlay { cursor: none !important; }
 
 
 /* Animated hamburger */
-.hamburger { display: flex; flex-direction: column; justify-content: center; gap: 5px; width: 20px; height: 20px; cursor: pointer; }
-.hamburger-bar { display: block; height: 1.5px; width: 20px; border-radius: 2px; background: currentColor; transform-origin: center; transition: transform 0.25s cubic-bezier(.4,0,.2,1), opacity 0.2s ease, width 0.25s ease; }
+.hamburger { display: flex; flex-direction: column; justify-content: center; gap: 5px; width: 20px; cursor: pointer; }
+.hamburger-bar { display: block; height: 2px; width: 20px; border-radius: 2px; background: var(--theme-nav-text, var(--ink)); transform-origin: center; transition: transform 0.25s cubic-bezier(.4,0,.2,1), opacity 0.2s ease, width 0.25s ease; }
 .hamburger.open .hamburger-bar:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
 .hamburger.open .hamburger-bar:nth-child(2) { opacity: 0; transform: scaleX(0); }
 .hamburger.open .hamburger-bar:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
@@ -753,3 +753,54 @@ next-dev-overlay { cursor: none !important; }
 .md-body th { text-align: left; padding: 8px 12px; border-bottom: 2px solid var(--glass-border); font-family: var(--ff-ui); font-weight: 600; color: var(--ink); }
 .md-body td { padding: 8px 12px; border-bottom: 1px solid var(--glass-border); color: var(--ink2); }
 .md-body .katex-display { overflow-x: auto; overflow-y: hidden; padding: 4px 0; }
+
+/* ── Responsive layout helpers ─────────────────────────────────────────── */
+
+/* Profile 2-column grid (left: main, right: 320px sidebar) */
+.profile-2col {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 20px;
+  align-items: start;
+}
+
+/* Leaderboard pills column — hidden on narrow screens */
+.lb-pills-col { flex-shrink: 0; }
+
+@media (max-width: 900px) {
+  .profile-2col { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 767px) {
+  /* Reduce container gutters */
+  .container { padding: 0 1rem; }
+
+  /* Profile hero */
+  .profile-hero  { padding: 20px 20px; }
+  .profile-top   { gap: 12px; }
+  .profile-name  { font-size: 22px; }
+
+  /* Stat grid: 4-col → 2-col */
+  .stat-grid     { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .stat-block    { padding: 14px 16px; }
+  .stat-val      { font-size: 26px; }
+
+  /* Page headings */
+  .page-hd h1    { font-size: clamp(22px, 6vw, 36px); }
+
+  /* Blog announce row: allow wrapping */
+  .blog-announce-row { flex-wrap: wrap; gap: 8px 12px; }
+
+  /* Leaderboard row: tighter padding */
+  .lb-row  { padding: 11px 14px; gap: 8px; }
+  .lb-head { padding: 14px 16px 12px; }
+
+  /* Hide group/school pills on very small screens to prevent overflow */
+  .lb-pills-col { display: none; }
+
+  /* Submission rows: allow wrapping */
+  .sub-row { flex-wrap: wrap; gap: 6px; }
+
+  /* Activity heatmap: scrollable horizontally */
+  .heatmap-scroll { overflow-x: auto; }
+}

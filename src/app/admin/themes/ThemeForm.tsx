@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import CustomSelect from '@/components/CustomSelect'
 
 const MONO = 'var(--ff-mono)'
 const LABEL: React.CSSProperties = {
@@ -210,9 +211,13 @@ export function ThemeForm({ initial, slug: editSlug, onDone }: ThemeFormProps) {
             </div>
             <div>
               <label style={LABEL}>Display Font</label>
-              <select value={displayFont} onChange={e => setDisplayFont(e.target.value)} className="input" style={{ width: '100%' }}>
-                {DISPLAY_FONTS.map(f => <option key={f} value={f}>{f}</option>)}
-              </select>
+              <CustomSelect
+                value={displayFont}
+                onChange={setDisplayFont}
+                options={DISPLAY_FONTS.map(f => ({ value: f, label: f }))}
+                variant="field"
+                style={{ width: '100%' }}
+              />
             </div>
           </div>
 
@@ -237,9 +242,13 @@ export function ThemeForm({ initial, slug: editSlug, onDone }: ThemeFormProps) {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '16px', alignItems: 'end' }}>
                 <div>
                   <label style={LABEL}>Blend Mode</label>
-                  <select value={blendMode} onChange={e => setBlendMode(e.target.value)} className="input" style={{ width: '100%' }}>
-                    {BLEND_MODES.map(m => <option key={m} value={m}>{m}</option>)}
-                  </select>
+                  <CustomSelect
+                    value={blendMode}
+                    onChange={setBlendMode}
+                    options={BLEND_MODES.map(m => ({ value: m, label: m }))}
+                    variant="field"
+                    style={{ width: '100%' }}
+                  />
                 </div>
                 <div style={{ minWidth: '140px' }}>
                   <label style={LABEL}>Opacity ({(opacity * 100).toFixed(0)}%)</label>

@@ -2,6 +2,14 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { z } from "zod";
+
+const createProblemSchema = z.object({
+    title: z.string().min(1, 'Title is required').max(200, 'Title too long').trim(),
+    statement: z.string().min(10, 'Statement must be at least 10 characters').max(50000, 'Statement too long'),
+    correctAnswer: z.string().min(1, 'Answer is required').max(500, 'Answer too long').trim(),
+    points: z.number().int('Points must be a whole number').min(1, 'Points must be at least 1').max(10000, 'Points cannot exceed 10,000'),
+});
 
 export async function POST(req: Request, props: { params: Promise<{ id: string }> }) {
     try {
@@ -11,19 +19,21 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        const body = await req.json();
-        const { title, statement, correctAnswer, points } = body;
+        let body: unknown;
+        try { body = await req.json(); } catch { return NextResponse.json({ message: 'Invalid JSON' }, { status: 400 }); }
 
-        if (!title || !statement || !correctAnswer || !points) {
-            return new NextResponse("Missing fields", { status: 400 });
+        const result = createProblemSchema.safeParse(body);
+        if (!result.success) {
+            return NextResponse.json({ message: result.error.issues[0].message }, { status: 400 });
         }
+        const { title, statement, correctAnswer, points } = result.data;
 
         const problem = await prisma.problem.create({
             data: {
                 title,
                 statement,
                 correctAnswer,
-                points: Number(points),
+                points,
                 contestId: params.id
             }
         });
