@@ -33,6 +33,7 @@ export function Navbar() {
         { name: 'Problems', href: '/problems' },
         { name: 'Leaderboard', href: '/leaderboard' },
         { name: 'Blog', href: '/blog' },
+        { name: 'Resources', href: '/resources' },
     ];
 
     if (session?.user?.isAdmin) {

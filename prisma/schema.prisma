@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model School {
@@ -17,6 +16,7 @@ model School {
 
   users       User[]
   groups      OrgGroup[]
+  resources   Resource[]
 }
 
 model OrgGroup {
@@ -62,6 +62,7 @@ model User {
   sentMessages  GroupMessage[]
   messageReads  GroupMessageRead[]
   hintReveals   HintReveal[]
+  resources     Resource[]
 }
 
 model Theme {
@@ -190,6 +191,20 @@ model RatingHistory {
 
   user    User    @relation(fields: [userId], references: [id])
   contest Contest @relation(fields: [contestId], references: [id])
+}
+
+model Resource {
+  id         String   @id @default(cuid())
+  title      String
+  content    String
+  authorId   String
+  visibility String   @default("PUBLIC") // "PUBLIC" or "SCHOOL_ONLY"
+  schoolId   String?  // populated when visibility is SCHOOL_ONLY
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  author User    @relation(fields: [authorId], references: [id])
+  school School? @relation(fields: [schoolId], references: [id])
 }
 
 model GroupMessage {
