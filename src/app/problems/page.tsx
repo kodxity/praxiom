@@ -3,6 +3,19 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import Link from 'next/link'
 import { ProblemsClient } from '@/components/ProblemsClient'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+    title: 'Problem Archive',
+    description:
+        'Browse and solve hundreds of math contest problems from Praxis competitions. Filter by difficulty — Easy, Medium, Hard, and Expert.',
+    openGraph: {
+        title: 'Problem Archive | Praxis',
+        description: 'Hundreds of AMC-style math problems to solve. Filter by difficulty and track your progress.',
+        url: '/problems',
+    },
+    alternates: { canonical: '/problems' },
+}
 
 export const dynamic = 'force-dynamic'
 

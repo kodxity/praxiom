@@ -11,7 +11,7 @@ interface CustomSelectProps {
     onChange: (value: string) => void;
     options: SelectOption[];
     placeholder?: string;
-    /** Outer container style — use for width constraints */
+    /** Outer container style - use for width constraints */
     style?: CSSProperties;
     /** 'filter' = compact bar style  |  'field' = full-width form field style */
     variant?: 'filter' | 'field';

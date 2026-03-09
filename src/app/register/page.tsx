@@ -239,7 +239,7 @@ export default function RegisterPage() {
                                 {isTeacher ? 'Teacher sign-up' : 'Student sign-up'}
                             </h1>
                             <p style={{ fontSize: '13px', color: 'var(--ink5)', fontWeight: 300 }}>
-                                Your name and email are only visible to admins and your teacher — never shown publicly.
+                                Your name and email are only visible to admins and your teacher - never shown publicly.
                             </p>
                         </>
                     )}
@@ -284,7 +284,7 @@ export default function RegisterPage() {
                             </div>
                             <div>
                                 <div style={{ fontFamily: 'var(--ff-ui)', fontWeight: 600, fontSize: '15px', color: 'var(--ink)', marginBottom: '3px' }}>Teacher</div>
-                                <div style={{ fontSize: '12px', color: 'var(--ink4)', lineHeight: 1.4 }}>Create a group for your students — requires admin approval</div>
+                                <div style={{ fontSize: '12px', color: 'var(--ink4)', lineHeight: 1.4 }}>Create a group for your students - requires admin approval</div>
                             </div>
                         </button>
 
@@ -315,7 +315,7 @@ export default function RegisterPage() {
                             <div style={fieldWrap}>
                                 <label style={labelStyle}>Full name</label>
                                 <input value={form.displayName} onChange={e => field('displayName', e.target.value)} name="displayName" required className="input" placeholder="Your real name" />
-                                <span style={hint}>Only visible to admins{!isTeacher ? ' and your teacher' : ''} — never shown on your profile</span>
+                                <span style={hint}>Only visible to admins{!isTeacher ? ' and your teacher' : ''} - never shown on your profile</span>
                             </div>
 
                             {/* School picker */}
@@ -340,10 +340,10 @@ export default function RegisterPage() {
                                         value={form.groupId}
                                         onChange={val => field('groupId', val)}
                                         options={[
-                                            { value: '', label: '— None —' },
+                                            { value: '', label: '- None -' },
                                             ...groups.map(g => ({ value: g.id, label: `${g.name} (by ${g.teacher.username})` }))
                                         ]}
-                                        placeholder="— None —"
+                                        placeholder="- None -"
                                         variant="field"
                                         style={{ width: '100%' }}
                                     />
@@ -377,7 +377,7 @@ export default function RegisterPage() {
                                     className="input"
                                     placeholder={!isTeacher && requireDomain ? `you@${selectedSchool?.emailDomain}` : 'your@email.com'}
                                 />
-                                <span style={hint}>Private — only visible to admin{!isTeacher ? ' and your teacher' : ''}</span>
+                                <span style={hint}>Private - only visible to admin{!isTeacher ? ' and your teacher' : ''}</span>
                             </div>
 
                             <div style={fieldWrap}>
@@ -409,7 +409,7 @@ export default function RegisterPage() {
                                     maxLength={500}
                                     className="input"
                                     placeholder={isTeacher
-                                        ? 'e.g. I coach AMC/AIME prep at Lincoln High — looking forward to building a team!'
+                                        ? 'e.g. I coach AMC/AIME prep at Lincoln High - looking forward to building a team!'
                                         : 'e.g. I compete in AMC 10/12 and love combinatorics. Excited to join!'
                                     }
                                     style={{ resize: 'vertical', minHeight: '72px', lineHeight: 1.5 }}
@@ -417,7 +417,7 @@ export default function RegisterPage() {
                                 <span style={hint}>
                                     {isTeacher
                                         ? 'Shown to admins when reviewing your account'
-                                        : 'Visible to your teacher and admins — helps them know who you are'}
+                                        : 'Visible to your teacher and admins - helps them know who you are'}
                                 </span>
                             </div>
 

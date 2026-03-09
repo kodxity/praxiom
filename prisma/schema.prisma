@@ -12,7 +12,7 @@ model School {
   name        String
   shortName   String
   district    String     // "ECSD", "EPSB", "INDEPENDENT"
-  emailDomain String?    // e.g. "ecsd.net" — null means any email OK
+  emailDomain String?    // e.g. "ecsd.net" - null means any email OK
   createdAt   DateTime   @default(now())
 
   users       User[]
@@ -44,6 +44,7 @@ model User {
   isTeacher     Boolean   @default(false)
   isApproved    Boolean   @default(false)
   rating        Int       @default(1200)
+  xp            Int       @default(0)
   createdAt     DateTime  @default(now())
   schoolId      String?
   groupId       String?
@@ -60,6 +61,7 @@ model User {
   registrations Registration[]
   sentMessages  GroupMessage[]
   messageReads  GroupMessageRead[]
+  hintReveals   HintReveal[]
 }
 
 model Theme {
@@ -106,9 +108,22 @@ model Problem {
   statement     String
   correctAnswer String
   points        Int      @default(100)
+  hint          String?
 
-  contest     Contest @relation(fields: [contestId], references: [id])
-  submissions Submission[]
+  contest       Contest       @relation(fields: [contestId], references: [id])
+  submissions   Submission[]
+  hintReveals   HintReveal[]
+}
+
+model HintReveal {
+  userId    String
+  problemId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id])
+  problem Problem @relation(fields: [problemId], references: [id])
+
+  @@id([userId, problemId])
 }
 
 model Submission {
@@ -119,6 +134,7 @@ model Submission {
   answer    String
   isCorrect Boolean
   isUpsolve Boolean  @default(false)
+  hintUsed  Boolean  @default(false)
   createdAt DateTime @default(now())
 
   user    User    @relation(fields: [userId], references: [id])

@@ -4,6 +4,19 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { BookOpen } from 'lucide-react';
 import { VoteButtons } from '@/components/VoteButtons';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: 'Blog',
+    description:
+        'Announcements, community posts, and discussions from the Praxis math contest community.',
+    openGraph: {
+        title: 'Blog | Praxis',
+        description: 'Read the latest announcements and community posts from Praxis.',
+        url: '/blog',
+    },
+    alternates: { canonical: '/blog' },
+};
 
 export const dynamic = 'force-dynamic';
 

@@ -27,11 +27,13 @@ export default function EditProblemPage() {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [contestTitle, setContestTitle] = useState('');
+    const [siblingProblems, setSiblingProblems] = useState<{ id: string; title: string }[]>([]);
 
     const [title, setTitle] = useState('');
     const [statement, setStatement] = useState('');
     const [correctAnswer, setCorrectAnswer] = useState('');
     const [points, setPoints] = useState(100);
+    const [hint, setHint] = useState('');
 
     useEffect(() => {
         Promise.all([
@@ -43,7 +45,9 @@ export default function EditProblemPage() {
                 setStatement(prob.statement ?? '');
                 setCorrectAnswer(prob.correctAnswer ?? '');
                 setPoints(prob.points ?? 100);
+                setHint(prob.hint ?? '');
                 setContestTitle(contest.title ?? '');
+                setSiblingProblems(contest.problems ?? []);
                 setLoading(false);
             })
             .catch(() => setLoading(false));
@@ -57,7 +61,7 @@ export default function EditProblemPage() {
         const res = await fetch(`/api/contests/${contestId}/problems/${problemId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title, statement, correctAnswer, points }),
+            body: JSON.stringify({ title, statement, correctAnswer, points, hint: hint || null }),
         });
         setSaving(false);
         if (res.ok) {
@@ -95,6 +99,38 @@ export default function EditProblemPage() {
                 >
                     ← Back to {contestTitle || 'Contest'}
                 </Link>
+
+                {/* Sibling problem quick-nav */}
+                {siblingProblems.length > 1 && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginBottom: '16px' }}>
+                        {siblingProblems.map((p, i) => {
+                            const letter = String.fromCharCode(65 + i);
+                            const isCurrent = p.id === problemId;
+                            return (
+                                <Link
+                                    key={p.id}
+                                    href={`/admin/contests/${contestId}/problems/${p.id}/edit`}
+                                    title={p.title}
+                                    style={{
+                                        fontFamily: MONO,
+                                        fontSize: '11px',
+                                        letterSpacing: '0.06em',
+                                        padding: '4px 11px',
+                                        borderRadius: '99px',
+                                        border: isCurrent ? '1px solid var(--sage)' : '1px solid var(--border)',
+                                        background: isCurrent ? 'var(--sage-bg)' : 'transparent',
+                                        color: isCurrent ? 'var(--sage)' : 'var(--ink4)',
+                                        textDecoration: 'none',
+                                        transition: 'all 0.12s',
+                                        pointerEvents: isCurrent ? 'none' : 'auto',
+                                    }}
+                                >
+                                    {letter}
+                                </Link>
+                            );
+                        })}
+                    </div>
+                )}
                 <p style={{ fontFamily: MONO, fontSize: '10px', letterSpacing: '0.22em', color: 'var(--sage)', marginBottom: '8px' }}>
                     ADMIN · EDIT PROBLEM
                 </p>
@@ -189,6 +225,22 @@ export default function EditProblemPage() {
                             />
                             <p style={{ fontFamily: MONO, fontSize: '10px', color: 'var(--ink5)', marginTop: '6px' }}>
                                 Submissions are compared case-insensitively with trimmed whitespace.
+                            </p>
+                        </div>
+
+                        {/* Hint */}
+                        <div>
+                            <label style={LABEL}>Hint <span style={{ color: 'var(--ink5)', fontWeight: 400, letterSpacing: '0.05em' }}>(optional)</span></label>
+                            <textarea
+                                value={hint}
+                                onChange={e => setHint(e.target.value)}
+                                rows={3}
+                                className="input"
+                                style={{ width: '100%', resize: 'vertical', fontFamily: 'var(--ff-ui)', fontSize: '14px', lineHeight: 1.7 }}
+                                placeholder="Optional hint shown to users for half the XP…"
+                            />
+                            <p style={{ fontFamily: MONO, fontSize: '10px', color: 'var(--ink5)', marginTop: '6px' }}>
+                                Revealing the hint costs {Math.floor(points / 2)} XP (half of {points}). Leave empty for no hint.
                             </p>
                         </div>
 

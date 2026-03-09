@@ -5,8 +5,38 @@ import { prisma } from '@/lib/db'
 import { buildCustomTheme } from '@/lib/contestThemes'
 import { z } from 'zod'
 
+const cssVal = z.string().max(300).regex(/^[^<>{}]+$/, 'Invalid CSS value').optional()
+const hexColor = z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Invalid hex color').optional()
+
 const updateThemeSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Name too long').trim().optional(),
+  tagline: z.string().max(200).trim().optional(),
+  accent: hexColor,
+  bg: cssVal,
+  bgSecondary: cssVal,
+  surface: cssVal,
+  surfaceBorder: cssVal,
+  surfaceHover: cssVal,
+  textPrimary: cssVal,
+  textSecondary: cssVal,
+  textMuted: cssVal,
+  textAccent: cssVal,
+  accentBg: cssVal,
+  accentBorder: cssVal,
+  displayFont: z.string().max(100).regex(/^[\w\s,-]+$/, 'Invalid font name').optional(),
+  particleColor: cssVal,
+  glowColor: cssVal,
+  gridOverlay: z.boolean().optional(),
+  grainOverlay: z.boolean().optional(),
+  doodlePaths: z.object({
+    hero: z.string().max(200).optional(),
+    background: z.string().max(200).optional(),
+    empty: z.string().max(200).optional(),
+    problemDivider: z.string().max(200).optional(),
+  }).optional(),
+  doodleBlend: z.string().max(50).optional(),
+  doodleOpacity: z.number().min(0).max(1).optional(),
+  navVariant: z.enum(['dark', 'light']).optional(),
 })
 
 export async function GET(_req: Request, props: { params: Promise<{ slug: string }> }) {
@@ -32,7 +62,8 @@ export async function PATCH(req: Request, props: { params: Promise<{ slug: strin
     const result = updateThemeSchema.safeParse(rawBody)
     if (!result.success) return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 })
 
-    const config = buildCustomTheme({ ...(rawBody as Record<string, unknown>), slug })
+    // Build config only from validated fields — never spread rawBody directly
+    const config = buildCustomTheme({ ...result.data, slug })
     const theme = await prisma.theme.update({
       where: { slug },
       data: { name: config.name, config: config as any },

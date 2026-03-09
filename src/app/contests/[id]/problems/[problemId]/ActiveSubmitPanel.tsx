@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface Props {
@@ -13,6 +13,11 @@ interface Props {
     problemTitle?: string;
     nextProblemId?: string;
     nextProblemLetter?: string;
+    // Hint props - hintText is only provided server-side if already purchased
+    hasHint?: boolean;
+    hintCost?: number;
+    userXp?: number;
+    hintText?: string;
 }
 
 function MathDoodle() {
@@ -76,14 +81,61 @@ export default function ActiveSubmitPanel({
     problemTitle = 'Problem',
     nextProblemId,
     nextProblemLetter,
+    hasHint = false,
+    hintCost = 0,
+    userXp: initialUserXp = 0,
+    hintText: initialHintText,
 }: Props) {
     const router = useRouter();
-    const [answer, setAnswer]   = useState('');
-    const [loading, setLoading] = useState(false);
-    const [solved, setSolved]   = useState(initialSolved);
-    const [attempts, setAttempts] = useState(initialAttempts);
-    const [feedback, setFeedback] = useState<{ correct: boolean; message: string } | null>(null);
+    const [answer, setAnswer]         = useState('');
+    const [loading, setLoading]       = useState(false);
+    const [solved, setSolved]         = useState(initialSolved);
+    const [attempts, setAttempts]     = useState(initialAttempts);
+    const [feedback, setFeedback]     = useState<{ correct: boolean; message: string } | null>(null);
     const [showTransition, setShowTransition] = useState(false);
+    // Hint state
+    const [revealedHintText, setRevealedHintText] = useState<string | undefined>(initialHintText);
+    const [localXp, setLocalXp]       = useState(initialUserXp);
+    const [hintLoading, setHintLoading] = useState(false);
+    const [hintError, setHintError]   = useState('');
+    const [xpLoading, setXpLoading]   = useState(true);
+
+    // Always fetch live XP on mount so stale server-side value is overridden
+    useEffect(() => {
+        fetch('/api/user/xp')
+            .then(r => r.ok ? r.json() : null)
+            .then(data => { if (data?.xp !== undefined) setLocalXp(data.xp); })
+            .catch(() => {})
+            .finally(() => setXpLoading(false));
+    }, []);
+
+    async function handleRevealHint() {
+        if (revealedHintText || hintLoading) return;
+        setHintLoading(true);
+        setHintError('');
+        try {
+            const res = await fetch('/api/hints', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ problemId }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setRevealedHintText(data.hint);
+                if (!data.alreadyRevealed && data.newXp !== undefined) {
+                    setLocalXp(data.newXp);
+                }
+            } else {
+                setHintError(data.error ?? 'Could not reveal hint.');
+            }
+        } catch {
+            setHintError('Network error.');
+        } finally {
+            setHintLoading(false);
+        }
+    }
+
+    const hintUsed = !!revealedHintText;
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -102,6 +154,7 @@ export default function ActiveSubmitPanel({
                     setAttempts(a => a + 1);
                     setSolved(true);
                     setAnswer('');
+                    if (data.xpAwarded) setLocalXp(xp => xp + data.xpAwarded);
                     setShowTransition(true);
                 } else {
                     setAttempts(a => a + 1);
@@ -146,6 +199,11 @@ export default function ActiveSubmitPanel({
                     }}>
                         +{xpPoints} XP
                     </div>
+                    {hintUsed && (
+                        <div style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', color: 'var(--ink4)', letterSpacing: '0.08em' }}>
+                            hint used
+                        </div>
+                    )}
                     <div style={{
                         fontFamily: 'var(--ff-body)', fontSize: '14px',
                         color: 'var(--ink4)', textAlign: 'center', maxWidth: '340px',
@@ -251,6 +309,55 @@ export default function ActiveSubmitPanel({
                     Answers are case-insensitive
                 </span>
             </div>
+
+            {hasHint && (
+                <div style={{ marginTop: '16px', borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+                    {revealedHintText ? (
+                        // Already purchased - show hint text
+                        <div>
+                            <div style={{ fontFamily: 'var(--ff-mono)', fontSize: '9px', letterSpacing: '0.18em', color: 'var(--slate)', textTransform: 'uppercase', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span>💡</span> HINT
+                                <span style={{ opacity: 0.5, fontWeight: 400 }}>· {hintCost} XP spent</span>
+                            </div>
+                            <div style={{ fontFamily: 'var(--ff-body)', fontSize: '14px', lineHeight: 1.7, color: 'var(--ink2)', padding: '12px 16px', background: 'rgba(107,148,120,0.06)', borderRadius: 'var(--r)', border: '1px solid var(--sage-border)' }}>
+                                {revealedHintText}
+                            </div>
+                        </div>
+                    ) : (
+                        // Not yet purchased
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                                <button
+                                    onClick={handleRevealHint}
+                                    disabled={hintLoading || xpLoading || localXp < hintCost}
+                                    style={{
+                                        display: 'flex', alignItems: 'center', gap: '7px',
+                                        padding: '7px 14px', borderRadius: 'var(--r)',
+                                        border: '1px solid var(--sage-border)',
+                                        background: (!xpLoading && localXp >= hintCost) ? 'var(--sage-bg)' : 'rgba(0,0,0,0.03)',
+                                        cursor: (hintLoading || xpLoading || localXp < hintCost) ? 'not-allowed' : 'pointer',
+                                        fontFamily: 'var(--ff-ui)', fontSize: '13px', fontWeight: 600,
+                                        color: (!xpLoading && localXp >= hintCost) ? 'var(--sage)' : 'var(--ink5)',
+                                        opacity: (hintLoading || xpLoading) ? 0.65 : 1,
+                                        transition: 'all 0.15s',
+                                    }}
+                                >
+                                    <span>💡</span>
+                                    {hintLoading ? 'Purchasing…' : `Reveal Hint · ${hintCost} XP`}
+                                </button>
+                                <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', color: (!xpLoading && localXp >= hintCost) ? 'var(--ink4)' : 'var(--rose)' }}>
+                                    {xpLoading ? 'Loading XP…' : `You have ${localXp} XP${localXp < hintCost ? ` · need ${hintCost - localXp} more` : ''}`}
+                                </span>
+                            </div>
+                            {hintError && (
+                                <div style={{ fontFamily: 'var(--ff-ui)', fontSize: '12px', color: 'var(--rose)', padding: '7px 12px', background: 'rgba(184,96,78,0.07)', border: '1px solid rgba(184,96,78,0.2)', borderRadius: 'var(--r)' }}>
+                                    {hintError}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     );
 }

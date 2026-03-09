@@ -132,7 +132,6 @@ export default async function GroupPage(props: { params: Promise<{ id: string }>
                         padding: '16px 24px', marginBottom: '20px',
                         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                         textDecoration: 'none', color: 'inherit', cursor: 'pointer',
-                        transition: 'box-shadow 0.15s',
                     }}
                 >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>

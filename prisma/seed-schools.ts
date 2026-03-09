@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 const schools = [
-  // ECSD — Edmonton Catholic School District
+  // ECSD - Edmonton Catholic School District
   { name: 'Archbishop MacDonald High School',  shortName: 'Archbishop Mac',   district: 'ECSD', emailDomain: 'ecsd.net' },
   { name: 'Bishop Carroll High School',         shortName: 'Bishop Carroll',   district: 'ECSD', emailDomain: 'ecsd.net' },
   { name: 'Holy Trinity Catholic High School', shortName: 'Holy Trinity',     district: 'ECSD', emailDomain: 'ecsd.net' },
@@ -19,7 +19,7 @@ const schools = [
   { name: 'St. Nicholas High School',           shortName: 'St. Nicholas',     district: 'ECSD', emailDomain: 'ecsd.net' },
   { name: 'St. Peter the Apostle High School', shortName: 'St. Peter',        district: 'ECSD', emailDomain: 'ecsd.net' },
 
-  // EPSB — Edmonton Public Schools
+  // EPSB - Edmonton Public Schools
   { name: 'Eastglen High School',               shortName: 'Eastglen',         district: 'EPSB', emailDomain: 'epsb.ca' },
   { name: 'Harry Ainlay High School',           shortName: 'Harry Ainlay',     district: 'EPSB', emailDomain: 'epsb.ca' },
   { name: 'J. Percy Page High School',          shortName: 'J. Percy Page',    district: 'EPSB', emailDomain: 'epsb.ca' },

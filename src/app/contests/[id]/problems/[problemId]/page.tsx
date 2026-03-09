@@ -65,6 +65,27 @@ export default async function ProblemViewPage(props: { params: Promise<{ id: str
         notFound();
     }
 
+    // Hint reveal status (persisted in DB so it survives page refresh)
+    let initialHintRevealed = false;
+    let userXp = 0;
+    if (session?.user?.id) {
+        try {
+            const [hintReveal, dbUser] = await Promise.all([
+                problem?.hint
+                    ? prisma.hintReveal.findUnique({
+                        where: { userId_problemId: { userId: session.user.id, problemId: params.problemId } },
+                    })
+                    : null,
+                prisma.user.findUnique({
+                    where: { id: session.user.id },
+                    select: { xp: true },
+                }),
+            ]);
+            initialHintRevealed = !!hintReveal;
+            userXp = dbUser?.xp ?? 0;
+        } catch { /* ignore */ }
+    }
+
     const now = new Date();
     const isPast = now > contest.endTime;
     const isActive = now >= contest.startTime && now <= contest.endTime;
@@ -147,8 +168,8 @@ export default async function ProblemViewPage(props: { params: Promise<{ id: str
                     </span>
                 </div>
 
-                {/* Problem statement */}
-                <div className="g prob-statement" style={{ padding: '28px 32px' }}>
+                {/* Problem statement - hidden when locked */}
+                {isLocked ? null : <div className="g prob-statement" style={{ padding: '28px 32px' }}>
 
                     {/* Contest tag row */}
                     <div className="prob-contest-tag" style={{ marginBottom: '16px' }}>
@@ -164,11 +185,11 @@ export default async function ProblemViewPage(props: { params: Promise<{ id: str
                     </h1>
 
                     {/* Statement body */}
-                    <div className="prob-body" style={{ fontFamily: 'var(--ff-body)', fontSize: '15px', lineHeight: 1.82, color: bodyColor, fontWeight: 300, whiteSpace: 'pre-wrap' }}>
+                    <div className="prob-body" suppressHydrationWarning style={{ fontFamily: 'var(--ff-body)', fontSize: '15px', lineHeight: 1.82, color: bodyColor, fontWeight: 300, whiteSpace: 'pre-wrap' }}>
                         {problem.statement}
                     </div>
 
-                </div>
+                </div>}
 
                 {/* Active contest - submit panel */}
                 {isActive && session && isRegistered && isLocked && (
@@ -198,6 +219,10 @@ export default async function ProblemViewPage(props: { params: Promise<{ id: str
                         problemTitle={problem.title}
                         nextProblemId={nextProblemId}
                         nextProblemLetter={nextProblemLetter}
+                        hasHint={!!problem.hint}
+                        hintCost={Math.floor(problem.points / 2)}
+                        userXp={userXp}
+                        hintText={initialHintRevealed ? (problem.hint ?? undefined) : undefined}
                     />
                 )}
                 {isActive && session && !isRegistered && (
@@ -224,6 +249,10 @@ export default async function ProblemViewPage(props: { params: Promise<{ id: str
                         initialSolved={userSolved}
                         initialAttempts={upsolveAttempts}
                         labelColor={labelColor}
+                        hasHint={!!problem.hint}
+                        hintCost={Math.floor(problem.points / 2)}
+                        userXp={userXp}
+                        hintText={initialHintRevealed ? (problem.hint ?? undefined) : undefined}
                     />
                 )}
 

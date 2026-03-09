@@ -16,10 +16,26 @@ const updateContestSchema = z.object({
 
 export async function GET(_req: Request, props: { params: Promise<{ id: string }> }) {
     const params = await props.params;
+    const session = await getServerSession(authOptions);
+    const isAdmin = session?.user?.isAdmin === true;
     try {
         const contest = await prisma.contest.findUnique({
             where: { id: params.id },
-            include: { problems: { orderBy: { points: 'asc' } } },
+            include: {
+                problems: {
+                    orderBy: { id: 'asc' },
+                    // Never expose correctAnswer to non-admin clients
+                    select: {
+                        id: true,
+                        title: true,
+                        statement: true,
+                        points: true,
+                        hint: true,
+                        contestId: true,
+                        ...(isAdmin ? { correctAnswer: true } : {}),
+                    },
+                },
+            },
         });
         if (!contest) return new NextResponse("Not Found", { status: 404 });
         return NextResponse.json(contest);

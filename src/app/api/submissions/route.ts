@@ -2,6 +2,14 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { z } from "zod";
+import { checkRateLimit, rateLimitResponse, getIp } from "@/lib/rateLimit";
+
+const submitSchema = z.object({
+    contestId: z.string().min(1).max(100),
+    problemId: z.string().min(1).max(100),
+    answer: z.string().min(1, 'Answer cannot be empty').max(1000, 'Answer too long').trim(),
+});
 
 export async function POST(req: Request) {
     const session = await getServerSession(authOptions);
@@ -9,7 +17,20 @@ export async function POST(req: Request) {
         return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const { contestId, problemId, answer } = await req.json();
+    // Per-user rate limit: 30 submissions per minute
+    const rlKey = `submit:user:${session.user.id}`;
+    if (!checkRateLimit(rlKey, { windowMs: 60_000, max: 30 })) {
+        return rateLimitResponse();
+    }
+
+    let body: unknown;
+    try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }); }
+
+    const result = submitSchema.safeParse(body);
+    if (!result.success) {
+        return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 });
+    }
+    const { contestId, problemId, answer } = result.data;
 
     const problem = await prisma.problem.findUnique({
         where: { id: problemId }
@@ -32,6 +53,39 @@ export async function POST(req: Request) {
     // Mark as upsolve if submitting after contest ended (not counted for ratings)
     const isUpsolve = !session.user.isAdmin && now > contest.endTime;
 
+    // During an active contest, only registered users may submit
+    if (!isUpsolve && !session.user.isAdmin) {
+        const reg = await prisma.registration.findUnique({
+            where: { userId_contestId: { userId: session.user.id, contestId } },
+        });
+        if (!reg) {
+            return new NextResponse('You must register for this contest to submit.', { status: 403 });
+        }
+    }
+
+    // Sequential lock enforcement: during an active contest, block submission if an
+    // earlier problem is still unsolved (admins bypass this check)
+    if (!isUpsolve && !session.user.isAdmin) {
+        const allProblems = await prisma.problem.findMany({
+            where: { contestId },
+            orderBy: { id: 'asc' },
+            select: { id: true },
+        });
+        const problemIndex = allProblems.findIndex(p => p.id === problemId);
+        if (problemIndex > 0) {
+            const solvedIds = new Set(
+                (await prisma.submission.findMany({
+                    where: { userId: session.user.id, contestId, isCorrect: true, isUpsolve: false },
+                    select: { problemId: true },
+                })).map(s => s.problemId)
+            );
+            const firstUnsolved = allProblems.findIndex(p => !solvedIds.has(p.id));
+            if (firstUnsolved !== -1 && problemIndex > firstUnsolved) {
+                return new NextResponse("Problem is locked. Solve earlier problems first.", { status: 403 });
+            }
+        }
+    }
+
     if (!isUpsolve) {
         // During contest: block resubmission if already solved
         const existingContestSolve = await prisma.submission.findFirst({
@@ -52,6 +106,27 @@ export async function POST(req: Request) {
 
     const isCorrect = problem.correctAnswer.trim().toLowerCase() === answer.trim().toLowerCase();
 
+    // Check if user revealed the hint for this problem
+    const hintReveal = await prisma.hintReveal.findUnique({
+        where: { userId_problemId: { userId: session.user.id, problemId } },
+    });
+    const hintUsed = !!hintReveal;
+
+    // Award XP for the first ever correct solve of this problem (contest or upsolve)
+    let xpAwarded = 0;
+    if (isCorrect) {
+        const alreadySolvedAny = await prisma.submission.findFirst({
+            where: { userId: session.user.id, problemId, isCorrect: true },
+        });
+        if (!alreadySolvedAny) {
+            xpAwarded = problem.points;
+            await prisma.user.update({
+                where: { id: session.user.id },
+                data: { xp: { increment: xpAwarded } },
+            });
+        }
+    }
+
     const submission = await prisma.submission.create({
         data: {
             userId: session.user.id,
@@ -60,12 +135,15 @@ export async function POST(req: Request) {
             answer,
             isCorrect,
             isUpsolve,
+            hintUsed,
         }
     });
 
     return NextResponse.json({
         id: submission.id,
         isCorrect: submission.isCorrect,
+        xpAwarded,
         isUpsolve: submission.isUpsolve,
+        hintUsed: submission.hintUsed,
     });
 }

@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 
 // GET /api/user/unread-messages
-// Returns { count: number } — total unread messages across all groups user belongs to
+// Returns { count: number } - total unread messages across all groups user belongs to
 export async function GET() {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) return NextResponse.json({ count: 0 });

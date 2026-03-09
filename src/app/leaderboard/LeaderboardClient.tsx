@@ -105,7 +105,7 @@ export function LeaderboardClient({ users, groups }: { users: User[]; groups: Gr
                                         </div>
                                     </div>
 
-                                    {/* Pills — vertically centered by lb-row's align-items:center */}
+                                    {/* Pills - vertically centered by lb-row's align-items:center */}
                                     {(() => {
                                         const displaySchool = user.school ?? user.group?.school ?? null;
                                         return (user.group || displaySchool) ? (
@@ -177,7 +177,7 @@ export function LeaderboardClient({ users, groups }: { users: User[]; groups: Gr
                                         </div>
                                     </div>
 
-                                    {/* School pill — vertically centered */}
+                                    {/* School pill - vertically centered */}
                                     {g.school && (
                                         <div className="lb-pills-col">
                                             <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', color: 'var(--ink3)', background: 'rgba(0,0,0,0.05)', padding: '2px 9px', borderRadius: '99px', whiteSpace: 'nowrap' }}>

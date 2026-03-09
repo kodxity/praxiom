@@ -764,7 +764,7 @@ next-dev-overlay { cursor: none !important; }
   align-items: start;
 }
 
-/* Leaderboard pills column — hidden on narrow screens */
+/* Leaderboard pills column - hidden on narrow screens */
 .lb-pills-col { flex-shrink: 0; }
 
 @media (max-width: 900px) {

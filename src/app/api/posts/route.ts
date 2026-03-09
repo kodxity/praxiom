@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
+import { checkRateLimit, rateLimitResponse, getIp } from "@/lib/rateLimit";
 
 const createPostSchema = z.object({
     title: z.string().min(1, 'Title is required').max(200, 'Title cannot exceed 200 characters').trim(),
@@ -10,7 +11,13 @@ const createPostSchema = z.object({
     isAnnouncement: z.boolean().optional(),
 });
 
-export async function GET() {
+export async function GET(req: Request) {
+    // 60 reads per minute per IP
+    const ip = getIp(req);
+    if (!checkRateLimit(`posts-list:ip:${ip}`, { windowMs: 60_000, max: 60 })) {
+        return rateLimitResponse();
+    }
+
     const posts = await prisma.blogPost.findMany({
         orderBy: { createdAt: 'desc' },
         include: { author: { select: { username: true, isAdmin: true } }, _count: { select: { comments: true } } },
@@ -22,6 +29,11 @@ export async function POST(req: Request) {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
         return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    // 5 posts per minute per user
+    if (!checkRateLimit(`post-create:user:${session.user.id}`, { windowMs: 60_000, max: 5 })) {
+        return rateLimitResponse();
     }
 
     let body: unknown;

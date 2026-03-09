@@ -79,13 +79,10 @@ export function ContestNav({
               const status = problemStatuses[p.id] ?? 'locked'
               const isCurrentProblem = pathname.includes(p.id)
               const effectiveStatus = isCurrentProblem ? 'current' : status
-              return (
-                <Link
-                  key={p.id}
-                  href={`/contests/${contestId}/problems/${p.id}`}
-                  className="flex items-center gap-1.5 shrink-0 group"
-                  title={p.title}
-                >
+              const isLocked = effectiveStatus === 'locked'
+
+              const inner = (
+                <>
                   <span
                     style={{
                       width: '8px',
@@ -106,6 +103,30 @@ export function ContestNav({
                   >
                     {i + 1}
                   </span>
+                </>
+              )
+
+              if (isLocked) {
+                return (
+                  <span
+                    key={p.id}
+                    className="flex items-center gap-1.5 shrink-0"
+                    title={i > 0 ? `Solve ${i} first to unlock` : p.title}
+                    style={{ cursor: 'not-allowed', opacity: 0.45 }}
+                  >
+                    {inner}
+                  </span>
+                )
+              }
+
+              return (
+                <Link
+                  key={p.id}
+                  href={`/contests/${contestId}/problems/${p.id}`}
+                  className="flex items-center gap-1.5 shrink-0 group"
+                  title={p.title}
+                >
+                  {inner}
                 </Link>
               )
             })}

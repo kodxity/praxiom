@@ -8,7 +8,7 @@ const updateGroupSchema = z.object({
     bio: z.string().max(2000, 'Bio must be 2000 characters or fewer').trim().optional(),
 });
 
-/** GET /api/groups/[id] — public group details */
+/** GET /api/groups/[id] - public group details */
 export async function GET(_req: Request, props: { params: Promise<{ id: string }> }) {
     const { id } = await props.params;
     try {
@@ -31,7 +31,7 @@ export async function GET(_req: Request, props: { params: Promise<{ id: string }
     }
 }
 
-/** PUT /api/groups/[id] — update bio (teacher of that group only) */
+/** PUT /api/groups/[id] - update bio (teacher of that group only) */
 export async function PUT(req: Request, props: { params: Promise<{ id: string }> }) {
     const { id } = await props.params;
     const session = await getServerSession(authOptions);

@@ -5,7 +5,35 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { UserSettings } from './UserSettings';
 import Link from 'next/link';
+import type { Metadata } from 'next';
 
+export async function generateMetadata(
+    props: { params: Promise<{ username: string }> },
+): Promise<Metadata> {
+    const { username } = await props.params;
+    try {
+        const user = await prisma.user.findUnique({
+            where: { username },
+            select: { username: true, rating: true, description: true },
+        });
+        if (!user) return { title: 'User Not Found' };
+        const desc =
+            user.description ??
+            `View ${user.username}'s contest history, rating ${user.rating}, and solved problems on Praxis.`;
+        return {
+            title: `${user.username}'s Profile`,
+            description: desc,
+            openGraph: {
+                title: `${user.username} | Praxis`,
+                description: desc,
+                url: `/user/${username}`,
+            },
+            alternates: { canonical: `/user/${username}` },
+        };
+    } catch {
+        return { title: 'Profile' };
+    }
+}
 export default async function UserProfile(props: { params: Promise<{ username: string }> }) {
     const params = await props.params;
     const session = await getServerSession(authOptions);
@@ -21,7 +49,7 @@ export default async function UserProfile(props: { params: Promise<{ username: s
                 school: { select: { name: true, shortName: true, district: true } },
                 group: { select: { id: true, name: true } },
                 taughtGroup: { select: { id: true, name: true } },
-            }
+            },
         });
     } catch {
         // DB unavailable in local frontend dev
@@ -50,9 +78,9 @@ export default async function UserProfile(props: { params: Promise<{ username: s
     }
 
     let totalSolved = 0;
-    let totalXP = 0;
+    const totalXP: number = user.xp ?? 0;
     try {
-        const [detailedSubs, heatmapSubs, solvedCount, xpSubs] = await Promise.all([
+        const [detailedSubs, heatmapSubs, solvedCount] = await Promise.all([
             // Always fetch submissions - answer is conditionally hidden in UI
             prisma.submission.findMany({
                 where: { userId: user.id },
@@ -67,16 +95,10 @@ export default async function UserProfile(props: { params: Promise<{ username: s
             }),
             // Total solved count (all-time, fast COUNT query)
             prisma.submission.count({ where: { userId: user.id, isCorrect: true } }),
-            // XP: sum of points from all correct submissions
-            prisma.submission.findMany({
-                where: { userId: user.id, isCorrect: true },
-                select: { problem: { select: { points: true } } },
-            }),
         ]);
         submissions = detailedSubs;
         allSubmissions = heatmapSubs;
         totalSolved = solvedCount;
-        totalXP = xpSubs.reduce((s: number, sub: any) => s + (sub.problem?.points ?? 0), 0);
     } catch { /* DB unavailable */ }
 
     const graphData = user.ratingHistory.map((h: any) => ({

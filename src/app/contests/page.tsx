@@ -3,6 +3,19 @@ import Link from 'next/link'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { ContestCard } from '@/components/ContestCard'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+    title: 'Contests',
+    description:
+        'Browse upcoming, active, and past math contests on Praxis. Register to compete and push your problem-solving skills to the limit.',
+    openGraph: {
+        title: 'Math Contests | Praxis',
+        description: 'Browse and register for AMC-style math contests. Compete live, solve problems, and earn rating.',
+        url: '/contests',
+    },
+    alternates: { canonical: '/contests' },
+}
 
 export const dynamic = 'force-dynamic'
 

@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/db';
 import Link from 'next/link';
-import { UserApproval } from './UserApproval';
+import { PendingApprovals } from './PendingApprovals';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
@@ -12,7 +12,6 @@ export default async function AdminPage() {
     }
 
     const [pendingUsers, contests] = await Promise.all([
-        // Admin sees: pending teachers + pending students with no group (independent)
         prisma.user.findMany({
             where: {
                 isApproved: false,
@@ -33,95 +32,101 @@ export default async function AdminPage() {
         }),
     ]);
 
-    const now = new Date();
+    const liveCount = contests.filter((c: any) => c.status === 'ACTIVE').length;
+    const upcomingCount = contests.filter((c: any) => c.status === 'SCHEDULED').length;
 
     return (
         <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '48px 1.75rem 80px' }}>
 
-            {/* Page header */}
-            <div style={{ marginBottom: '40px' }}>
+            {/* ── Page header ── */}
+            <div style={{ marginBottom: '28px' }}>
                 <p style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', letterSpacing: '0.22em', color: 'var(--sage)', marginBottom: '10px', textTransform: 'uppercase' }}>
                     Admin &middot; Dashboard
                 </p>
-                <h1 style={{ fontFamily: 'var(--ff-display)', fontStyle: 'italic', fontSize: '36px', fontWeight: 400, color: 'var(--ink)', letterSpacing: '-0.02em' }}>
-                    Control Panel
-                </h1>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))', gap: '24px' }}>
-
-                {/* Quick Actions */}
-                <div className="g" style={{ padding: '28px 32px' }}>
-                    <p className="sec-label" style={{ marginBottom: '20px' }}>Quick Actions</p>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                        <Link href="/admin/posts/new" className="btn btn-ghost" style={{ justifyContent: 'flex-start', gap: '10px' }}>
-                            <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '14px', color: 'var(--sage)' }}>+</span>
-                            New Announcement
-                        </Link>
-                        <Link href="/admin/contests/new" className="btn btn-ghost" style={{ justifyContent: 'flex-start', gap: '10px' }}>
-                            <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '14px', color: 'var(--sage)' }}>+</span>
-                            New Contest
-                        </Link>
-                        <Link href="/admin/themes/new" className="btn btn-ghost" style={{ justifyContent: 'flex-start', gap: '10px' }}>
-                            <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '14px', color: 'var(--sage)' }}>+</span>
-                            New Theme
-                        </Link>
-                    </div>
-                    <div style={{ marginTop: '28px', paddingTop: '20px', borderTop: '1px solid var(--border)' }}>
-                        <p style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', letterSpacing: '0.14em', color: 'var(--ink5)', textTransform: 'uppercase', marginBottom: '10px' }}>Navigate</p>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                            {[
-                                { href: '/contests',       label: 'Contests'    },
-                                { href: '/problems',       label: 'Problems'    },
-                                { href: '/leaderboard',    label: 'Leaderboard' },
-                                { href: '/admin/themes',   label: 'Themes'      },
-                            ].map(({ href, label }) => (
-                                <Link
-                                    key={href}
-                                    href={href}
-                                    className="admin-nav-link"
-                                >
-                                    {label}
-                                    <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '12px', color: 'var(--ink5)' }}>→</span>
-                                </Link>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Pending Users */}
-                <div className="g" style={{ padding: '28px 32px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
-                        <p className="sec-label" style={{ marginBottom: 0, borderBottom: 'none', paddingBottom: 0 }}>Pending Approvals</p>
+                <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+                    <h1 style={{ fontFamily: 'var(--ff-display)', fontStyle: 'italic', fontSize: '36px', fontWeight: 400, color: 'var(--ink)', letterSpacing: '-0.02em', margin: 0 }}>
+                        Control Panel
+                    </h1>
+                    {/* At-a-glance stats */}
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', paddingBottom: '4px' }}>
                         {pendingUsers.length > 0 && (
                             <span style={{
-                                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                                minWidth: '20px', height: '20px', borderRadius: '99px',
-                                background: 'rgba(220,60,60,0.12)', color: 'rgba(200,50,50,0.9)',
-                                fontFamily: 'var(--ff-mono)', fontSize: '10px', fontWeight: 700, padding: '0 5px'
+                                display: 'inline-flex', alignItems: 'center', gap: '5px',
+                                padding: '4px 12px', borderRadius: '99px',
+                                background: 'rgba(220,60,60,0.08)', border: '1px solid rgba(220,60,60,0.18)',
+                                fontFamily: 'var(--ff-mono)', fontSize: '11px', color: 'rgba(200,50,50,0.9)',
                             }}>
-                                {pendingUsers.length}
+                                <span style={{ fontWeight: 700 }}>{pendingUsers.length}</span> pending
+                            </span>
+                        )}
+                        {liveCount > 0 && (
+                            <span style={{
+                                display: 'inline-flex', alignItems: 'center', gap: '5px',
+                                padding: '4px 12px', borderRadius: '99px',
+                                background: 'rgba(80,170,100,0.08)', border: '1px solid rgba(80,170,100,0.2)',
+                                fontFamily: 'var(--ff-mono)', fontSize: '11px', color: 'rgba(60,150,80,0.9)',
+                            }}>
+                                ● <span style={{ fontWeight: 700 }}>{liveCount}</span> live
+                            </span>
+                        )}
+                        {upcomingCount > 0 && (
+                            <span style={{
+                                display: 'inline-flex', alignItems: 'center', gap: '5px',
+                                padding: '4px 12px', borderRadius: '99px',
+                                background: 'rgba(100,140,200,0.08)', border: '1px solid rgba(100,140,200,0.2)',
+                                fontFamily: 'var(--ff-mono)', fontSize: '11px', color: 'rgba(80,120,180,0.9)',
+                            }}>
+                                <span style={{ fontWeight: 700 }}>{upcomingCount}</span> upcoming
                             </span>
                         )}
                     </div>
-                    {pendingUsers.length === 0 ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '32px 20px', color: 'var(--ink5)', fontFamily: 'var(--ff-mono)', fontSize: '12px', textAlign: 'center' }}>
-                            <span style={{ fontSize: '20px', opacity: 0.4 }}>✓</span>
-                            All caught up - no pending users.
-                        </div>
-                    ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '420px', overflowY: 'auto', paddingRight: '4px' }}>
-                            {pendingUsers.map((user: any) => (
-                                <UserApproval key={user.id} user={user} />
-                            ))}
-                        </div>
-                    )}
                 </div>
-
             </div>
 
-            {/* Manage Contests */}
-            <div className="g" style={{ padding: '28px 32px', marginTop: '24px' }}>
+            {/* ── Quick Actions bar ── */}
+            <div style={{
+                display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px',
+                padding: '14px 20px', marginBottom: '28px',
+                background: 'rgba(0,0,0,0.02)', borderRadius: 'var(--r)',
+                border: '1px solid var(--border)',
+            }}>
+                {/* Create actions */}
+                <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', letterSpacing: '0.12em', color: 'var(--ink5)', textTransform: 'uppercase', marginRight: '4px' }}>Create</span>
+                {[
+                    { href: '/admin/posts/new',    label: 'Announcement' },
+                    { href: '/admin/contests/new', label: 'Contest'      },
+                    { href: '/admin/themes/new',   label: 'Theme'        },
+                ].map(({ href, label }) => (
+                    <Link key={href} href={href} className="btn btn-ghost btn-sm" style={{ gap: '6px' }}>
+                        <span style={{ fontFamily: 'var(--ff-mono)', color: 'var(--sage)', fontSize: '13px', lineHeight: 1 }}>+</span>
+                        {label}
+                    </Link>
+                ))}
+
+                {/* Divider */}
+                <div style={{ width: '1px', height: '20px', background: 'var(--border)', margin: '0 10px', flexShrink: 0 }} />
+
+                {/* Navigation links */}
+                <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', letterSpacing: '0.12em', color: 'var(--ink5)', textTransform: 'uppercase', marginRight: '4px' }}>Go to</span>
+                {[
+                    { href: '/contests',     label: 'Contests'    },
+                    { href: '/problems',     label: 'Problems'    },
+                    { href: '/leaderboard',  label: 'Leaderboard' },
+                    { href: '/admin/themes', label: 'Themes'      },
+                ].map(({ href, label }) => (
+                    <Link key={href} href={href} className="admin-nav-link" style={{ justifyContent: 'initial', gap: '5px', fontFamily: 'var(--ff-mono)', fontSize: '12px' }}>
+                        {label} <span style={{ opacity: 0.4 }}>↗</span>
+                    </Link>
+                ))}
+            </div>
+
+            {/* ── Pending Approvals ── */}
+            <div className="g" style={{ padding: '28px 32px', marginBottom: '24px' }}>
+                <PendingApprovals users={pendingUsers} />
+            </div>
+
+            {/* ── Manage Contests ── */}
+            <div className="g" style={{ padding: '28px 32px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
                     <p className="sec-label" style={{ marginBottom: 0, borderBottom: 'none', paddingBottom: 0 }}>Manage Contests</p>
                     <Link href="/admin/contests/new" style={{ fontFamily: 'var(--ff-mono)', fontSize: '11px', color: 'var(--sage)', textDecoration: 'none', letterSpacing: '0.06em' }}>+ New</Link>
@@ -135,36 +140,35 @@ export default async function AdminPage() {
                     <div style={{ overflowX: 'auto' }}>
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--ff-ui)', fontSize: '13px' }}>
                             <thead>
-                                <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                                    <th style={{ textAlign: 'left', padding: '8px 12px', fontFamily: 'var(--ff-mono)', fontSize: '10px', letterSpacing: '0.12em', color: 'var(--ink5)', fontWeight: 400, textTransform: 'uppercase' }}>Title</th>
-                                    <th style={{ textAlign: 'left', padding: '8px 12px', fontFamily: 'var(--ff-mono)', fontSize: '10px', letterSpacing: '0.12em', color: 'var(--ink5)', fontWeight: 400, textTransform: 'uppercase' }}>Status</th>
-                                    <th style={{ textAlign: 'left', padding: '8px 12px', fontFamily: 'var(--ff-mono)', fontSize: '10px', letterSpacing: '0.12em', color: 'var(--ink5)', fontWeight: 400, textTransform: 'uppercase' }}>Theme</th>
-                                    <th style={{ textAlign: 'left', padding: '8px 12px', fontFamily: 'var(--ff-mono)', fontSize: '10px', letterSpacing: '0.12em', color: 'var(--ink5)', fontWeight: 400, textTransform: 'uppercase' }}>Start</th>
-                                    <th style={{ padding: '8px 12px' }}></th>
+                                <tr style={{ borderBottom: '2px solid var(--border)' }}>
+                                    {['Title', 'Status', 'Theme', 'Start'].map(h => (
+                                        <th key={h} style={{ textAlign: 'left', padding: '8px 14px', fontFamily: 'var(--ff-mono)', fontSize: '10px', letterSpacing: '0.12em', color: 'var(--ink5)', fontWeight: 400, textTransform: 'uppercase' }}>{h}</th>
+                                    ))}
+                                    <th style={{ padding: '8px 14px' }} />
                                 </tr>
                             </thead>
                             <tbody>
                                 {contests.map((c: any) => {
                                     const start = new Date(c.startTime);
                                     const statusLabel = c.status === 'ACTIVE' ? '● Live' : c.status === 'SCHEDULED' ? 'Upcoming' : 'Ended';
-                                    const statusColor = c.status === 'ACTIVE' ? 'rgba(80,170,100,0.9)' : c.status === 'SCHEDULED' ? 'rgba(100,140,200,0.9)' : 'var(--ink5)';
+                                    const statusColor = c.status === 'ACTIVE' ? 'rgba(60,150,80,0.95)' : c.status === 'SCHEDULED' ? 'rgba(80,120,180,0.9)' : 'var(--ink5)';
                                     const statusBg = c.status === 'ACTIVE' ? 'rgba(80,170,100,0.1)' : c.status === 'SCHEDULED' ? 'rgba(100,140,200,0.1)' : 'rgba(0,0,0,0.04)';
                                     return (
                                         <tr key={c.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                                            <td style={{ padding: '12px 12px', color: 'var(--ink)', fontWeight: 500 }}>{c.title}</td>
-                                            <td style={{ padding: '12px 12px' }}>
-                                                <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: '99px', background: statusBg, color: statusColor, fontFamily: 'var(--ff-mono)', fontSize: '10px', letterSpacing: '0.06em' }}>
+                                            <td style={{ padding: '13px 14px', color: 'var(--ink)', fontWeight: 500 }}>{c.title}</td>
+                                            <td style={{ padding: '13px 14px' }}>
+                                                <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: '99px', background: statusBg, color: statusColor, fontFamily: 'var(--ff-mono)', fontSize: '10px', letterSpacing: '0.06em', fontWeight: 600 }}>
                                                     {statusLabel}
                                                 </span>
                                             </td>
-                                            <td style={{ padding: '12px 12px', color: 'var(--ink4)', fontFamily: 'var(--ff-mono)', fontSize: '11px' }}>{c.themeSlug || '-'}</td>
-                                            <td style={{ padding: '12px 12px', color: 'var(--ink4)', fontFamily: 'var(--ff-mono)', fontSize: '11px' }}>
+                                            <td style={{ padding: '13px 14px', color: 'var(--ink4)', fontFamily: 'var(--ff-mono)', fontSize: '11px' }}>{c.themeSlug || <span style={{ opacity: 0.35 }}>-</span>}</td>
+                                            <td style={{ padding: '13px 14px', color: 'var(--ink4)', fontFamily: 'var(--ff-mono)', fontSize: '11px' }}>
                                                 {start.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                                             </td>
-                                            <td style={{ padding: '12px 12px', textAlign: 'right' }}>
-                                                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                            <td style={{ padding: '13px 14px', textAlign: 'right' }}>
+                                                <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
                                                     <Link href={`/contests/${c.id}`} style={{ fontFamily: 'var(--ff-mono)', fontSize: '11px', color: 'var(--ink4)', textDecoration: 'none' }}>View</Link>
-                                                    <Link href={`/admin/contests/${c.id}/edit`} style={{ fontFamily: 'var(--ff-mono)', fontSize: '11px', color: 'var(--sage)', textDecoration: 'none' }}>Edit</Link>
+                                                    <Link href={`/admin/contests/${c.id}/edit`} style={{ fontFamily: 'var(--ff-mono)', fontSize: '11px', color: 'var(--sage)', textDecoration: 'none', fontWeight: 600 }}>Edit</Link>
                                                 </div>
                                             </td>
                                         </tr>

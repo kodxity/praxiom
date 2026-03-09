@@ -72,15 +72,15 @@ export default async function HomePage() {
           {/* Stats strip */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', minWidth: '200px' }}>
             <div className="g fade-in-d" style={{ padding: '22px 24px' }}>
-              <div style={{ fontFamily: 'var(--ff-display)', fontSize: '34px', color: 'var(--ink)', lineHeight: 1, marginBottom: '4px', animation: 'count-up 0.6s ease 0.3s both' }}>{problemCount ?? '—'}</div>
+              <div style={{ fontFamily: 'var(--ff-display)', fontSize: '34px', color: 'var(--ink)', lineHeight: 1, marginBottom: '4px', animation: 'count-up 0.6s ease 0.3s both' }}>{problemCount ?? '-'}</div>
               <div style={{ fontFamily: 'var(--ff-mono)', fontSize: '9px', letterSpacing: '0.14em', color: 'var(--ink5)', textTransform: 'uppercase' }}>Problems in vault</div>
             </div>
             <div className="g fade-in-d2" style={{ padding: '22px 24px' }}>
-              <div style={{ fontFamily: 'var(--ff-display)', fontSize: '34px', color: 'var(--ink)', lineHeight: 1, marginBottom: '4px', animation: 'count-up 0.6s ease 0.45s both' }}>{userCount !== null ? userCount.toLocaleString() : '—'}</div>
+              <div style={{ fontFamily: 'var(--ff-display)', fontSize: '34px', color: 'var(--ink)', lineHeight: 1, marginBottom: '4px', animation: 'count-up 0.6s ease 0.45s both' }}>{userCount !== null ? userCount.toLocaleString() : '-'}</div>
               <div style={{ fontFamily: 'var(--ff-mono)', fontSize: '9px', letterSpacing: '0.14em', color: 'var(--ink5)', textTransform: 'uppercase' }}>Registered solvers</div>
             </div>
             <div className="g fade-in-d3" style={{ padding: '22px 24px' }}>
-              <div style={{ fontFamily: 'var(--ff-display)', fontSize: '34px', color: 'var(--ink)', lineHeight: 1, marginBottom: '4px', animation: 'count-up 0.6s ease 0.6s both' }}>{contestCount ?? '—'}</div>
+              <div style={{ fontFamily: 'var(--ff-display)', fontSize: '34px', color: 'var(--ink)', lineHeight: 1, marginBottom: '4px', animation: 'count-up 0.6s ease 0.6s both' }}>{contestCount ?? '-'}</div>
               <div style={{ fontFamily: 'var(--ff-mono)', fontSize: '9px', letterSpacing: '0.14em', color: 'var(--ink5)', textTransform: 'uppercase', marginBottom: '10px' }}>Contests hosted</div>
               <div className="prog-bar-wrap" style={{ height: '5px' }}>
                 <div className="prog-fill prog-sage" style={{ width: contestCount !== null && contestCount > 0 ? `${Math.min((contestCount / 20) * 100, 100)}%` : '4%', height: '5px', transition: 'width 1s ease 0.8s' }} />

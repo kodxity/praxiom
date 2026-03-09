@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 
-/** GET /api/groups?schoolId=xxx — list groups, optionally filtered by school */
+/** GET /api/groups?schoolId=xxx - list groups, optionally filtered by school */
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const schoolId = searchParams.get('schoolId');

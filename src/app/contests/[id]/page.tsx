@@ -6,7 +6,33 @@ import { AddProblemForm } from './AddProblemForm';
 import { ProblemsList } from './ProblemsList';
 import { ContestHero } from '@/components/ContestHero';
 import { EndContestButton } from './EndContestButton';
+import type { Metadata } from 'next';
 
+export async function generateMetadata(
+    props: { params: Promise<{ id: string }> },
+): Promise<Metadata> {
+    const { id } = await props.params;
+    try {
+        const contest = await prisma.contest.findUnique({
+            where: { id },
+            select: { title: true, description: true },
+        });
+        if (!contest) return { title: 'Contest Not Found' };
+        const desc = contest.description ?? `Compete in ${contest.title} on Praxis.`;
+        return {
+            title: contest.title,
+            description: desc,
+            openGraph: {
+                title: `${contest.title} | Praxis`,
+                description: desc,
+                url: `/contests/${id}`,
+            },
+            alternates: { canonical: `/contests/${id}` },
+        };
+    } catch {
+        return { title: 'Contest' };
+    }
+}
 
 export default async function ContestPage(props: { params: Promise<{ id: string }> }) {
     const params = await props.params;

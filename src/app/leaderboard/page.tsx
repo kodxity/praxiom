@@ -1,5 +1,18 @@
 ﻿import { prisma } from '@/lib/db';
 import { LeaderboardClient } from './LeaderboardClient';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: 'Leaderboard',
+    description:
+        'See the top math competitors on Praxis ranked by contest rating. Track individual standings and group averages.',
+    openGraph: {
+        title: 'Leaderboard | Praxis',
+        description: 'Top-rated math competitors ranked by contest performance.',
+        url: '/leaderboard',
+    },
+    alternates: { canonical: '/leaderboard' },
+};
 
 export const dynamic = 'force-dynamic';
 
@@ -36,7 +49,7 @@ export default async function LeaderboardPage() {
         // DB unavailable in local frontend dev
     }
 
-    // Compute group stats — include groups with 0 members
+    // Compute group stats - include groups with 0 members
     const groupsWithStats = groups
         .map((g: any) => ({
             id: g.id,

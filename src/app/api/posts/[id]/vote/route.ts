@@ -2,6 +2,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit';
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -25,7 +26,17 @@ export async function POST(req: Request, ctx: Ctx) {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) return new NextResponse('Unauthorized', { status: 401 });
 
-    const { type } = await req.json() as { type: 'UP' | 'DOWN' };
+    // 30 votes per minute per user
+    if (!checkRateLimit(`vote:user:${session.user.id}`, { windowMs: 60_000, max: 30 })) {
+        return rateLimitResponse();
+    }
+
+    let body: unknown;
+    try { body = await req.json(); } catch { return new NextResponse('Invalid JSON', { status: 400 }); }
+    const { type } = body as { type?: unknown };
+    if (type !== 'UP' && type !== 'DOWN') {
+        return new NextResponse('Invalid vote type', { status: 400 });
+    }
     const userId = session.user.id;
 
     const existing = await prisma.vote.findUnique({

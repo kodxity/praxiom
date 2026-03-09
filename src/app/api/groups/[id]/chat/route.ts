@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit';
 
 // Security: verify caller is a member (or teacher) of the group
 async function assertMember(groupId: string, userId: string) {
@@ -16,7 +17,7 @@ async function assertMember(groupId: string, userId: string) {
     return group.teacherId === userId || group.members.length > 0;
 }
 
-// GET /api/groups/[id]/chat — fetch messages + mark all as read for caller
+// GET /api/groups/[id]/chat - fetch messages + mark all as read for caller
 export async function GET(
     _req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
@@ -57,7 +58,7 @@ export async function GET(
     return NextResponse.json(messages);
 }
 
-// POST /api/groups/[id]/chat — send a message
+// POST /api/groups/[id]/chat - send a message
 export async function POST(
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
@@ -70,8 +71,14 @@ export async function POST(
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const body = await req.json();
-    const raw: string = body?.content ?? '';
+    // 20 messages per minute per user
+    if (!checkRateLimit(`chat:user:${session.user.id}`, { windowMs: 60_000, max: 20 })) {
+        return rateLimitResponse();
+    }
+
+    let body: unknown;
+    try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }); }
+    const raw: string = typeof (body as any)?.content === 'string' ? (body as any).content : '';
     // Sanitize: strip HTML tags, trim, limit length
     const content = raw.replace(/<[^>]*>/g, '').trim().slice(0, 2000);
     if (!content) return NextResponse.json({ error: 'Empty message' }, { status: 400 });

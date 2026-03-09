@@ -124,6 +124,9 @@ export default async function StandingsPage(props: { params: Promise<{ id: strin
                     <Link href={`/contests/${contest.id}/submissions`} style={{ padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontFamily: 'var(--ff-mono)', textDecoration: 'none', letterSpacing: '0.05em', color: 'var(--ink4)' }}>
                         Submissions
                     </Link>
+                    <Link href={`/contests/${contest.id}/all-submissions`} style={{ padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontFamily: 'var(--ff-mono)', textDecoration: 'none', letterSpacing: '0.05em', color: 'var(--ink4)' }}>
+                        All Submissions
+                    </Link>
                 </div>
             </div>
 

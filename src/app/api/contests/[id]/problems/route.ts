@@ -9,6 +9,7 @@ const createProblemSchema = z.object({
     statement: z.string().min(10, 'Statement must be at least 10 characters').max(50000, 'Statement too long'),
     correctAnswer: z.string().min(1, 'Answer is required').max(500, 'Answer too long').trim(),
     points: z.number().int('Points must be a whole number').min(1, 'Points must be at least 1').max(10000, 'Points cannot exceed 10,000'),
+    hint: z.string().max(2000, 'Hint too long').optional().nullable(),
 });
 
 export async function POST(req: Request, props: { params: Promise<{ id: string }> }) {
@@ -26,7 +27,7 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
         if (!result.success) {
             return NextResponse.json({ message: result.error.issues[0].message }, { status: 400 });
         }
-        const { title, statement, correctAnswer, points } = result.data;
+        const { title, statement, correctAnswer, points, hint } = result.data;
 
         const problem = await prisma.problem.create({
             data: {
@@ -34,6 +35,7 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
                 statement,
                 correctAnswer,
                 points,
+                hint: hint || null,
                 contestId: params.id
             }
         });

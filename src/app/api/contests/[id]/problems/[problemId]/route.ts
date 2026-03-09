@@ -9,6 +9,7 @@ const updateProblemSchema = z.object({
     statement: z.string().min(10, 'Statement must be at least 10 characters').max(50000, 'Statement too long').optional(),
     correctAnswer: z.string().min(1, 'Answer is required').max(500, 'Answer too long').trim().optional(),
     points: z.number().int('Points must be a whole number').min(1, 'Points must be at least 1').max(10000, 'Points cannot exceed 10,000').optional(),
+    hint: z.string().max(2000, 'Hint too long').nullable().optional(),
 });
 
 export async function GET(_req: Request, props: { params: Promise<{ problemId: string }> }) {
@@ -41,7 +42,7 @@ export async function PATCH(req: Request, props: { params: Promise<{ problemId: 
         if (!result.success) {
             return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 });
         }
-        const { title, statement, correctAnswer, points } = result.data;
+        const { title, statement, correctAnswer, points, hint } = result.data;
         const problem = await prisma.problem.update({
             where: { id: params.problemId },
             data: {
@@ -49,6 +50,7 @@ export async function PATCH(req: Request, props: { params: Promise<{ problemId: 
                 ...(statement !== undefined && { statement }),
                 ...(correctAnswer !== undefined && { correctAnswer }),
                 ...(points !== undefined && { points }),
+                ...('hint' in result.data && { hint: hint || null }),
             },
         });
         return NextResponse.json(problem);

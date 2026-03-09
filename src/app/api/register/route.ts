@@ -2,10 +2,14 @@ import { NextResponse } from 'next/server';
 import { hash } from 'bcryptjs';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
+import { checkRateLimit, rateLimitResponse, getIp } from '@/lib/rateLimit';
 
 const baseSchema = z.object({
-    username: z.string().min(3, 'Username must be at least 3 characters').max(32),
-    password: z.string().min(6, 'Password must be at least 6 characters'),
+    username: z.string()
+        .min(3, 'Username must be at least 3 characters')
+        .max(32, 'Username cannot exceed 32 characters')
+        .regex(/^[a-zA-Z0-9_-]+$/, 'Username may only contain letters, numbers, underscores, and hyphens'),
+    password: z.string().min(8, 'Password must be at least 8 characters'),
     displayName: z.string().min(1, 'Full name is required').max(100),
     email: z.string().email('Invalid email address').optional().or(z.literal('')),
     isTeacher: z.boolean().optional().default(false),
@@ -16,6 +20,12 @@ const baseSchema = z.object({
 });
 
 export async function POST(req: Request) {
+    // 5 registration attempts per hour per IP
+    const ip = getIp(req);
+    if (!checkRateLimit(`register:ip:${ip}`, { windowMs: 60 * 60_000, max: 5 })) {
+        return rateLimitResponse();
+    }
+
     try {
         const body = await req.json();
         const parsed = baseSchema.parse(body);

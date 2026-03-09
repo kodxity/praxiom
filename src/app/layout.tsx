@@ -34,9 +34,56 @@ const jetbrainsMono = JetBrains_Mono({
   variable: '--font-mono',
 });
 
+const BASE_URL = (process.env.NEXTAUTH_URL ?? 'https://mathshowup2.vercel.app').replace(/\/$/, '');
+
 export const metadata: Metadata = {
-  title: 'Praxis',
-  description: 'Enter the Praxis. A math contest platform.',
+  metadataBase: new URL(BASE_URL),
+  title: {
+    default: 'Praxis — Math Contest Platform',
+    template: '%s | Praxis',
+  },
+  description:
+    'Praxis is a competitive math platform where students solve contest problems, climb the leaderboard, and sharpen their skills for AMC, AIME, and olympiad competitions.',
+  keywords: [
+    'math contest',
+    'competition math',
+    'AMC',
+    'AIME',
+    'math olympiad',
+    'math problems',
+    'math leaderboard',
+    'math competition platform',
+    'math practice',
+  ],
+  authors: [{ name: 'Praxis' }],
+  creator: 'Praxis',
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: '/',
+    siteName: 'Praxis',
+    title: 'Praxis — Math Contest Platform',
+    description:
+      'Compete, solve, and climb. The premier math contest platform for AMC, AIME, and olympiad prep.',
+    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Praxis — Math Contest Platform' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Praxis — Math Contest Platform',
+    description: 'Compete, solve, and climb. The premier math contest platform.',
+    images: ['/opengraph-image'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   icons: {
     icon: '/icon.svg',
     apple: '/icon.svg',
@@ -59,6 +106,35 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@graph': [
+                {
+                  '@type': 'WebSite',
+                  '@id': `${BASE_URL}/#website`,
+                  url: BASE_URL,
+                  name: 'Praxis',
+                  description: 'A competitive math contest platform for AMC, AIME, and olympiad preparation.',
+                  potentialAction: {
+                    '@type': 'SearchAction',
+                    target: { '@type': 'EntryPoint', urlTemplate: `${BASE_URL}/problems?q={search_term_string}` },
+                    'query-input': 'required name=search_term_string',
+                  },
+                },
+                {
+                  '@type': 'Organization',
+                  '@id': `${BASE_URL}/#organization`,
+                  name: 'Praxis',
+                  url: BASE_URL,
+                  logo: { '@type': 'ImageObject', url: `${BASE_URL}/icon.svg` },
+                },
+              ],
+            }),
+          }}
+        />
       </head>
       <body className={fontVars} style={{ fontFamily: 'var(--font-body, DM Sans, sans-serif)' }}>
         <Providers>

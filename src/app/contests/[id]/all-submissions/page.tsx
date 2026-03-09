@@ -31,7 +31,7 @@ function td(align: 'left' | 'center' | 'right'): React.CSSProperties {
     };
 }
 
-export default async function ContestSubmissionsPage(props: { params: Promise<{ id: string }> }) {
+export default async function AllSubmissionsPage(props: { params: Promise<{ id: string }> }) {
     const params = await props.params;
     const session = await getServerSession(authOptions);
 
@@ -39,9 +39,12 @@ export default async function ContestSubmissionsPage(props: { params: Promise<{ 
         where: { id: params.id },
         include: {
             problems: { orderBy: { id: 'asc' } },
+            // All submissions — both during-contest and upsolves
             submissions: {
-                where: { isUpsolve: false },
-                include: { user: { select: { id: true, username: true } }, problem: { select: { id: true, title: true } } },
+                include: {
+                    user: { select: { id: true, username: true } },
+                    problem: { select: { id: true, title: true } },
+                },
                 orderBy: { createdAt: 'desc' },
             },
         },
@@ -49,11 +52,9 @@ export default async function ContestSubmissionsPage(props: { params: Promise<{ 
 
     if (!contest) notFound();
 
-    // All submissions (no window filter - all-time)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const windowSubs = contest.submissions as any[];
+    const allSubs = contest.submissions as any[];
 
-    // Viewer's solved problem IDs (controls answer visibility)
+    // Answer visibility: revealed if viewer has ever solved that problem (contest or upsolve)
     const viewerSolvedIds = new Set<string>();
     if (session?.user?.id) {
         const viewerSubs = await prisma.submission.findMany({
@@ -61,16 +62,13 @@ export default async function ContestSubmissionsPage(props: { params: Promise<{ 
                 userId: session.user.id,
                 contestId: params.id,
                 isCorrect: true,
-                isUpsolve: false,
             },
             select: { problemId: true },
         });
-        viewerSubs.forEach(s => viewerSolvedIds.add(s.problemId));
+        viewerSubs.forEach((s: any) => viewerSolvedIds.add(s.problemId));
     }
 
-    // Problem label map
     const problemLabels = new Map<string, string>();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (contest.problems as any[]).forEach((p, i) => {
         problemLabels.set(p.id, String.fromCharCode(65 + i));
     });
@@ -99,7 +97,7 @@ export default async function ContestSubmissionsPage(props: { params: Promise<{ 
                 <Link href={`/contests/${contest.id}`} className="btn btn-ghost btn-sm" style={{ marginBottom: '20px' }}>
                     ← Back to Contest
                 </Link>
-                <p className="sec-label" style={{ marginTop: '20px' }}>CONTEST SUBMISSIONS</p>
+                <p className="sec-label" style={{ marginTop: '20px' }}>ALL SUBMISSIONS</p>
                 <h1 style={{
                     fontFamily: 'var(--ff-display)', fontStyle: 'italic',
                     fontSize: 'clamp(26px,3.5vw,40px)', fontWeight: 400, color: 'var(--ink)',
@@ -116,15 +114,13 @@ export default async function ContestSubmissionsPage(props: { params: Promise<{ 
 
                 {/* Tab nav */}
                 <div style={{ display: 'flex', gap: '4px', marginTop: '20px' }}>
-                    <Link href={`/contests/${contest.id}/standings`} style={tabLink}>
-                        Standings
-                    </Link>
-                    <span style={tabActive}>Submissions</span>
-                    <Link href={`/contests/${contest.id}/all-submissions`} style={tabLink}>All Submissions</Link>
+                    <Link href={`/contests/${contest.id}/standings`} style={tabLink}>Standings</Link>
+                    <Link href={`/contests/${contest.id}/submissions`} style={tabLink}>Submissions</Link>
+                    <span style={tabActive}>All Submissions</span>
                 </div>
             </div>
 
-            {windowSubs.length === 0 ? (
+            {allSubs.length === 0 ? (
                 <div className="g fade-in-d">
                     <div className="empty">
                         <div className="empty-title">No submissions yet</div>
@@ -133,24 +129,23 @@ export default async function ContestSubmissionsPage(props: { params: Promise<{ 
                 </div>
             ) : (
                 <div className="g fade-in-d" style={{ overflow: 'auto', padding: 0 }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '620px' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '680px' }}>
                         <thead>
                             <tr style={{ background: 'rgba(0,0,0,0.025)' }}>
                                 <th style={th('left')}>PROBLEM</th>
                                 <th style={th('left', '160px')}>USER</th>
                                 <th style={th('center', '120px')}>DATE</th>
                                 <th style={th('left', '140px')}>ANSWER</th>
+                                <th style={th('center', '80px')}>TYPE</th>
                                 <th style={th('center', '72px')}>RESULT</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                            {windowSubs.map((sub: any, i: number) => {
+                            {allSubs.map((sub: any, i: number) => {
                                 const label = problemLabels.get(sub.problemId) ?? '?';
-                                const canSeeAnswer = viewerSolvedIds.has(sub.problemId);
+                                const canSeeAnswer = session?.user?.isAdmin || viewerSolvedIds.has(sub.problemId);
                                 return (
                                     <tr key={sub.id} style={{ animation: `fade-in 0.3s ${i * 0.015}s both` }}>
-                                        {/* Problem */}
                                         <td style={td('left')}>
                                             <Link
                                                 href={`/contests/${contest.id}/problems/${sub.problemId}`}
@@ -161,7 +156,6 @@ export default async function ContestSubmissionsPage(props: { params: Promise<{ 
                                             </Link>
                                         </td>
 
-                                        {/* User */}
                                         <td style={td('left')}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                 <div className="avatar avatar-sm" style={{ flexShrink: 0, background: 'rgba(107,148,120,0.10)' }}>
@@ -173,14 +167,12 @@ export default async function ContestSubmissionsPage(props: { params: Promise<{ 
                                             </div>
                                         </td>
 
-                                        {/* Time */}
                                         <td style={td('center')}>
                                             <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '11px', color: 'var(--ink4)', whiteSpace: 'nowrap' }}>
                                                 {formatTime(sub.createdAt)}
                                             </span>
                                         </td>
 
-                                        {/* Answer */}
                                         <td style={td('left')}>
                                             {canSeeAnswer ? (
                                                 <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '12px', color: sub.isCorrect ? 'var(--sage)' : 'var(--ink3)' }}>
@@ -188,12 +180,45 @@ export default async function ContestSubmissionsPage(props: { params: Promise<{ 
                                                 </span>
                                             ) : (
                                                 <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '11px', color: 'var(--ink5)' }}>
-                                                    - solve to reveal
+                                                    — solve to reveal
                                                 </span>
                                             )}
                                         </td>
 
-                                        {/* Result */}
+                                        <td style={td('center')}>
+                                            {sub.isUpsolve ? (
+                                                <span style={{
+                                                    display: 'inline-block',
+                                                    padding: '2px 8px',
+                                                    borderRadius: '99px',
+                                                    fontFamily: 'var(--ff-mono)',
+                                                    fontSize: '9px',
+                                                    letterSpacing: '0.08em',
+                                                    color: 'var(--ink4)',
+                                                    border: '1px solid rgba(255,255,255,0.12)',
+                                                    background: 'rgba(255,255,255,0.05)',
+                                                    whiteSpace: 'nowrap',
+                                                }}>
+                                                    UPSOLVE
+                                                </span>
+                                            ) : (
+                                                <span style={{
+                                                    display: 'inline-block',
+                                                    padding: '2px 8px',
+                                                    borderRadius: '99px',
+                                                    fontFamily: 'var(--ff-mono)',
+                                                    fontSize: '9px',
+                                                    letterSpacing: '0.08em',
+                                                    color: 'var(--sage)',
+                                                    border: '1px solid var(--sage-border)',
+                                                    background: 'var(--sage-bg)',
+                                                    whiteSpace: 'nowrap',
+                                                }}>
+                                                    CONTEST
+                                                </span>
+                                            )}
+                                        </td>
+
                                         <td style={td('center')}>
                                             <span style={{
                                                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',

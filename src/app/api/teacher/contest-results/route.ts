@@ -3,7 +3,7 @@ import { authOptions } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 
-/** GET — contest results for all students in the teacher's group */
+/** GET - contest results for all students in the teacher's group */
 export async function GET() {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id || !session.user.isTeacher) {

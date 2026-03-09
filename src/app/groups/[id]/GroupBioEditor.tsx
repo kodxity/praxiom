@@ -69,7 +69,7 @@ export function GroupBioEditor({
                 <p style={{ fontSize: '14px', color: 'var(--ink3)', lineHeight: 1.65, whiteSpace: 'pre-wrap' }}>{bio}</p>
             ) : (
                 <p style={{ fontSize: '13px', color: 'var(--ink5)', fontStyle: 'italic', fontFamily: 'var(--ff-mono)' }}>
-                    {isTeacher ? 'No bio yet — click Edit to add one.' : 'No bio yet.'}
+                    {isTeacher ? 'No bio yet - click Edit to add one.' : 'No bio yet.'}
                 </p>
             )}
             {isTeacher && (

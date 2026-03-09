@@ -8,7 +8,7 @@ const s = (name: string, shortName: string, district: string, emailDomain: strin
 
 const schools: S[] = [
   // ─────────────────────────────────────────
-  // ECSD — Edmonton Catholic School District
+  // ECSD - Edmonton Catholic School District
   // ─────────────────────────────────────────
   s('Archbishop MacDonald High School',  'Archbishop Mac',    'ECSD', 'ecsd.net'),
   s('Bishop Carroll High School',        'Bishop Carroll',    'ECSD', 'ecsd.net'),
@@ -26,7 +26,7 @@ const schools: S[] = [
   s('St. Peter the Apostle High School', 'St. Peter',         'ECSD', 'ecsd.net'),
 
   // ─────────────────────────────────────────
-  // EPSB — Edmonton Public Schools
+  // EPSB - Edmonton Public Schools
   // ─────────────────────────────────────────
   s('Eastglen High School',           'Eastglen',        'EPSB', 'epsb.ca'),
   s('Harry Ainlay High School',       'Harry Ainlay',    'EPSB', 'epsb.ca'),
@@ -44,7 +44,7 @@ const schools: S[] = [
   s('Calder High School',             'Calder',          'EPSB', 'epsb.ca'),
 
   // ─────────────────────────────────────────
-  // CANADA — Alberta
+  // CANADA - Alberta
   // ─────────────────────────────────────────
   s('University of Alberta',                  'UAlberta',    'Alberta'),
   s('University of Calgary',                  'UCalgary',    'Alberta'),
@@ -67,7 +67,7 @@ const schools: S[] = [
   s('Northwestern Polytechnic',               'NWP',         'Alberta'),
 
   // ─────────────────────────────────────────
-  // CANADA — British Columbia
+  // CANADA - British Columbia
   // ─────────────────────────────────────────
   s('University of British Columbia',         'UBC',         'British Columbia'),
   s('Simon Fraser University',                'SFU',         'British Columbia'),
@@ -91,7 +91,7 @@ const schools: S[] = [
   s('Columbia Bible College',                 'CBC',         'British Columbia'),
 
   // ─────────────────────────────────────────
-  // CANADA — Manitoba
+  // CANADA - Manitoba
   // ─────────────────────────────────────────
   s('University of Manitoba',                 'UManitoba',   'Manitoba'),
   s('University of Winnipeg',                 'UWinnipeg',   'Manitoba'),
@@ -101,7 +101,7 @@ const schools: S[] = [
   s('Assiniboine Community College',          'ACC',         'Manitoba'),
 
   // ─────────────────────────────────────────
-  // CANADA — New Brunswick
+  // CANADA - New Brunswick
   // ─────────────────────────────────────────
   s('University of New Brunswick',            'UNB',         'New Brunswick'),
   s('Université de Moncton',                  'UMoncton',    'New Brunswick'),
@@ -110,13 +110,13 @@ const schools: S[] = [
   s('New Brunswick Community College',        'NBCC',        'New Brunswick'),
 
   // ─────────────────────────────────────────
-  // CANADA — Newfoundland & Labrador
+  // CANADA - Newfoundland & Labrador
   // ─────────────────────────────────────────
   s('Memorial University of Newfoundland',    'MUN',         'Newfoundland & Labrador'),
   s('College of the North Atlantic',          'CNA',         'Newfoundland & Labrador'),
 
   // ─────────────────────────────────────────
-  // CANADA — Nova Scotia
+  // CANADA - Nova Scotia
   // ─────────────────────────────────────────
   s('Dalhousie University',                   'Dal',         'Nova Scotia'),
   s('Acadia University',                      'Acadia',      'Nova Scotia'),
@@ -128,7 +128,7 @@ const schools: S[] = [
   s('King\'s University College (NS)',        'King\'s NS',  'Nova Scotia'),
 
   // ─────────────────────────────────────────
-  // CANADA — Ontario
+  // CANADA - Ontario
   // ─────────────────────────────────────────
   s('University of Toronto',                  'UofT',        'Ontario'),
   s('McMaster University',                    'McMaster',    'Ontario'),
@@ -175,13 +175,13 @@ const schools: S[] = [
   s('Confederation College',                  'Confederation','Ontario'),
 
   // ─────────────────────────────────────────
-  // CANADA — Prince Edward Island
+  // CANADA - Prince Edward Island
   // ─────────────────────────────────────────
   s('University of Prince Edward Island',     'UPEI',        'Prince Edward Island'),
   s('Holland College',                        'Holland',     'Prince Edward Island'),
 
   // ─────────────────────────────────────────
-  // CANADA — Quebec
+  // CANADA - Quebec
   // ─────────────────────────────────────────
   s('McGill University',                      'McGill',      'Quebec'),
   s('Université de Montréal',                 'UdeM',        'Quebec'),
@@ -200,7 +200,7 @@ const schools: S[] = [
   s('Institut national de la recherche scientifique', 'INRS', 'Quebec'),
 
   // ─────────────────────────────────────────
-  // CANADA — Saskatchewan
+  // CANADA - Saskatchewan
   // ─────────────────────────────────────────
   s('University of Saskatchewan',             'USask',       'Saskatchewan'),
   s('University of Regina',                   'URegina',     'Saskatchewan'),
@@ -208,14 +208,14 @@ const schools: S[] = [
   s('Saskatchewan Polytechnic',               'SaskPolytech','Saskatchewan'),
 
   // ─────────────────────────────────────────
-  // CANADA — Northwest Territories / Yukon / Nunavut
+  // CANADA - Northwest Territories / Yukon / Nunavut
   // ─────────────────────────────────────────
   s('Yukon University',                       'YukonU',      'Yukon'),
   s('Aurora College',                         'Aurora',      'Northwest Territories'),
   s('Nunavut Arctic College',                 'NAC',         'Nunavut'),
 
   // ─────────────────────────────────────────
-  // USA — Alabama
+  // USA - Alabama
   // ─────────────────────────────────────────
   s('University of Alabama',                  'UA',          'Alabama'),
   s('Auburn University',                      'Auburn',      'Alabama'),
@@ -234,7 +234,7 @@ const schools: S[] = [
   s('University of Montevallo',               'Montevallo',  'Alabama'),
 
   // ─────────────────────────────────────────
-  // USA — Alaska
+  // USA - Alaska
   // ─────────────────────────────────────────
   s('University of Alaska Fairbanks',         'UAF',         'Alaska'),
   s('University of Alaska Anchorage',         'UAA',         'Alaska'),
@@ -242,7 +242,7 @@ const schools: S[] = [
   s('Alaska Pacific University',              'APU',         'Alaska'),
 
   // ─────────────────────────────────────────
-  // USA — Arizona
+  // USA - Arizona
   // ─────────────────────────────────────────
   s('University of Arizona',                  'UA',          'Arizona'),
   s('Arizona State University',               'ASU',         'Arizona'),
@@ -253,7 +253,7 @@ const schools: S[] = [
   s('Prescott College',                       'Prescott',    'Arizona'),
 
   // ─────────────────────────────────────────
-  // USA — Arkansas
+  // USA - Arkansas
   // ─────────────────────────────────────────
   s('University of Arkansas',                 'UArk',        'Arkansas'),
   s('Arkansas State University',              'A-State',     'Arkansas'),
@@ -264,7 +264,7 @@ const schools: S[] = [
   s('Harding University',                     'Harding',     'Arkansas'),
 
   // ─────────────────────────────────────────
-  // USA — California
+  // USA - California
   // ─────────────────────────────────────────
   s('University of California, Berkeley',     'UC Berkeley', 'California'),
   s('University of California, Los Angeles',  'UCLA',        'California'),
@@ -324,7 +324,7 @@ const schools: S[] = [
   s('Azusa Pacific University',              'APU',         'California'),
 
   // ─────────────────────────────────────────
-  // USA — Colorado
+  // USA - Colorado
   // ─────────────────────────────────────────
   s('University of Colorado Boulder',        'CU Boulder',  'Colorado'),
   s('Colorado State University',             'CSU',         'Colorado'),
@@ -340,7 +340,7 @@ const schools: S[] = [
   s('Regis University',                      'Regis',       'Colorado'),
 
   // ─────────────────────────────────────────
-  // USA — Connecticut
+  // USA - Connecticut
   // ─────────────────────────────────────────
   s('Yale University',                       'Yale',        'Connecticut'),
   s('University of Connecticut',             'UConn',       'Connecticut'),
@@ -358,7 +358,7 @@ const schools: S[] = [
   s('Post University',                       'Post',        'Connecticut'),
 
   // ─────────────────────────────────────────
-  // USA — Delaware
+  // USA - Delaware
   // ─────────────────────────────────────────
   s('University of Delaware',               'UD',          'Delaware'),
   s('Delaware State University',            'DSU',         'Delaware'),
@@ -366,7 +366,7 @@ const schools: S[] = [
   s('Wesley College',                       'Wesley',      'Delaware'),
 
   // ─────────────────────────────────────────
-  // USA — Florida
+  // USA - Florida
   // ─────────────────────────────────────────
   s('University of Florida',                'UF',          'Florida'),
   s('Florida State University',             'FSU',         'Florida'),
@@ -393,7 +393,7 @@ const schools: S[] = [
   s('Bethune-Cookman University',           'BCU',         'Florida'),
 
   // ─────────────────────────────────────────
-  // USA — Georgia
+  // USA - Georgia
   // ─────────────────────────────────────────
   s('Georgia Institute of Technology',      'Georgia Tech','Georgia'),
   s('University of Georgia',                'UGA',         'Georgia'),
@@ -416,7 +416,7 @@ const schools: S[] = [
   s('Oglethorpe University',                'Oglethorpe',  'Georgia'),
 
   // ─────────────────────────────────────────
-  // USA — Hawaii
+  // USA - Hawaii
   // ─────────────────────────────────────────
   s('University of Hawaii at Manoa',        'UH Manoa',    'Hawaii'),
   s('University of Hawaii at Hilo',         'UH Hilo',     'Hawaii'),
@@ -424,7 +424,7 @@ const schools: S[] = [
   s('Hawaii Pacific University',            'HPU',         'Hawaii'),
 
   // ─────────────────────────────────────────
-  // USA — Idaho
+  // USA - Idaho
   // ─────────────────────────────────────────
   s('University of Idaho',                  'UI',          'Idaho'),
   s('Boise State University',               'BSU',         'Idaho'),
@@ -434,7 +434,7 @@ const schools: S[] = [
   s('Northwest Nazarene University',        'NNU',         'Idaho'),
 
   // ─────────────────────────────────────────
-  // USA — Illinois
+  // USA - Illinois
   // ─────────────────────────────────────────
   s('University of Illinois Urbana-Champaign','UIUC',      'Illinois'),
   s('Northwestern University',              'Northwestern','Illinois'),
@@ -469,7 +469,7 @@ const schools: S[] = [
   s('Saint Xavier University',             'SXU',         'Illinois'),
 
   // ─────────────────────────────────────────
-  // USA — Indiana
+  // USA - Indiana
   // ─────────────────────────────────────────
   s('Purdue University',                   'Purdue',      'Indiana'),
   s('Indiana University Bloomington',      'IU',          'Indiana'),
@@ -494,7 +494,7 @@ const schools: S[] = [
   s('University of Indianapolis',          'UIndy',       'Indiana'),
 
   // ─────────────────────────────────────────
-  // USA — Iowa
+  // USA - Iowa
   // ─────────────────────────────────────────
   s('University of Iowa',                  'UIowa',       'Iowa'),
   s('Iowa State University',               'ISU IA',      'Iowa'),
@@ -510,7 +510,7 @@ const schools: S[] = [
   s('Wartburg College',                    'Wartburg',    'Iowa'),
 
   // ─────────────────────────────────────────
-  // USA — Kansas
+  // USA - Kansas
   // ─────────────────────────────────────────
   s('University of Kansas',                'KU',          'Kansas'),
   s('Kansas State University',             'K-State',     'Kansas'),
@@ -524,7 +524,7 @@ const schools: S[] = [
   s('Friends University',                  'Friends',     'Kansas'),
 
   // ─────────────────────────────────────────
-  // USA — Kentucky
+  // USA - Kentucky
   // ─────────────────────────────────────────
   s('University of Kentucky',              'UK',          'Kentucky'),
   s('University of Louisville',            'UofL',        'Kentucky'),
@@ -540,7 +540,7 @@ const schools: S[] = [
   s('Berea College',                       'Berea',       'Kentucky'),
 
   // ─────────────────────────────────────────
-  // USA — Louisiana
+  // USA - Louisiana
   // ─────────────────────────────────────────
   s('Louisiana State University',          'LSU',         'Louisiana'),
   s('Tulane University',                   'Tulane',      'Louisiana'),
@@ -558,7 +558,7 @@ const schools: S[] = [
   s('Southeastern Louisiana University',   'SLU',         'Louisiana'),
 
   // ─────────────────────────────────────────
-  // USA — Maine
+  // USA - Maine
   // ─────────────────────────────────────────
   s('University of Maine',                 'UMaine',      'Maine'),
   s('Bowdoin College',                     'Bowdoin',     'Maine'),
@@ -570,7 +570,7 @@ const schools: S[] = [
   s('Saint Joseph\'s College of Maine',    'SJC Maine',   'Maine'),
 
   // ─────────────────────────────────────────
-  // USA — Maryland
+  // USA - Maryland
   // ─────────────────────────────────────────
   s('University of Maryland, College Park','UMD',         'Maryland'),
   s('Johns Hopkins University',            'JHU',         'Maryland'),
@@ -590,7 +590,7 @@ const schools: S[] = [
   s('McDaniel College',                    'McDaniel',    'Maryland'),
 
   // ─────────────────────────────────────────
-  // USA — Massachusetts
+  // USA - Massachusetts
   // ─────────────────────────────────────────
   s('Massachusetts Institute of Technology','MIT',        'Massachusetts'),
   s('Harvard University',                  'Harvard',     'Massachusetts'),
@@ -636,7 +636,7 @@ const schools: S[] = [
   s('Regis College',                       'Regis MA',    'Massachusetts'),
 
   // ─────────────────────────────────────────
-  // USA — Michigan
+  // USA - Michigan
   // ─────────────────────────────────────────
   s('University of Michigan',              'UMich',       'Michigan'),
   s('Michigan State University',           'MSU',         'Michigan'),
@@ -667,7 +667,7 @@ const schools: S[] = [
   s('Madonna University',                  'Madonna',     'Michigan'),
 
   // ─────────────────────────────────────────
-  // USA — Minnesota
+  // USA - Minnesota
   // ─────────────────────────────────────────
   s('University of Minnesota Twin Cities', 'UMN',         'Minnesota'),
   s('University of Minnesota Duluth',      'UMD MN',      'Minnesota'),
@@ -691,7 +691,7 @@ const schools: S[] = [
   s('St. Catherine University',            'St. Kate\'s', 'Minnesota'),
 
   // ─────────────────────────────────────────
-  // USA — Mississippi
+  // USA - Mississippi
   // ─────────────────────────────────────────
   s('University of Mississippi',           'Ole Miss',    'Mississippi'),
   s('Mississippi State University',        'MSU MS',      'Mississippi'),
@@ -703,7 +703,7 @@ const schools: S[] = [
   s('Millsaps College',                    'Millsaps',    'Mississippi'),
 
   // ─────────────────────────────────────────
-  // USA — Missouri
+  // USA - Missouri
   // ─────────────────────────────────────────
   s('Washington University in St. Louis',  'WashU',       'Missouri'),
   s('University of Missouri',              'Mizzou',      'Missouri'),
@@ -722,7 +722,7 @@ const schools: S[] = [
   s('Rockhurst University',                'Rockhurst',   'Missouri'),
 
   // ─────────────────────────────────────────
-  // USA — Montana
+  // USA - Montana
   // ─────────────────────────────────────────
   s('University of Montana',               'UM',          'Montana'),
   s('Montana State University',            'MSU MT',      'Montana'),
@@ -732,7 +732,7 @@ const schools: S[] = [
   s('Rocky Mountain College',              'RMC MT',      'Montana'),
 
   // ─────────────────────────────────────────
-  // USA — Nebraska
+  // USA - Nebraska
   // ─────────────────────────────────────────
   s('University of Nebraska-Lincoln',      'UNL',         'Nebraska'),
   s('Creighton University',                'Creighton',   'Nebraska'),
@@ -746,7 +746,7 @@ const schools: S[] = [
   s('Hastings College',                    'Hastings',    'Nebraska'),
 
   // ─────────────────────────────────────────
-  // USA — Nevada
+  // USA - Nevada
   // ─────────────────────────────────────────
   s('University of Nevada, Las Vegas',     'UNLV',        'Nevada'),
   s('University of Nevada, Reno',          'UNR',         'Nevada'),
@@ -754,7 +754,7 @@ const schools: S[] = [
   s('Sierra Nevada University',            'SNU',         'Nevada'),
 
   // ─────────────────────────────────────────
-  // USA — New Hampshire
+  // USA - New Hampshire
   // ─────────────────────────────────────────
   s('Dartmouth College',                   'Dartmouth',   'New Hampshire'),
   s('University of New Hampshire',         'UNH',         'New Hampshire'),
@@ -766,7 +766,7 @@ const schools: S[] = [
   s('New England College',                 'NEC',         'New Hampshire'),
 
   // ─────────────────────────────────────────
-  // USA — New Jersey
+  // USA - New Jersey
   // ─────────────────────────────────────────
   s('Princeton University',                'Princeton',   'New Jersey'),
   s('Rutgers University-New Brunswick',    'Rutgers',     'New Jersey'),
@@ -791,7 +791,7 @@ const schools: S[] = [
   s('Saint Peter\'s University',           'SPU NJ',      'New Jersey'),
 
   // ─────────────────────────────────────────
-  // USA — New Mexico
+  // USA - New Mexico
   // ─────────────────────────────────────────
   s('University of New Mexico',            'UNM',         'New Mexico'),
   s('New Mexico State University',         'NMSU',        'New Mexico'),
@@ -801,7 +801,7 @@ const schools: S[] = [
   s('New Mexico Highlands University',     'NMHU',        'New Mexico'),
 
   // ─────────────────────────────────────────
-  // USA — New York
+  // USA - New York
   // ─────────────────────────────────────────
   s('Columbia University',                 'Columbia',    'New York'),
   s('New York University',                 'NYU',         'New York'),
@@ -876,7 +876,7 @@ const schools: S[] = [
   s('Yeshiva University',                  'YU',          'New York'),
 
   // ─────────────────────────────────────────
-  // USA — North Carolina
+  // USA - North Carolina
   // ─────────────────────────────────────────
   s('University of North Carolina at Chapel Hill','UNC',  'North Carolina'),
   s('Duke University',                     'Duke',        'North Carolina'),
@@ -907,7 +907,7 @@ const schools: S[] = [
   s('Shaw University',                     'Shaw',        'North Carolina'),
 
   // ─────────────────────────────────────────
-  // USA — North Dakota
+  // USA - North Dakota
   // ─────────────────────────────────────────
   s('University of North Dakota',          'UND',         'North Dakota'),
   s('North Dakota State University',       'NDSU',        'North Dakota'),
@@ -918,7 +918,7 @@ const schools: S[] = [
   s('Mayville State University',           'MaSU',        'North Dakota'),
 
   // ─────────────────────────────────────────
-  // USA — Ohio
+  // USA - Ohio
   // ─────────────────────────────────────────
   s('Ohio State University',               'OSU',         'Ohio'),
   s('Case Western Reserve University',     'CWRU',        'Ohio'),
@@ -955,7 +955,7 @@ const schools: S[] = [
   s('Mount Vernon Nazarene University',    'MVNU',        'Ohio'),
 
   // ─────────────────────────────────────────
-  // USA — Oklahoma
+  // USA - Oklahoma
   // ─────────────────────────────────────────
   s('University of Oklahoma',              'OU OK',       'Oklahoma'),
   s('Oklahoma State University',           'OSU OK',      'Oklahoma'),
@@ -970,7 +970,7 @@ const schools: S[] = [
   s('Langston University',                 'Langston',    'Oklahoma'),
 
   // ─────────────────────────────────────────
-  // USA — Oregon
+  // USA - Oregon
   // ─────────────────────────────────────────
   s('University of Oregon',                'UO',          'Oregon'),
   s('Oregon State University',             'OSU OR',      'Oregon'),
@@ -988,7 +988,7 @@ const schools: S[] = [
   s('Concordia University (Portland)',     'CUP',         'Oregon'),
 
   // ─────────────────────────────────────────
-  // USA — Pennsylvania
+  // USA - Pennsylvania
   // ─────────────────────────────────────────
   s('University of Pennsylvania',          'Penn',        'Pennsylvania'),
   s('Carnegie Mellon University',          'CMU',         'Pennsylvania'),
@@ -1044,7 +1044,7 @@ const schools: S[] = [
   s('York College of Pennsylvania',        'YCP',         'Pennsylvania'),
 
   // ─────────────────────────────────────────
-  // USA — Rhode Island
+  // USA - Rhode Island
   // ─────────────────────────────────────────
   s('Brown University',                    'Brown',       'Rhode Island'),
   s('Providence College',                  'PC',          'Rhode Island'),
@@ -1056,7 +1056,7 @@ const schools: S[] = [
   s('Salve Regina University',             'Salve Regina','Rhode Island'),
 
   // ─────────────────────────────────────────
-  // USA — South Carolina
+  // USA - South Carolina
   // ─────────────────────────────────────────
   s('Clemson University',                  'Clemson',     'South Carolina'),
   s('University of South Carolina',        'USC',         'South Carolina'),
@@ -1076,7 +1076,7 @@ const schools: S[] = [
   s('Erskine College',                     'Erskine',     'South Carolina'),
 
   // ─────────────────────────────────────────
-  // USA — South Dakota
+  // USA - South Dakota
   // ─────────────────────────────────────────
   s('University of South Dakota',          'USD SD',      'South Dakota'),
   s('South Dakota State University',       'SDSU',        'South Dakota'),
@@ -1087,7 +1087,7 @@ const schools: S[] = [
   s('Northern State University',           'NSU SD',      'South Dakota'),
 
   // ─────────────────────────────────────────
-  // USA — Tennessee
+  // USA - Tennessee
   // ─────────────────────────────────────────
   s('Vanderbilt University',               'Vanderbilt',  'Tennessee'),
   s('University of Tennessee, Knoxville',  'UTK',         'Tennessee'),
@@ -1111,7 +1111,7 @@ const schools: S[] = [
   s('Maryville College',                   'Maryville',   'Tennessee'),
 
   // ─────────────────────────────────────────
-  // USA — Texas
+  // USA - Texas
   // ─────────────────────────────────────────
   s('University of Texas at Austin',       'UT Austin',   'Texas'),
   s('Texas A&M University',                'TAMU',        'Texas'),
@@ -1165,7 +1165,7 @@ const schools: S[] = [
   s('Texas Wesleyan University',           'TWU TX',      'Texas'),
 
   // ─────────────────────────────────────────
-  // USA — Utah
+  // USA - Utah
   // ─────────────────────────────────────────
   s('University of Utah',                  'UofU',        'Utah'),
   s('Brigham Young University',            'BYU',         'Utah'),
@@ -1178,7 +1178,7 @@ const schools: S[] = [
   s('Snow College',                        'Snow',        'Utah'),
 
   // ─────────────────────────────────────────
-  // USA — Vermont
+  // USA - Vermont
   // ─────────────────────────────────────────
   s('University of Vermont',               'UVM',         'Vermont'),
   s('Middlebury College',                  'Middlebury',  'Vermont'),
@@ -1191,7 +1191,7 @@ const schools: S[] = [
   s('Goddard College',                     'Goddard',     'Vermont'),
 
   // ─────────────────────────────────────────
-  // USA — Virginia
+  // USA - Virginia
   // ─────────────────────────────────────────
   s('University of Virginia',              'UVA',         'Virginia'),
   s('Virginia Tech',                       'Virginia Tech','Virginia'),
@@ -1226,7 +1226,7 @@ const schools: S[] = [
   s('Christendom College',                 'Christendom', 'Virginia'),
 
   // ─────────────────────────────────────────
-  // USA — Washington
+  // USA - Washington
   // ─────────────────────────────────────────
   s('University of Washington',            'UW',          'Washington'),
   s('Washington State University',         'WSU WA',      'Washington'),
@@ -1246,7 +1246,7 @@ const schools: S[] = [
   s('Northwest University',                'NU WA',       'Washington'),
 
   // ─────────────────────────────────────────
-  // USA — West Virginia
+  // USA - West Virginia
   // ─────────────────────────────────────────
   s('West Virginia University',            'WVU',         'West Virginia'),
   s('Marshall University',                 'Marshall',    'West Virginia'),
@@ -1259,7 +1259,7 @@ const schools: S[] = [
   s('Davis & Elkins College',              'D&E',         'West Virginia'),
 
   // ─────────────────────────────────────────
-  // USA — Wisconsin
+  // USA - Wisconsin
   // ─────────────────────────────────────────
   s('University of Wisconsin-Madison',     'UW-Madison',  'Wisconsin'),
   s('Marquette University',                'Marquette',   'Wisconsin'),
@@ -1290,12 +1290,12 @@ const schools: S[] = [
   s('Viterbo University',                  'Viterbo',     'Wisconsin'),
 
   // ─────────────────────────────────────────
-  // USA — Wyoming
+  // USA - Wyoming
   // ─────────────────────────────────────────
   s('University of Wyoming',               'UW WY',       'Wyoming'),
 
   // ─────────────────────────────────────────
-  // USA — Washington D.C.
+  // USA - Washington D.C.
   // ─────────────────────────────────────────
   s('Georgetown University',               'Georgetown',  'Washington D.C.'),
   s('George Washington University',        'GWU',         'Washington D.C.'),
@@ -1308,7 +1308,7 @@ const schools: S[] = [
   s('United States Military Academy',      'West Point',  'Washington D.C.'),
 
   // ─────────────────────────────────────────
-  // MEXICO — Major universities
+  // MEXICO - Major universities
   // ─────────────────────────────────────────
   s('Universidad Nacional Autónoma de México', 'UNAM',    'Mexico'),
   s('Instituto Politécnico Nacional',          'IPN',     'Mexico'),
