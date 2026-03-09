@@ -42,6 +42,7 @@ export default function EditContestPage() {
     const [themeSlug, setThemeSlug] = useState('global');
     const [accentColor, setAccentColor] = useState('');
     const [status, setStatus] = useState('SCHEDULED');
+    const [contestType, setContestType] = useState<'individual' | 'team' | 'relay'>('individual');
     const [problems, setProblems] = useState<any[]>([]);
     const [removingProblem, setRemovingProblem] = useState<string | null>(null);
     const [customThemes, setCustomThemes] = useState<any[]>([]);
@@ -61,6 +62,7 @@ export default function EditContestPage() {
                 setThemeSlug(data.themeSlug ?? 'global');
                 setAccentColor(data.accentColor ?? '');
                 setStatus(data.status ?? 'SCHEDULED');
+                setContestType(data.contestType ?? 'individual');
                 setProblems(data.problems ?? []);
                 setLoading(false);
             })
@@ -75,13 +77,14 @@ export default function EditContestPage() {
         const res = await fetch(`/api/contests/${contestId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title, description, startTime, endTime, themeSlug, accentColor: accentColor || null, status }),
+            body: JSON.stringify({ title, description, startTime, endTime, themeSlug, accentColor: accentColor || null, status, contestType }),
         });
         setSaving(false);
         if (res.ok) {
             setSuccess('Contest updated successfully.');
         } else {
-            setError('Failed to save changes.');
+            const body = await res.json().catch(() => null);
+            setError(body?.error ?? 'Failed to save changes.');
         }
     }
 
@@ -175,6 +178,23 @@ export default function EditContestPage() {
                                     </button>
                                 ))}
                             </div>
+                        </div>
+
+                        {/* Contest Type */}
+                        <div>
+                            <label style={LABEL}>Contest Type</label>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                {(['individual', 'team', 'relay'] as const).map(ct => (
+                                    <button key={ct} type="button" onClick={() => setContestType(ct)} style={{ fontFamily: MONO, fontSize: '10px', letterSpacing: '0.1em', padding: '6px 14px', borderRadius: '6px', border: 'none', cursor: 'pointer', textTransform: 'uppercase', background: contestType === ct ? 'var(--sage-bg)' : 'rgba(0,0,0,0.04)', color: contestType === ct ? 'var(--sage)' : 'var(--ink4)', fontWeight: contestType === ct ? 700 : 400 }}>
+                                        {ct}
+                                    </button>
+                                ))}
+                            </div>
+                            <p style={{ fontFamily: MONO, fontSize: '10px', color: 'var(--ink5)', marginTop: '6px', lineHeight: 1.5 }}>
+                                {contestType === 'individual' && 'Solo sequential — users solve in order.'}
+                                {contestType === 'team' && 'Team (up to 6) — any member solves any problem.'}
+                                {contestType === 'relay' && 'Relay (3-person) — sequential slot unlocks. Requires exactly 3 problems.'}
+                            </p>
                         </div>
 
                         {/* Theme */}

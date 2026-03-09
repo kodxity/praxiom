@@ -270,64 +270,83 @@ export function ContestCard({ contest, active, past, isAdmin, animDelay = 0, isR
   // ── Default (light/global) card ─────────────────────────────────────────
   return (
     <div
-      className="g contest-card fade-in"
-      style={{ maxWidth: '360px', width: '100%', animationDelay: `${animDelay}s` }}
+      className="fade-in"
+      style={{
+        width: 'min(360px, 100%)',
+        borderRadius: 'var(--r-xl)',
+        overflow: 'hidden',
+        position: 'relative',
+        background: 'var(--glass-bg, rgba(255,255,255,0.88))',
+        border: '1px solid var(--glass-bd, rgba(0,0,0,0.07))',
+        padding: '28px',
+        animationDelay: `${animDelay}s`,
+      }}
     >
-      {/* Status */}
-      <div style={{ marginBottom: '14px' }}>
-        {active ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <div className="live-dot" />
-            <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', letterSpacing: '0.12em', color: 'var(--rose)' }}>LIVE NOW</span>
-          </div>
-        ) : past ? (
-          <span className="tag">ENDED  {shortDate(new Date(contest.endTime))}</span>
-        ) : (
-          <span className="tag tag-amber">{shortDate(new Date(contest.startTime))} &middot; {daysUntil} DAYS</span>
+      <div style={{ position: 'relative', zIndex: 2 }}>
+        {/* Eyebrow */}
+        <div style={{ fontFamily: 'var(--ff-mono)', fontSize: '9px', letterSpacing: '0.22em', color: 'var(--ink5)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span>PRAXIS CONTEST</span>
+          {active && (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: 'var(--rose)', display: 'inline-block', boxShadow: '0 0 6px var(--rose)' }} />
+              LIVE
+            </span>
+          )}
+          {past && <span style={{ color: 'var(--ink5)' }}>ENDED {shortDate(new Date(contest.endTime))}</span>}
+          {!active && !past && <span style={{ color: 'var(--ink4)' }}>{shortDate(new Date(contest.startTime))} · {daysUntil}D</span>}
+        </div>
+
+        {/* Title */}
+        <div style={{ fontFamily: 'var(--ff-display)', fontSize: '24px', fontStyle: 'italic', color: 'var(--ink)', marginBottom: '8px', lineHeight: 1.15 }}>
+          {contest.title}
+        </div>
+
+        {/* Description */}
+        <div style={{ fontSize: '13px', fontWeight: 300, color: 'var(--ink3)', marginBottom: '20px', lineHeight: 1.6, minHeight: '38px' }}>
+          {contest.description ?? ''}
+        </div>
+
+        {/* Stats */}
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '18px' }}>
+          {[
+            { val: participants > 0 ? participants : '-', label: active ? 'Live' : 'Registered' },
+            { val: problemCount > 0 ? problemCount : '-', label: 'Problems' },
+            { val: duration > 0 ? `${duration}m` : '-', label: active ? 'Remaining' : 'Duration' },
+          ].map(({ val, label }) => (
+            <div key={label} style={{ flex: 1, background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.07)', borderRadius: 'var(--r)', padding: '10px 8px', textAlign: 'center' }}>
+              <div style={{ fontFamily: 'var(--ff-display)', fontStyle: 'italic', fontSize: '20px', color: 'var(--ink)' }}>{val}</div>
+              <div style={{ fontFamily: 'var(--ff-mono)', fontSize: '9px', letterSpacing: '0.1em', color: 'var(--ink5)', textTransform: 'uppercase', marginTop: '2px' }}>{label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* CTA */}
+        <Link
+          href={`/contests/${contest.id}`}
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            width: '100%', padding: '12px 20px',
+            background: active ? 'rgba(184,96,78,0.10)' : past ? 'rgba(0,0,0,0.04)' : 'rgba(107,148,120,0.12)',
+            border: active ? '1px solid rgba(184,96,78,0.28)' : past ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(107,148,120,0.28)',
+            borderRadius: 'var(--r)',
+            color: active ? 'var(--rose)' : past ? 'var(--ink3)' : 'var(--sage)',
+            fontFamily: 'var(--ff-ui)', fontSize: '14px', fontWeight: 500,
+            textDecoration: 'none',
+            transition: 'all 0.15s',
+          }}
+        >
+          {active && isRegistered ? 'Open →' : active ? 'Join Live →' : past ? 'View Results' : isRegistered ? 'Open →' : 'Register →'}
+        </Link>
+
+        {isAdmin && (
+          <Link
+            href={`/admin/contests/${contest.id}/edit`}
+            style={{ display: 'block', textAlign: 'center', marginTop: '8px', fontFamily: 'var(--ff-mono)', fontSize: '10px', color: 'var(--ink5)', textDecoration: 'none', letterSpacing: '0.06em' }}
+          >
+            Manage
+          </Link>
         )}
       </div>
-
-      {/* Title */}
-      <div className="contest-title">{contest.title}</div>
-
-      {/* Description */}
-      <div className="contest-desc" style={{ minHeight: contest.description ? undefined : '42px' }}>
-        {contest.description ?? ''}
-      </div>
-
-      {/* Stats */}
-      <div className="contest-stats">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-          <div className="cstat-val">{participants > 0 ? participants : ''}</div>
-          <div className="cstat-label">{active ? 'Live' : 'Registered'}</div>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-          <div className="cstat-val">{problemCount > 0 ? problemCount : ''}</div>
-          <div className="cstat-label">Problems</div>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-          <div className="cstat-val">{duration > 0 ? <>{duration}<span style={{ fontSize: '14px' }}> min</span></> : ''}</div>
-          <div className="cstat-label">{active ? 'Remaining' : 'Duration'}</div>
-        </div>
-      </div>
-
-      {/* CTA */}
-      <Link
-        href={`/contests/${contest.id}`}
-        className={`btn ${active ? 'btn-ink' : past ? 'btn-glass' : 'btn-sage'}`}
-        style={{ width: '100%', justifyContent: 'center', marginTop: '18px', display: 'flex' }}
-      >
-        {active && isRegistered ? 'Open' : active ? 'Join Live' : past ? 'View Results' : isRegistered ? 'Open' : 'Register'}
-      </Link>
-
-      {isAdmin && (
-        <Link
-          href={`/admin/contests/${contest.id}/edit`}
-          style={{ display: 'block', textAlign: 'center', marginTop: '8px', fontFamily: 'var(--ff-mono)', fontSize: '10px', color: 'var(--ink5)', textDecoration: 'none', letterSpacing: '0.06em' }}
-        >
-          Manage
-        </Link>
-      )}
     </div>
   )
 }

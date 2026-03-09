@@ -63,6 +63,12 @@ model User {
   messageReads  GroupMessageRead[]
   hintReveals   HintReveal[]
   resources     Resource[]
+  // team contest relations
+  teamMemberships  ContestTeamMember[]
+  receivedInvites  ContestTeamInvite[]   @relation("ReceivedInvites")
+  sentInvites      ContestTeamInvite[]   @relation("SentInvites")
+  joinRequests     ContestTeamJoinRequest[]
+  ledTeams         ContestTeam[]         @relation("TeamLeader")
 }
 
 model Theme {
@@ -95,11 +101,15 @@ model Contest {
   status      String   @default("SCHEDULED") // SCHEDULED, ACTIVE, ENDED
   themeSlug   String   @default("global")
   accentColor String?  // optional hex to override theme accent
+  contestType String   @default("individual") // individual | team | relay
 
   problems      Problem[]
   submissions   Submission[]
   ratingHistory RatingHistory[]
   registrations Registration[]
+  teams         ContestTeam[]
+  teamInvites   ContestTeamInvite[]
+  joinRequests  ContestTeamJoinRequest[]
 }
 
 model Problem {
@@ -132,15 +142,17 @@ model Submission {
   userId    String
   contestId String
   problemId String
+  teamId    String?  // null for individual contests
   answer    String
   isCorrect Boolean
   isUpsolve Boolean  @default(false)
   hintUsed  Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  user    User    @relation(fields: [userId], references: [id])
-  contest Contest @relation(fields: [contestId], references: [id])
-  problem Problem @relation(fields: [problemId], references: [id])
+  user    User         @relation(fields: [userId], references: [id])
+  contest Contest      @relation(fields: [contestId], references: [id])
+  problem Problem      @relation(fields: [problemId], references: [id])
+  team    ContestTeam? @relation(fields: [teamId], references: [id])
 }
 
 model BlogPost {
@@ -228,4 +240,75 @@ model GroupMessageRead {
   user    User         @relation(fields: [userId], references: [id])
 
   @@id([messageId, userId])
+}
+
+// ─── Team Contest Models ───────────────────────────────────────────────────
+
+model ContestTeam {
+  id           String   @id @default(cuid())
+  contestId    String
+  name         String
+  leaderUserId String
+  maxSize      Int
+  // FORMING | READY | FROZEN | INCOMPLETE
+  status       String   @default("FORMING")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  contest      Contest                  @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  leader       User                     @relation("TeamLeader", fields: [leaderUserId], references: [id])
+  members      ContestTeamMember[]
+  invites      ContestTeamInvite[]
+  joinRequests ContestTeamJoinRequest[]
+  submissions  Submission[]
+
+  @@unique([contestId, name])
+}
+
+model ContestTeamMember {
+  id         String   @id @default(cuid())
+  teamId     String
+  userId     String
+  role       String   @default("member") // leader | member
+  relayOrder Int?     // null for non-relay; 1 | 2 | 3 for relay
+  joinedAt   DateTime @default(now())
+
+  team ContestTeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User        @relation(fields: [userId], references: [id])
+
+  @@unique([teamId, userId])
+}
+
+model ContestTeamInvite {
+  id              String   @id @default(cuid())
+  contestId       String
+  teamId          String
+  invitedUserId   String
+  invitedByUserId String
+  // PENDING | ACCEPTED | DECLINED | EXPIRED | REVOKED
+  status          String   @default("PENDING")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  contest       Contest     @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  team          ContestTeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  invitedUser   User        @relation("ReceivedInvites", fields: [invitedUserId], references: [id])
+  invitedByUser User        @relation("SentInvites", fields: [invitedByUserId], references: [id])
+}
+
+model ContestTeamJoinRequest {
+  id        String   @id @default(cuid())
+  contestId String
+  teamId    String
+  userId    String
+  // PENDING | ACCEPTED | REJECTED | EXPIRED
+  status    String   @default("PENDING")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  contest Contest     @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  team    ContestTeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user    User        @relation(fields: [userId], references: [id])
+
+  @@unique([teamId, userId])
 }

@@ -110,7 +110,7 @@ export default async function UserProfile(props: { params: Promise<{ username: s
         graphData.unshift({ date: 'Start', rating: 1200, contestId: 'init' });
     }
 
-    const maxRating = Math.max(1200, ...user.ratingHistory.map((r: any) => r.newRating));
+    const maxRating = Math.max(user.rating ?? 1200, 1200, ...user.ratingHistory.map((r: any) => r.newRating));
     const rank = getRankLabel(user.rating);
     const initials = user.username[0].toUpperCase();
     // Heatmap: 16 weeks × 7 days = 112 cells, newest day = today

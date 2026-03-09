@@ -21,6 +21,7 @@ interface Props {
   isUpcoming?: boolean
   isLoggedIn?: boolean
   isAdmin?: boolean
+  contestType?: string
 }
 
 function formatDate(d: Date) {
@@ -56,11 +57,13 @@ export function ContestHero({
   isUpcoming = false,
   isLoggedIn = false,
   isAdmin = false,
+  contestType = 'individual',
 }: Props) {
   const theme = useTheme()
   const isDark = theme.navVariant === 'dark'
   const router = useRouter()
   const [registering, setRegistering] = useState(false)
+  const isTeamContest = contestType === 'team' || contestType === 'relay'
 
   async function handleRegister() {
     if (registering) return
@@ -127,7 +130,7 @@ export function ContestHero({
               </div>
               {/* Buttons */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                {isLoggedIn && !isPast && !isRegistered && !isAdmin && (
+                {isLoggedIn && !isPast && !isTeamContest && !isRegistered && !isAdmin && (
                   <button onClick={handleRegister} disabled={registering} style={{
                     display: 'inline-flex', alignItems: 'center', gap: '6px',
                     padding: '12px 28px', borderRadius: '10px',
@@ -138,6 +141,17 @@ export function ContestHero({
                   }}>
                     {registering ? 'Registering…' : 'Register →'}
                   </button>
+                )}
+                {isLoggedIn && !isPast && isTeamContest && !isRegistered && !isAdmin && (
+                  <Link href={`/contests/${contestId}?tab=team`} style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '6px',
+                    padding: '12px 28px', borderRadius: '10px', textDecoration: 'none',
+                    fontFamily: 'var(--ff-ui)', fontSize: '14px', fontWeight: 500,
+                    background: theme.accentBg, border: `1px solid ${theme.accentBorder}`,
+                    color: theme.textPrimary, transition: 'all 0.15s',
+                  }}>
+                    {contestType === 'relay' ? 'Form a Relay Team →' : 'Form a Team →'}
+                  </Link>
                 )}
                 {isLoggedIn && !isPast && isRegistered && (
                   <Link href={`/contests/${contestId}`} style={{
@@ -284,7 +298,7 @@ export function ContestHero({
 
         {/* CTA buttons */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-          {isLoggedIn && !isPast && !isRegistered && !isAdmin && (
+          {isLoggedIn && !isPast && !isTeamContest && !isRegistered && !isAdmin && (
             <button
               onClick={handleRegister}
               disabled={registering}
@@ -301,6 +315,22 @@ export function ContestHero({
             >
               {registering ? 'Registering…' : 'Register for Contest'}
             </button>
+          )}
+          {isLoggedIn && !isPast && isTeamContest && !isRegistered && !isAdmin && (
+            <Link
+              href={`/contests/${contestId}?tab=team`}
+              className="btn"
+              style={{
+                padding: '12px 28px',
+                background: 'var(--sage)',
+                color: '#fff',
+                boxShadow: '0 4px 16px rgba(107,148,120,0.25)',
+                fontSize: '15px',
+                textDecoration: 'none',
+              }}
+            >
+              {contestType === 'relay' ? 'Form a Relay Team' : 'Form a Team'}
+            </Link>
           )}
           {isLoggedIn && !isPast && isRegistered && (
             <Link

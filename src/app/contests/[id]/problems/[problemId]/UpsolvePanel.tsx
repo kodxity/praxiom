@@ -9,6 +9,7 @@ interface UpsolvePanelProps {
     initialSolved: boolean;
     initialAttempts: number;
     labelColor: string;
+    solvedDuringContest?: boolean;
     // Hint props - hintText only provided if already purchased
     hasHint?: boolean;
     hintCost?: number;
@@ -23,6 +24,7 @@ export default function UpsolvePanel({
     initialSolved,
     initialAttempts,
     labelColor,
+    solvedDuringContest = false,
     hasHint = false,
     hintCost = 0,
     userXp: initialUserXp = 0,
@@ -153,9 +155,20 @@ export default function UpsolvePanel({
             <p style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', letterSpacing: '0.14em', color: labelColor, textTransform: 'uppercase', marginBottom: '6px' }}>
                 Upsolve
             </p>
-            <p style={{ fontFamily: 'var(--ff-body)', fontSize: '13px', color: 'var(--ink3)', marginBottom: '16px' }}>
-                The contest has ended. Submit below - upsolves don&apos;t affect ratings.
-            </p>
+            {solvedDuringContest ? (
+                <div style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '6px',
+                    padding: '4px 10px', borderRadius: '99px', marginBottom: '12px',
+                    background: 'var(--sage-bg)', border: '1px solid var(--sage-border)',
+                    fontFamily: 'var(--ff-mono)', fontSize: '10px', color: 'var(--sage)',
+                }}>
+                    ✓ Solved during contest — one upsolve attempt allowed
+                </div>
+            ) : (
+                <p style={{ fontFamily: 'var(--ff-body)', fontSize: '13px', color: 'var(--ink3)', marginBottom: '16px' }}>
+                    The contest has ended. Submit below — upsolves don&apos;t affect ratings.
+                </p>
+            )}
 
             {feedback && (
                 <div style={{

@@ -1,13 +1,17 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 
 export function AddProblemForm({ contestId }: { contestId: string }) {
     const router = useRouter();
     const formRef = useRef<HTMLFormElement>(null);
+    const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+    const [submitting, setSubmitting] = useState(false);
 
     async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
+        setStatus(null);
+        setSubmitting(true);
         const form = new FormData(e.currentTarget);
         const data = Object.fromEntries(form);
 
@@ -21,15 +25,19 @@ export function AddProblemForm({ contestId }: { contestId: string }) {
             if (res.ok) {
                 formRef.current?.reset();
                 router.refresh();
-                alert('Problem added successfully!');
+                setStatus({ type: 'success', message: 'Problem added!' });
             } else {
-                const text = await res.text();
-                console.error("Failed to add problem:", text);
-                alert(`Failed to add problem: ${text || res.statusText}`);
+                let message = res.statusText;
+                try {
+                    const json = await res.json();
+                    message = json.message ?? message;
+                } catch { /* non-JSON body */ }
+                setStatus({ type: 'error', message });
             }
-        } catch (error) {
-            console.error(error);
-            alert('An error occurred while adding the problem.');
+        } catch {
+            setStatus({ type: 'error', message: 'Network error — please try again.' });
+        } finally {
+            setSubmitting(false);
         }
     }
 
@@ -41,8 +49,23 @@ export function AddProblemForm({ contestId }: { contestId: string }) {
             <textarea name="hint" placeholder="Hint (optional - costs half XP to reveal)" className="input" rows={2} style={{ resize: 'vertical' }} />
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <input name="points" type="number" placeholder="Points" defaultValue={100} required className="input" style={{ width: '100px' }} />
-                <button className="btn btn-sage" style={{ flex: 1 }}>Add Problem</button>
+                <button className="btn btn-sage" disabled={submitting} style={{ flex: 1, opacity: submitting ? 0.7 : 1 }}>
+                    {submitting ? 'Adding…' : 'Add Problem'}
+                </button>
             </div>
+            {status && (
+                <div style={{
+                    padding: '9px 13px',
+                    borderRadius: 'var(--r)',
+                    fontFamily: 'var(--ff-ui)',
+                    fontSize: '13px',
+                    background: status.type === 'success' ? 'var(--sage-bg)' : 'var(--rose-bg)',
+                    border: `1px solid ${status.type === 'success' ? 'var(--sage-border)' : 'var(--rose-border)'}`,
+                    color: status.type === 'success' ? 'var(--sage)' : 'var(--rose)',
+                }}>
+                    {status.message}
+                </div>
+            )}
         </form>
-    )
+    );
 }

@@ -8,8 +8,8 @@ const createProblemSchema = z.object({
     title: z.string().min(1, 'Title is required').max(200, 'Title too long').trim(),
     statement: z.string().min(10, 'Statement must be at least 10 characters').max(50000, 'Statement too long'),
     correctAnswer: z.string().min(1, 'Answer is required').max(500, 'Answer too long').trim(),
-    points: z.number().int('Points must be a whole number').min(1, 'Points must be at least 1').max(10000, 'Points cannot exceed 10,000'),
-    hint: z.string().max(2000, 'Hint too long').optional().nullable(),
+    points: z.coerce.number().int('Points must be a whole number').min(1, 'Points must be at least 1').max(10000, 'Points cannot exceed 10,000'),
+    hint: z.string().max(2000, 'Hint too long').transform(v => v.trim() || null).nullable().optional(),
 });
 
 export async function POST(req: Request, props: { params: Promise<{ id: string }> }) {

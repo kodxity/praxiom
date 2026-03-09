@@ -44,7 +44,15 @@ export function ProblemsList({ problems, contestId, initialSubmissions, lockedId
     return (
         <div className="fade-in">
             {/* Filter bar */}
-            <div className="g" style={{ padding: '12px 18px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            <div style={{
+                padding: '12px 18px', marginBottom: '12px',
+                display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap',
+                overflow: 'visible',
+                background: 'var(--glass)', backdropFilter: 'blur(22px) saturate(1.5)',
+                WebkitBackdropFilter: 'blur(22px) saturate(1.5)',
+                border: '1px solid var(--glass-border)', boxShadow: 'var(--shadow)',
+                borderRadius: 'var(--r-lg)',
+            }}>
                 <div className="search-wrap" style={{ flex: 1, minWidth: '160px' }}>
                     <svg className="search-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />

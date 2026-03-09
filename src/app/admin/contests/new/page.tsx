@@ -100,6 +100,7 @@ export default function NewContestPage() {
     const router = useRouter();
     const [selectedTheme, setSelectedTheme] = useState('global');
     const [accentColor, setAccentColor] = useState('');
+    const [contestType, setContestType] = useState<'individual' | 'team' | 'relay'>('individual');
     const [error, setError] = useState('');
 
     async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -108,6 +109,7 @@ export default function NewContestPage() {
         const form = new FormData(e.currentTarget);
         const data = Object.fromEntries(form) as Record<string, string>;
         data.themeSlug = selectedTheme;
+        data.contestType = contestType;
         if (accentColor) data.accentColor = accentColor;
 
         const res = await fetch('/api/contests', {
@@ -177,6 +179,23 @@ export default function NewContestPage() {
                             <label style={LABEL_STYLE}>End Time</label>
                             <input name="endTime" type="datetime-local" required className="input" style={{ width: '100%' }} />
                         </div>
+                    </div>
+
+                    {/* Contest Type */}
+                    <div>
+                        <label style={LABEL_STYLE}>Contest Type</label>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            {(['individual', 'team', 'relay'] as const).map(ct => (
+                                <button key={ct} type="button" onClick={() => setContestType(ct)} style={{ fontFamily: MONO, fontSize: '11px', letterSpacing: '0.1em', padding: '8px 18px', borderRadius: '7px', border: 'none', cursor: 'pointer', textTransform: 'uppercase', background: contestType === ct ? 'var(--sage-bg)' : 'rgba(0,0,0,0.04)', color: contestType === ct ? 'var(--sage)' : 'var(--ink4)', fontWeight: contestType === ct ? 700 : 400, boxShadow: contestType === ct ? '0 0 0 1px var(--sage-border)' : 'none' }}>
+                                    {ct}
+                                </button>
+                            ))}
+                        </div>
+                        <p style={{ fontFamily: MONO, fontSize: '10px', color: 'var(--ink5)', marginTop: '8px', lineHeight: 1.5 }}>
+                            {contestType === 'individual' && 'Solo sequential contest — users solve problems in order.'}
+                            {contestType === 'team' && 'Team contest (up to 6) — any member solves any problem in any order.'}
+                            {contestType === 'relay' && 'Relay contest — 3-person teams with sequential unlocks per slot.'}
+                        </p>
                     </div>
 
                     {/* Theme Picker */}

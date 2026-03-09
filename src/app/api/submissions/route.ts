@@ -53,8 +53,61 @@ export async function POST(req: Request) {
     // Mark as upsolve if submitting after contest ended (not counted for ratings)
     const isUpsolve = !session.user.isAdmin && now > contest.endTime;
 
-    // During an active contest, only registered users may submit
-    if (!isUpsolve && !session.user.isAdmin) {
+    // ── Team/relay checks ──────────────────────────────────────────────────
+    let teamId: string | null = null;
+
+    if (!isUpsolve && !session.user.isAdmin && contest.contestType !== 'individual') {
+        // Must be a member of a team for this contest
+        const membership = await prisma.contestTeamMember.findFirst({
+            where: { userId: session.user.id, team: { contestId } },
+            include: { team: true },
+        });
+
+        if (!membership) {
+            return new NextResponse('You must be on a team to submit in this contest.', { status: 403 });
+        }
+
+        if (contest.contestType === 'relay') {
+            // Validate relay slot authorization
+            const allProblems = await prisma.problem.findMany({
+                where: { contestId },
+                orderBy: { id: 'asc' },
+                select: { id: true },
+            });
+
+            if (allProblems.length !== 3) {
+                return new NextResponse('Relay contest must have exactly 3 problems.', { status: 400 });
+            }
+
+            const problemIndex = allProblems.findIndex(p => p.id === problemId); // 0-indexed -> slot = index+1
+            if (problemIndex === -1) return new NextResponse("Invalid problem", { status: 400 });
+            const requiredSlot = problemIndex + 1;
+
+            if (membership.relayOrder !== requiredSlot) {
+                return NextResponse.json({
+                    error: `As slot ${membership.relayOrder ?? 'unassigned'}, you may only submit problem ${membership.relayOrder}.`,
+                }, { status: 403 });
+            }
+
+            // Check prerequisite solved
+            if (requiredSlot > 1) {
+                const prevProblemId = allProblems[requiredSlot - 2].id;
+                const prevSolved = await prisma.submission.findFirst({
+                    where: { teamId: membership.teamId, problemId: prevProblemId, isCorrect: true, isUpsolve: false },
+                });
+                if (!prevSolved) {
+                    return NextResponse.json({
+                        error: `Problem ${requiredSlot - 1} must be solved first.`,
+                    }, { status: 403 });
+                }
+            }
+        }
+
+        teamId = membership.teamId;
+    }
+
+    // During an active individual contest, only registered users may submit
+    if (!isUpsolve && !session.user.isAdmin && contest.contestType === 'individual') {
         const reg = await prisma.registration.findUnique({
             where: { userId_contestId: { userId: session.user.id, contestId } },
         });
@@ -63,9 +116,8 @@ export async function POST(req: Request) {
         }
     }
 
-    // Sequential lock enforcement: during an active contest, block submission if an
-    // earlier problem is still unsolved (admins bypass this check)
-    if (!isUpsolve && !session.user.isAdmin) {
+    // Sequential lock enforcement for individual contests
+    if (!isUpsolve && !session.user.isAdmin && contest.contestType === 'individual') {
         const allProblems = await prisma.problem.findMany({
             where: { contestId },
             orderBy: { id: 'asc' },
@@ -88,9 +140,12 @@ export async function POST(req: Request) {
 
     if (!isUpsolve) {
         // During contest: block resubmission if already solved
-        const existingContestSolve = await prisma.submission.findFirst({
-            where: { userId: session.user.id, problemId, isCorrect: true, isUpsolve: false },
-        });
+        // For team/relay: check team solve; for individual: check user solve
+        const solveWhere = teamId
+            ? { teamId, problemId, isCorrect: true, isUpsolve: false }
+            : { userId: session.user.id, problemId, isCorrect: true, isUpsolve: false };
+
+        const existingContestSolve = await prisma.submission.findFirst({ where: solveWhere });
         if (existingContestSolve) {
             return NextResponse.json({ id: existingContestSolve.id, isCorrect: true, isUpsolve: false, alreadySolved: true });
         }
@@ -132,6 +187,7 @@ export async function POST(req: Request) {
             userId: session.user.id,
             contestId,
             problemId,
+            teamId: teamId || null,
             answer,
             isCorrect,
             isUpsolve,

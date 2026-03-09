@@ -10,8 +10,9 @@ const updateContestSchema = z.object({
     startTime: z.string().optional(),
     endTime: z.string().optional(),
     themeSlug: z.string().regex(/^[a-z0-9-]*$/, 'Invalid theme slug').max(50).optional(),
-    accentColor: z.string().regex(/^(#[0-9A-Fa-f]{6})?$/, 'Invalid hex color').optional(),
+    accentColor: z.string().regex(/^(#[0-9A-Fa-f]{6})?$/, 'Invalid hex color').nullable().optional(),
     status: z.enum(['SCHEDULED', 'ACTIVE', 'ENDED']).optional(),
+    contestType: z.enum(['individual', 'team', 'relay']).optional(),
 });
 
 export async function GET(_req: Request, props: { params: Promise<{ id: string }> }) {
@@ -58,7 +59,7 @@ export async function PATCH(req: Request, props: { params: Promise<{ id: string 
     if (!result.success) {
         return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 });
     }
-    const { title, description, startTime, endTime, themeSlug, accentColor, status } = result.data;
+    const { title, description, startTime, endTime, themeSlug, accentColor, status, contestType } = result.data;
 
     // Validate dates if provided
     let start: Date | undefined, end: Date | undefined;
@@ -79,6 +80,7 @@ export async function PATCH(req: Request, props: { params: Promise<{ id: string 
                 ...(themeSlug !== undefined && { themeSlug }),
                 ...(accentColor !== undefined && { accentColor: accentColor || null }),
                 ...(status !== undefined && { status }),
+                ...(contestType !== undefined && { contestType }),
             },
         });
         return NextResponse.json(contest);
@@ -95,10 +97,20 @@ export async function DELETE(_req: Request, props: { params: Promise<{ id: strin
     }
     const params = await props.params;
     try {
-        // Delete related records first
+        // Delete related records in dependency order
+        const problemIds = (await prisma.problem.findMany({
+            where: { contestId: params.id },
+            select: { id: true },
+        })).map(p => p.id);
+
+        if (problemIds.length > 0) {
+            await prisma.hintReveal.deleteMany({ where: { problemId: { in: problemIds } } });
+        }
         await prisma.submission.deleteMany({ where: { contestId: params.id } });
+        await prisma.ratingHistory.deleteMany({ where: { contestId: params.id } });
         await prisma.registration.deleteMany({ where: { contestId: params.id } });
         await prisma.problem.deleteMany({ where: { contestId: params.id } });
+        // ContestTeam cascade-deletes members, invites, and join-requests
         await prisma.contest.delete({ where: { id: params.id } });
         return new NextResponse(null, { status: 204 });
     } catch (e) {

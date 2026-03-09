@@ -10,7 +10,8 @@ const createContestSchema = z.object({
     startTime: z.string().min(1, 'Start time is required'),
     endTime: z.string().min(1, 'End time is required'),
     themeSlug: z.string().regex(/^[a-z0-9-]*$/, 'Invalid theme slug').max(50).optional(),
-    accentColor: z.string().regex(/^(#[0-9A-Fa-f]{6})?$/, 'Invalid hex color').optional(),
+    accentColor: z.string().regex(/^(#[0-9A-Fa-f]{6})?$/, 'Invalid hex color').nullable().optional(),
+    contestType: z.enum(['individual', 'team', 'relay']).default('individual'),
 });
 
 export async function POST(req: Request) {
@@ -26,7 +27,7 @@ export async function POST(req: Request) {
     if (!result.success) {
         return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 });
     }
-    const { title, description, startTime, endTime, themeSlug, accentColor } = result.data;
+    const { title, description, startTime, endTime, themeSlug, accentColor, contestType } = result.data;
 
     const start = new Date(startTime);
     const end = new Date(endTime);
@@ -46,6 +47,7 @@ export async function POST(req: Request) {
             status: 'SCHEDULED',
             themeSlug: themeSlug || 'global',
             accentColor: accentColor || null,
+            contestType,
         }
     });
 

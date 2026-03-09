@@ -81,13 +81,13 @@ export function ProblemsClient({ problems, solvedIds }: ProblemsClientProps) {
                         style={{ width: '100%' }}
                     />
                 </div>
-                <CustomSelect
+                {/* <CustomSelect
                     value={topic}
                     onChange={setTopic}
                     options={[{ value: '', label: 'All Topics' }, ...TOPICS.map(t => ({ value: t, label: t }))]}
                     placeholder="All Topics"
                     style={{ width: '140px' }}
-                />
+                /> */}
                 <CustomSelect
                     value={difficulty}
                     onChange={setDiff}

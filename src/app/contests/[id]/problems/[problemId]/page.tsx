@@ -56,10 +56,20 @@ export default async function ProblemViewPage(props: { params: Promise<{ id: str
             userSolvedIds = new Set(
                 allContestSubs.filter((s: any) => s.isCorrect && !s.isUpsolve).map((s: any) => s.problemId)
             );
-            const reg = await prisma.registration.findUnique({
-                where: { userId_contestId: { userId: session.user.id, contestId: params.id } },
-            });
-            isRegistered = !!reg;
+
+            if (contest.contestType === 'team' || contest.contestType === 'relay') {
+                const member = await prisma.contestTeamMember.findFirst({
+                    where: { userId: session.user.id, team: { contestId: params.id } },
+                });
+                isRegistered = !!member;
+                // Store relay order on the member object for locking logic below
+                (contest as any)._myRelayOrder = member?.relayOrder ?? null;
+            } else {
+                const reg = await prisma.registration.findUnique({
+                    where: { userId_contestId: { userId: session.user.id, contestId: params.id } },
+                });
+                isRegistered = !!reg;
+            }
         }
     } catch {
         notFound();
@@ -89,6 +99,7 @@ export default async function ProblemViewPage(props: { params: Promise<{ id: str
     const now = new Date();
     const isPast = now > contest.endTime;
     const isActive = now >= contest.startTime && now <= contest.endTime;
+    const isUpcoming = now < contest.startTime;
 
     const diff = getPointsLabel(problem.points);
     const problemIndex = allProblems.findIndex((p: any) => p.id === params.problemId);
@@ -96,6 +107,8 @@ export default async function ProblemViewPage(props: { params: Promise<{ id: str
 
     // Solved by user?
     const userSolved = submissions.some((s: any) => s.isCorrect);
+    // Solved correctly via upsolve specifically (determines if upsolve form should still show)
+    const upsolveSolvedCorrectly = submissions.some((s: any) => s.isCorrect && s.isUpsolve);
     // Attempts split by context
     const activeAttempts = submissions.filter((s: any) => !s.isUpsolve).length;
     const upsolveAttempts = submissions.filter((s: any) => s.isUpsolve).length;
@@ -103,9 +116,31 @@ export default async function ProblemViewPage(props: { params: Promise<{ id: str
     // Total attempts (across all users)
     const totalAttempts = problem._count.submissions;
 
-    // Sequential locking: problem is locked if any earlier problem is unsolved (active contests only)
+    // Sequential locking: problem is locked if any earlier problem is unsolved (individual only)
     const firstUnsolvedIdx = allProblems.findIndex((p: any) => !userSolvedIds.has(p.id));
-    const isLocked = isActive && isRegistered && firstUnsolvedIdx !== -1 && problemIndex > firstUnsolvedIdx;
+    const contestType = contest.contestType as string;
+
+    let isLocked = false;
+    let lockReason = '';
+    if (isActive && isRegistered) {
+        if (contestType === 'relay') {
+            const mySlot: number | null = (contest as any)._myRelayOrder ?? null;
+            if (mySlot === null) {
+                // Relay slot not assigned yet
+                isLocked = true;
+                lockReason = 'relay-unassigned';
+            } else if (mySlot !== problemIndex + 1) {
+                // User is assigned to a different slot
+                isLocked = true;
+                lockReason = 'relay-wrong-slot';
+            }
+        } else if (contestType === 'individual') {
+            isLocked = firstUnsolvedIdx !== -1 && problemIndex > firstUnsolvedIdx;
+            lockReason = 'sequential';
+        }
+        // team: no locking
+    }
+
     const prevProblem = problemIndex > 0 ? allProblems[problemIndex - 1] : null;
     const prevLetter = problemIndex > 0 ? String.fromCharCode(65 + problemIndex - 1) : '';
 
@@ -132,13 +167,27 @@ export default async function ProblemViewPage(props: { params: Promise<{ id: str
                 <span style={{ color: crumbLast }}>{letter}. {problem.title}</span>
             </div>
 
+            {/* Gate: hide problem content before contest starts (non-admins only) */}
+            {isUpcoming && !session?.user?.isAdmin ? (
+                <div className="g" style={{ padding: '48px 32px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}>
+                    <div style={{ fontSize: '32px' }}>🔒</div>
+                    <div style={{ fontFamily: 'var(--ff-display)', fontStyle: 'italic', fontSize: '22px', color: 'var(--ink)' }}>Contest Not Started</div>
+                    <div style={{ fontFamily: 'var(--ff-body)', fontSize: '14px', color: 'var(--ink4)', maxWidth: '360px' }}>
+                        This problem will be available when the contest begins.
+                    </div>
+                    <Link href={`/contests/${params.id}`} style={{ marginTop: '8px', padding: '8px 20px', borderRadius: 'var(--r)', background: 'var(--sage)', color: '#fff', fontFamily: 'var(--ff-ui)', fontSize: '13px', fontWeight: 600, textDecoration: 'none' }}>
+                        Back to Contest
+                    </Link>
+                </div>
+            ) : (
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
                 {/* Problem nav dots */}
                 <div className="g prob-nav" style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                     {allProblems.map((p: any, idx: number) => {
                         const isCurrent = p.id === params.problemId;
-                        const dotLocked = isActive && isRegistered && firstUnsolvedIdx !== -1 && idx > firstUnsolvedIdx;
+                        const dotLocked = contestType === 'individual' && isActive && isRegistered && firstUnsolvedIdx !== -1 && idx > firstUnsolvedIdx;
                         if (dotLocked && !isCurrent) {
                             return (
                                 <div
@@ -196,14 +245,40 @@ export default async function ProblemViewPage(props: { params: Promise<{ id: str
                     <div className="g" style={{ padding: '20px 24px', textAlign: 'center' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', padding: '12px 0' }}>
                             <div style={{ fontSize: '28px' }}>🔒</div>
-                            <div style={{ fontFamily: 'var(--ff-display)', fontStyle: 'italic', fontSize: '20px', color: 'var(--ink)' }}>Level Locked</div>
-                            <div style={{ fontFamily: 'var(--ff-body)', fontSize: '14px', color: 'var(--ink4)', maxWidth: '300px' }}>
-                                Solve {prevLetter ? `${prevLetter}. ${prevProblem?.title}` : 'the previous problem'} first to unlock this level.
-                            </div>
-                            {prevProblem && (
-                                <Link href={`/contests/${params.id}/problems/${prevProblem.id}`} style={{ padding: '8px 20px', borderRadius: 'var(--r)', background: 'var(--sage)', color: '#fff', fontFamily: 'var(--ff-ui)', fontSize: '13px', fontWeight: 600, textDecoration: 'none', marginTop: '4px' }}>
-                                    ← Go to {prevLetter}
-                                </Link>
+                            {lockReason === 'relay-unassigned' ? (
+                                <>
+                                    <div style={{ fontFamily: 'var(--ff-display)', fontStyle: 'italic', fontSize: '20px', color: 'var(--ink)' }}>Relay Slot Not Set</div>
+                                    <div style={{ fontFamily: 'var(--ff-body)', fontSize: '14px', color: 'var(--ink4)', maxWidth: '340px' }}>
+                                        Your team leader needs to assign relay slots before the contest starts.
+                                    </div>
+                                    <Link href={`/contests/${params.id}?tab=team`} style={{ padding: '8px 20px', borderRadius: 'var(--r)', background: 'var(--sage)', color: '#fff', fontFamily: 'var(--ff-ui)', fontSize: '13px', fontWeight: 600, textDecoration: 'none', marginTop: '4px' }}>
+                                        View Team
+                                    </Link>
+                                </>
+                            ) : lockReason === 'relay-wrong-slot' ? (
+                                <>
+                                    <div style={{ fontFamily: 'var(--ff-display)', fontStyle: 'italic', fontSize: '20px', color: 'var(--ink)' }}>Not Your Slot</div>
+                                    <div style={{ fontFamily: 'var(--ff-body)', fontSize: '14px', color: 'var(--ink4)', maxWidth: '340px' }}>
+                                        You are assigned to Slot {(contest as any)._myRelayOrder}. Navigate to Problem {String.fromCharCode(64 + ((contest as any)._myRelayOrder ?? 1))} to submit.
+                                    </div>
+                                    {allProblems[(contest as any)._myRelayOrder - 1] && (
+                                        <Link href={`/contests/${params.id}/problems/${allProblems[(contest as any)._myRelayOrder - 1].id}`} style={{ padding: '8px 20px', borderRadius: 'var(--r)', background: 'var(--sage)', color: '#fff', fontFamily: 'var(--ff-ui)', fontSize: '13px', fontWeight: 600, textDecoration: 'none', marginTop: '4px' }}>
+                                            Go to Problem {String.fromCharCode(64 + ((contest as any)._myRelayOrder ?? 1))}
+                                        </Link>
+                                    )}
+                                </>
+                            ) : (
+                                <>
+                                    <div style={{ fontFamily: 'var(--ff-display)', fontStyle: 'italic', fontSize: '20px', color: 'var(--ink)' }}>Level Locked</div>
+                                    <div style={{ fontFamily: 'var(--ff-body)', fontSize: '14px', color: 'var(--ink4)', maxWidth: '300px' }}>
+                                        Solve {prevLetter ? `${prevLetter}. ${prevProblem?.title}` : 'the previous problem'} first to unlock this level.
+                                    </div>
+                                    {prevProblem && (
+                                        <Link href={`/contests/${params.id}/problems/${prevProblem.id}`} style={{ padding: '8px 20px', borderRadius: 'var(--r)', background: 'var(--sage)', color: '#fff', fontFamily: 'var(--ff-ui)', fontSize: '13px', fontWeight: 600, textDecoration: 'none', marginTop: '4px' }}>
+                                            ← Go to {prevLetter}
+                                        </Link>
+                                    )}
+                                </>
                             )}
                         </div>
                     </div>
@@ -228,7 +303,10 @@ export default async function ProblemViewPage(props: { params: Promise<{ id: str
                 {isActive && session && !isRegistered && (
                     <div className="g" style={{ padding: '20px 24px', textAlign: 'center' }}>
                         <p style={{ fontFamily: 'var(--ff-body)', fontSize: '14px', color: 'var(--ink3)' }}>
-                            <Link href={`/contests/${params.id}`} style={{ color: 'var(--sage)' }}>Register for this contest</Link> to submit answers.
+                            {contestType === 'team' || contestType === 'relay'
+                                ? <><Link href={`/contests/${params.id}?tab=team`} style={{ color: 'var(--sage)' }}>Join or create a team</Link> to submit answers.</>
+                                : <><Link href={`/contests/${params.id}`} style={{ color: 'var(--sage)' }}>Register for this contest</Link> to submit answers.</>
+                            }
                         </p>
                     </div>
                 )}
@@ -246,9 +324,10 @@ export default async function ProblemViewPage(props: { params: Promise<{ id: str
                         contestId={params.id}
                         problemId={params.problemId}
                         correctAnswer={problem.correctAnswer}
-                        initialSolved={userSolved}
+                        initialSolved={upsolveSolvedCorrectly}
                         initialAttempts={upsolveAttempts}
                         labelColor={labelColor}
+                        solvedDuringContest={userSolved && !upsolveSolvedCorrectly}
                         hasHint={!!problem.hint}
                         hintCost={Math.floor(problem.points / 2)}
                         userXp={userXp}
@@ -319,6 +398,7 @@ export default async function ProblemViewPage(props: { params: Promise<{ id: str
                 </div>
 
             </div>
+            )} {/* end upcoming gate */}
         </div>
     );
 }

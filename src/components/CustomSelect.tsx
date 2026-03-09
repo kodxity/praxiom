@@ -1,5 +1,6 @@
 'use client';
 import { useState, useRef, useEffect, CSSProperties } from 'react';
+import { createPortal } from 'react-dom';
 
 export interface SelectOption {
     value: string;
@@ -21,7 +22,9 @@ export default function CustomSelect({
     value, onChange, options, placeholder, style, variant = 'filter',
 }: CustomSelectProps) {
     const [open, setOpen] = useState(false);
+    const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number; width: number } | null>(null);
     const ref = useRef<HTMLDivElement>(null);
+    const btnRef = useRef<HTMLButtonElement>(null);
     const selected = options.find(o => o.value === value);
     const isFilter = variant === 'filter';
 
@@ -32,6 +35,28 @@ export default function CustomSelect({
         document.addEventListener('mousedown', close);
         return () => document.removeEventListener('mousedown', close);
     }, []);
+
+    // Recalculate position on scroll/resize while open
+    useEffect(() => {
+        if (!open) return;
+        const update = () => {
+            const rect = btnRef.current?.getBoundingClientRect();
+            if (rect) setDropdownPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+        };
+        update();
+        window.addEventListener('scroll', update, true);
+        window.addEventListener('resize', update);
+        return () => {
+            window.removeEventListener('scroll', update, true);
+            window.removeEventListener('resize', update);
+        };
+    }, [open]);
+
+    const handleOpen = () => {
+        const rect = btnRef.current?.getBoundingClientRect();
+        if (rect) setDropdownPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+        setOpen(o => !o);
+    };
 
     const triggerStyle: CSSProperties = isFilter ? {
         background: 'rgba(255,255,255,0.72)',
@@ -67,14 +92,63 @@ export default function CustomSelect({
         backgroundPosition: 'right 11px center',
     };
 
+    const dropdown = open && dropdownPos ? createPortal(
+        <div
+            role="listbox"
+            style={{
+                position: 'fixed',
+                zIndex: 99999,
+                top: dropdownPos.top,
+                left: dropdownPos.left,
+                width: dropdownPos.width,
+                background: 'rgba(252,250,246,0.97)',
+                backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
+                border: '1.5px solid rgba(0,0,0,0.10)',
+                borderRadius: 'var(--r-lg)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.22)',
+                overflow: 'auto', maxHeight: '240px',
+                padding: '4px 0',
+            }}
+        >
+            {options.map(opt => (
+                <div
+                    key={opt.value}
+                    role="option"
+                    aria-selected={opt.value === value}
+                    onMouseDown={e => { e.preventDefault(); onChange(opt.value); setOpen(false); }}
+                    style={{
+                        padding: isFilter ? '8px 13px' : '10px 14px',
+                        cursor: 'pointer',
+                        fontFamily: isFilter ? 'var(--ff-ui)' : 'var(--ff-body)',
+                        fontSize: isFilter ? '13px' : '15px',
+                        fontWeight: isFilter ? 500 : 400,
+                        color: opt.value === value ? 'var(--sage)' : 'var(--ink2)',
+                        background: opt.value === value ? 'rgba(107,148,120,0.09)' : 'transparent',
+                        transition: 'background 0.1s',
+                    }}
+                    onMouseEnter={e => {
+                        if (opt.value !== value) e.currentTarget.style.background = 'rgba(107,148,120,0.06)';
+                    }}
+                    onMouseLeave={e => {
+                        e.currentTarget.style.background = opt.value === value ? 'rgba(107,148,120,0.09)' : 'transparent';
+                    }}
+                >
+                    {opt.label}
+                </div>
+            ))}
+        </div>,
+        document.body
+    ) : null;
+
     return (
         <div ref={ref} style={{ position: 'relative', ...style }}>
             <button
+                ref={btnRef}
                 type="button"
-                onClick={() => setOpen(o => !o)}
+                onClick={handleOpen}
                 onKeyDown={e => {
                     if (e.key === 'Escape') setOpen(false);
-                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen(o => !o); }
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleOpen(); }
                 }}
                 style={triggerStyle}
                 aria-haspopup="listbox"
@@ -82,50 +156,8 @@ export default function CustomSelect({
             >
                 {selected ? selected.label : (placeholder ?? 'Select…')}
             </button>
-
-            {open && (
-                <div
-                    role="listbox"
-                    style={{
-                        position: 'absolute', zIndex: 9999,
-                        top: 'calc(100% + 4px)', left: 0, right: 0,
-                        background: 'rgba(252,250,246,0.97)',
-                        backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
-                        border: '1.5px solid rgba(0,0,0,0.10)',
-                        borderRadius: 'var(--r-lg)',
-                        boxShadow: '0 8px 32px rgba(0,0,0,0.14)',
-                        overflow: 'auto', maxHeight: '240px',
-                        padding: '4px 0',
-                    }}
-                >
-                    {options.map(opt => (
-                        <div
-                            key={opt.value}
-                            role="option"
-                            aria-selected={opt.value === value}
-                            onClick={() => { onChange(opt.value); setOpen(false); }}
-                            style={{
-                                padding: isFilter ? '8px 13px' : '10px 14px',
-                                cursor: 'pointer',
-                                fontFamily: isFilter ? 'var(--ff-ui)' : 'var(--ff-body)',
-                                fontSize: isFilter ? '13px' : '15px',
-                                fontWeight: isFilter ? 500 : 400,
-                                color: opt.value === value ? 'var(--sage)' : 'var(--ink2)',
-                                background: opt.value === value ? 'rgba(107,148,120,0.09)' : 'transparent',
-                                transition: 'background 0.1s',
-                            }}
-                            onMouseEnter={e => {
-                                if (opt.value !== value) e.currentTarget.style.background = 'rgba(107,148,120,0.06)';
-                            }}
-                            onMouseLeave={e => {
-                                e.currentTarget.style.background = opt.value === value ? 'rgba(107,148,120,0.09)' : 'transparent';
-                            }}
-                        >
-                            {opt.label}
-                        </div>
-                    ))}
-                </div>
-            )}
+            {dropdown}
         </div>
     );
 }
+
