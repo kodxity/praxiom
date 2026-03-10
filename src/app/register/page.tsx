@@ -221,8 +221,10 @@ export default function RegisterPage() {
                 <div style={{ textAlign: 'center', marginBottom: '28px' }}>
                     <Link href="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                         <img src="/icon.svg" alt="Praxiom logo" style={{ width: '24px', height: '24px', display: 'block' }} />
-                        <span style={{ fontFamily: 'var(--ff-display)', fontSize: '22px', fontWeight: 400, color: 'var(--ink)' }}>Praxi</span>
-                        <em style={{ fontFamily: 'var(--ff-display)', fontSize: '22px', fontStyle: 'italic', color: 'var(--sage)' }}>om</em>
+                        <span style={{ fontFamily: 'var(--ff-display, Instrument Serif, serif)', fontSize: '22px', fontWeight: 400, color: 'var(--theme-logo-text, var(--ink))', lineHeight: 1 }}>
+                            Praxi
+                            <em style={{ fontFamily: 'var(--ff-display, Instrument Serif, serif)', fontSize: '22px', fontStyle: 'italic', color: 'var(--theme-logo-accent, var(--sage))', lineHeight: 1, marginLeft: '-0.1ch' }}>om</em>
+                        </span>
                     </Link>
 
                     {step === 1 ? (
