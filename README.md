@@ -2,6 +2,12 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+Setup:
+```bash
+npm install
+npx prisma generate
+```
+
 First, run the development server:
 
 ```bash
