@@ -17,9 +17,9 @@ const securityHeaders = [
             "default-src 'self'",
             // Next.js requires 'unsafe-inline' for its runtime style injection;
             // nonce-based CSP requires additional framework support.
-            "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
-            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-            "font-src 'self' https://fonts.gstatic.com",
+            "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.jsdelivr.net",
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
+            "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net",
             "img-src 'self' data: blob:",
             "connect-src 'self'",
             "frame-ancestors 'none'",
