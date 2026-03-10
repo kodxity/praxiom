@@ -39,7 +39,11 @@ export default async function GroupPage(props: { params: Promise<{ id: string }>
                 teacher: { select: { id: true, username: true, rating: true } },
                 members: {
                     orderBy: { user: { rating: 'desc' } },
-                    select: { user: { id: true, username: true, rating: true, isApproved: true } },
+                    select: {
+                        user: {
+                            select: { id: true, username: true, rating: true, isApproved: true },
+                        },
+                    },
                 },
                 joinRequests: {
                     where: { userId: session?.user?.id ?? 'none' }

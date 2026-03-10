@@ -19,7 +19,11 @@ export async function GET(_req: Request, props: { params: Promise<{ id: string }
                 teacher: { select: { id: true, username: true, rating: true } },
                 members: {
                     orderBy: { user: { username: 'asc' } },
-                    select: { user: { id: true, username: true, rating: true, schoolId: true, isApproved: true } },
+                    select: {
+                        user: {
+                            select: { id: true, username: true, rating: true, schoolId: true, isApproved: true },
+                        },
+                    },
                 },
             },
         });
