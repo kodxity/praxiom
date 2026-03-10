@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 
-type Status = 'member' | 'teacher' | 'pending' | 'none' | 'login';
+type Status = 'member' | 'teacher' | 'pending' | 'none' | 'login' | 'other_group';
 
 export function JoinGroupButton({
     groupId,
@@ -16,6 +16,7 @@ export function JoinGroupButton({
 }) {
     const [state, setState] = useState<Status>(status);
     const [loading, setLoading] = useState(false);
+    const [confirmLeave, setConfirmLeave] = useState(false);
 
     async function requestJoin() {
         setLoading(true);
@@ -44,10 +45,58 @@ export function JoinGroupButton({
         );
     }
 
+    async function leaveGroup() {
+        setLoading(true);
+        const res = await fetch(`/api/groups/${groupId}/leave`, { method: 'DELETE' });
+        setLoading(false);
+        if (res.ok) setState('none');
+        setConfirmLeave(false);
+    }
+
     if (state === 'member') {
+        if (confirmLeave) {
+            return (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontFamily: 'var(--ff-mono)', fontSize: compact ? '10px' : '11px', color: 'var(--ink4)' }}>Leave group?</span>
+                    <button
+                        className={compact ? 'btn btn-ghost btn-sm' : 'btn btn-ghost'}
+                        onClick={leaveGroup}
+                        disabled={loading}
+                        style={compact ? { fontSize: '10px', color: 'var(--red, #c0392b)' } : { color: 'var(--red, #c0392b)' }}
+                    >
+                        {loading ? '…' : 'Yes, leave'}
+                    </button>
+                    <button
+                        className={compact ? 'btn btn-ghost btn-sm' : 'btn btn-ghost'}
+                        onClick={() => setConfirmLeave(false)}
+                        disabled={loading}
+                        style={compact ? { fontSize: '10px' } : undefined}
+                    >
+                        Cancel
+                    </button>
+                </div>
+            );
+        }
         return (
-            <span style={{ fontFamily: 'var(--ff-mono)', fontSize: compact ? '10px' : '11px', color: 'var(--sage)' }}>
-                Member
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontFamily: 'var(--ff-mono)', fontSize: compact ? '10px' : '11px', color: 'var(--sage)' }}>
+                    Member
+                </span>
+                <button
+                    className={compact ? 'btn btn-ghost btn-sm' : 'btn btn-ghost'}
+                    onClick={() => setConfirmLeave(true)}
+                    style={compact ? { fontSize: '10px', color: 'var(--ink5)' } : { color: 'var(--ink5)' }}
+                >
+                    Leave
+                </button>
+            </div>
+        );
+    }
+
+    if (state === 'other_group') {
+        return (
+            <span style={{ fontFamily: 'var(--ff-mono)', fontSize: compact ? '10px' : '11px', color: 'var(--ink5)' }}>
+                Already in a group
             </span>
         );
     }
