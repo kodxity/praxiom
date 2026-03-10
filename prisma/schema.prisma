@@ -62,9 +62,10 @@ model User {
   ratingHistory     RatingHistory[]
   registrations     Registration[]
   resources         Resource[]
-  submissions       Submission[]
-  school            School?                  @relation(fields: [schoolId], references: [id])
-  votes             Vote[]
+  submissions          Submission[]
+  school               School?                  @relation(fields: [schoolId], references: [id])
+  votes                Vote[]
+  passwordResetTokens  PasswordResetToken[]
 }
 
 model GroupMember {
@@ -311,4 +312,13 @@ model ContestTeamJoinRequest {
   user      User        @relation(fields: [userId], references: [id])
 
   @@unique([teamId, userId])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique // SHA-256 hash of the raw token sent in the email
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
