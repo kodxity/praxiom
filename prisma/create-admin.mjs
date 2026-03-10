@@ -1,7 +1,14 @@
+import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 import { hashSync } from 'bcryptjs';
 
-const prisma = new PrismaClient();
+function createPrismaClient() {
+    const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+    return new PrismaClient({ adapter });
+}
+
+const prisma = createPrismaClient();
 
 const hashed = hashSync('7f1ZT7mlr597JeHjUyh8rd9s7Ai5yjjy', 12);
 
