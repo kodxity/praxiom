@@ -220,10 +220,10 @@ export default function RegisterPage() {
 
                 {/* Wordmark */}
                 <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-                    <Link href="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'baseline', gap: '0' }}>
-                        <span style={{ fontFamily: 'var(--ff-display)', fontSize: '20px', fontStyle: 'italic', color: 'var(--sage)', marginRight: '3px' }}>Σ</span>
+                    <Link href="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                        <img src="/icon.svg" alt="Praxiom logo" style={{ width: '24px', height: '24px', display: 'block' }} />
                         <span style={{ fontFamily: 'var(--ff-display)', fontSize: '22px', fontWeight: 400, color: 'var(--ink)' }}>Praxi</span>
-                        <em style={{ fontFamily: 'var(--ff-display)', fontSize: '22px', fontStyle: 'italic', color: 'var(--sage)' }}>s</em>
+                        <em style={{ fontFamily: 'var(--ff-display)', fontSize: '22px', fontStyle: 'italic', color: 'var(--sage)' }}>om</em>
                     </Link>
 
                     {step === 1 ? (
@@ -469,4 +469,3 @@ export default function RegisterPage() {
         </div>
     );
 }
-
