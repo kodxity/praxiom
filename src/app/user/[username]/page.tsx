@@ -47,8 +47,8 @@ export default async function UserProfile(props: { params: Promise<{ username: s
             include: {
                 ratingHistory: { orderBy: { createdAt: 'asc' } },
                 school: { select: { name: true, shortName: true, district: true } },
-                group: { select: { id: true, name: true } },
-                taughtGroup: { select: { id: true, name: true } },
+                groupMemberships: { select: { group: { select: { id: true, name: true } } } },
+                taughtGroups: { select: { id: true, name: true } },
             },
         });
     } catch {
@@ -156,15 +156,18 @@ export default async function UserProfile(props: { params: Promise<{ username: s
                                     {user.school.shortName} · {user.school.district}
                                 </span>
                             )}
-                            {(user.group || user.taughtGroup) && (() => {
-                                const g = user.group ?? user.taughtGroup;
-                                return (
-                                    <a href={`/groups/${g.id}`} style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', padding: '2px 9px', borderRadius: '99px', background: 'rgba(107,148,120,0.1)', border: '1px solid rgba(107,148,120,0.2)', color: 'var(--sage)', letterSpacing: '0.04em', textDecoration: 'none' }}>
-                                        {user.taughtGroup ? '📚 ' : ''}
-                                        {g.name}
-                                    </a>
-                                );
-                            })()}
+                        {(() => {
+                            const memberGroups = (user.groupMemberships ?? []).map((m: any) => m.group);
+                            const taughtGroups = user.taughtGroups ?? [];
+                            const allGroups = [...taughtGroups, ...memberGroups];
+                            if (allGroups.length === 0) return null;
+                            return allGroups.slice(0, 3).map((g: any, idx: number) => (
+                                <a key={g.id + idx} href={`/groups/${g.id}`} style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', padding: '2px 9px', borderRadius: '99px', background: 'rgba(107,148,120,0.1)', border: '1px solid rgba(107,148,120,0.2)', color: 'var(--sage)', letterSpacing: '0.04em', textDecoration: 'none' }}>
+                                    {taughtGroups.some((tg: any) => tg.id === g.id) ? '📚 ' : ''}
+                                    {g.name}
+                                </a>
+                            ));
+                        })()}
                         </div>
                     </div>
                     {isOwnProfile && (

@@ -10,7 +10,7 @@ export default async function GroupChatPage(props: { params: Promise<{ id: strin
 
     if (!session?.user?.id) redirect('/login');
 
-    let group: { id: string; name: string; teacherId: string; members: { id: string }[] } | null = null;
+    let group: { id: string; name: string; teacherId: string; members: { userId: string }[] } | null = null;
     try {
         group = await prisma.orgGroup.findUnique({
             where: { id },
@@ -18,7 +18,7 @@ export default async function GroupChatPage(props: { params: Promise<{ id: strin
                 id: true,
                 name: true,
                 teacherId: true,
-                members: { where: { id: session.user.id }, select: { id: true } },
+                members: { where: { userId: session.user.id }, select: { userId: true } },
             },
         });
     } catch { notFound(); }

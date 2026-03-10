@@ -34,7 +34,7 @@ const jetbrainsMono = JetBrains_Mono({
   variable: '--font-mono',
 });
 
-const BASE_URL = (process.env.NEXTAUTH_URL ?? 'https://mathshowup2.vercel.app').replace(/\/$/, '');
+const BASE_URL = (process.env.NEXTAUTH_URL ?? 'https://praxiom.vercel.app').replace(/\/$/, '');
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),

@@ -10,7 +10,7 @@ async function assertMember(groupId: string, userId: string) {
         where: { id: groupId },
         select: {
             teacherId: true,
-            members: { where: { id: userId }, select: { id: true } },
+            members: { where: { userId }, select: { userId: true } },
         },
     });
     if (!group) return false;

@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import Link from 'next/link';
 import { JoinGroupButton } from './JoinGroupButton';
+import { CreateGroupForm } from './CreateGroupForm';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -27,10 +28,11 @@ export default async function GroupsPage() {
                 id: true,
                 name: true,
                 school: { select: { shortName: true, district: true } },
-                teacher: { select: { username: true } },
+                teacher: { select: { id: true, username: true } },
                 _count: { select: { members: true } },
             },
         });
+        console.log('[DEBUG] GroupsPage found total groups:', groups.length);
 
         if (session?.user?.id) {
             const pending = await prisma.groupJoinRequest.findMany({
@@ -39,7 +41,9 @@ export default async function GroupsPage() {
             });
             pendingSet = new Set(pending.map(p => p.groupId));
         }
-    } catch { /* DB unavailable */ }
+    } catch (e) {
+        console.error('Database Error in GroupsPage:', e);
+    }
 
     return (
         <div style={{ maxWidth: '980px', margin: '0 auto', padding: '48px 1.75rem 80px', position: 'relative', zIndex: 1 }}>
@@ -55,6 +59,8 @@ export default async function GroupsPage() {
                 </p>
             </div>
 
+            {session?.user?.isTeacher && <CreateGroupForm />}
+
             {groups.length === 0 ? (
                 <div className="g" style={{ padding: '28px', textAlign: 'center', color: 'var(--ink5)', fontFamily: 'var(--ff-mono)', fontSize: '12px' }}>
                     No groups yet.
@@ -62,8 +68,8 @@ export default async function GroupsPage() {
             ) : (
                 <div className="g" style={{ overflow: 'hidden' }}>
                     {groups.map((g, i) => {
-                        const isTeacher = session?.user?.isTeacher && session.user.groupId === g.id;
-                        const isMember = !isTeacher && session?.user?.groupId === g.id;
+                        const isTeacher = session?.user?.isTeacher && g.teacher.id === session.user.id;
+                        const isMember = !isTeacher && (session?.user?.groupIds ?? []).includes(g.id);
                         const status: 'member' | 'teacher' | 'pending' | 'none' | 'login' = !session
                             ? 'login'
                             : isTeacher

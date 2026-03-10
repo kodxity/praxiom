@@ -18,16 +18,15 @@ export async function GET(_req: Request, props: { params: Promise<{ id: string }
                 school: true,
                 teacher: { select: { id: true, username: true, rating: true } },
                 members: {
-                    where: { isApproved: true },
-                    orderBy: { rating: 'desc' },
-                    select: { id: true, username: true, rating: true, schoolId: true },
+                    orderBy: { user: { username: 'asc' } },
+                    select: { user: { id: true, username: true, rating: true, schoolId: true, isApproved: true } },
                 },
             },
         });
         if (!group) return NextResponse.json({ error: 'Not found' }, { status: 404 });
         return NextResponse.json(group);
-    } catch {
-        return NextResponse.json({ error: 'Server error' }, { status: 500 });
+    } catch (e: any) {
+        return NextResponse.json({ error: e.message || 'Server error' }, { status: 500 });
     }
 }
 

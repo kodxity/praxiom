@@ -20,6 +20,13 @@ export async function POST(_req: Request, props: { params: Promise<{ id: string 
             return NextResponse.json({ error: 'Teachers cannot join groups' }, { status: 403 });
         }
 
+        const existingMember = await prisma.groupMember.findUnique({
+            where: { groupId_userId: { groupId, userId: user.id } },
+        });
+        if (existingMember) {
+            return NextResponse.json({ ok: true });
+        }
+
         await prisma.groupJoinRequest.upsert({
             where: { groupId_userId: { groupId, userId: user.id } },
             create: { groupId, userId: user.id },

@@ -23,9 +23,10 @@ export function Navbar() {
     const pathname = usePathname();
     const [isOpen, setIsOpen] = useState(false);
 
-    const groupId = session?.user?.groupId ?? null;
-    const unread = useUnreadCount(!!groupId);
-    const showChatIcon = !!groupId;
+    const groupIds = session?.user?.groupIds ?? [];
+    const primaryGroupId = groupIds.length === 1 ? groupIds[0] : null;
+    const unread = useUnreadCount(groupIds.length > 0);
+    const showChatIcon = !!primaryGroupId;
 
     const links = [
         { name: 'Home', href: '/' },
@@ -34,7 +35,7 @@ export function Navbar() {
         { name: 'Leaderboard', href: '/leaderboard' },
         { name: 'Blog', href: '/blog' },
         { name: 'Resources', href: '/resources' },
-        { name: 'My Group', href: '/groups' },
+        { name: 'Groups', href: '/groups' },
     ];
 
     if (session?.user?.isAdmin) {
@@ -107,9 +108,9 @@ export function Navbar() {
                             </div>
                             {showChatIcon && (
                                 <Link
-                                    href={`/groups/${groupId}/chat`}
+                                    href={`/groups/${primaryGroupId}/chat`}
                                     aria-label="Group chat"
-                                    style={{ position: 'relative', width: '34px', height: '34px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: pathname.startsWith(`/groups/${groupId}/chat`) ? 'var(--sage)' : mutedColor, background: pathname.startsWith(`/groups/${groupId}/chat`) ? 'rgba(107,148,120,0.1)' : 'transparent', transition: 'all 0.15s', textDecoration: 'none' }}
+                                    style={{ position: 'relative', width: '34px', height: '34px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: pathname.startsWith(`/groups/${primaryGroupId}/chat`) ? 'var(--sage)' : mutedColor, background: pathname.startsWith(`/groups/${primaryGroupId}/chat`) ? 'rgba(107,148,120,0.1)' : 'transparent', transition: 'all 0.15s', textDecoration: 'none' }}
                                 >
                                     <MessageCircle size={18} />
                                     {unread > 0 && (
@@ -199,7 +200,7 @@ export function Navbar() {
                                     Profile ({session.user.username})
                                 </Link>
                                 {showChatIcon && (
-                                    <Link href={`/groups/${groupId}/chat`} onClick={() => setIsOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 14px', fontFamily: 'var(--ff-ui)', fontSize: '14px', textDecoration: 'none', color: textColor, borderRadius: '9px' }}>
+                                    <Link href={`/groups/${primaryGroupId}/chat`} onClick={() => setIsOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 14px', fontFamily: 'var(--ff-ui)', fontSize: '14px', textDecoration: 'none', color: textColor, borderRadius: '9px' }}>
                                         <MessageCircle size={15} />
                                         Group Chat
                                         {unread > 0 && (

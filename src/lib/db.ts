@@ -6,7 +6,12 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient() {
-    const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+    const url = process.env.DATABASE_URL;
+    console.log('[DEBUG] DB Client creation - URL present:', !!url);
+    if (url) {
+        console.log('[DEBUG] DB Endpoint:', url.split('@')[1] || 'UNKNOWN');
+    }
+    const adapter = new PrismaPg({ connectionString: url! });
     return new PrismaClient({ adapter });
 }
 

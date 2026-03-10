@@ -21,9 +21,9 @@ export function TeacherDashboardClient({ group, embedded = false }: { group: Gro
     const [addUsername, setAddUsername] = useState('');
     const [addError, setAddError] = useState('');
 
-    const fetchPending  = useCallback(() => fetch('/api/teacher/pending').then(r => r.json()).then(setPending).catch(() => {}), []);
-    const fetchStudents = useCallback(() => fetch('/api/teacher/students').then(r => r.json()).then(setStudents).catch(() => {}), []);
-    const fetchResults  = useCallback(() => fetch('/api/teacher/contest-results').then(r => r.json()).then(setResults).catch(() => {}), []);
+    const fetchPending  = useCallback(() => fetch(`/api/teacher/pending?groupId=${group.id}`).then(r => r.json()).then(setPending).catch(() => {}), [group.id]);
+    const fetchStudents = useCallback(() => fetch(`/api/teacher/students?groupId=${group.id}`).then(r => r.json()).then(setStudents).catch(() => {}), [group.id]);
+    const fetchResults  = useCallback(() => fetch(`/api/teacher/contest-results?groupId=${group.id}`).then(r => r.json()).then(setResults).catch(() => {}), [group.id]);
 
     useEffect(() => { fetchPending(); }, [fetchPending]);
     useEffect(() => { if (tab === 'students') fetchStudents(); }, [tab, fetchStudents]);
@@ -34,7 +34,7 @@ export function TeacherDashboardClient({ group, embedded = false }: { group: Gro
         await fetch('/api/teacher/users', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, action }),
+            body: JSON.stringify({ userId, action, groupId: group.id }),
         });
         setLoadingAction(null);
         fetchPending();
@@ -50,7 +50,7 @@ export function TeacherDashboardClient({ group, embedded = false }: { group: Gro
         const res = await fetch('/api/teacher/users', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'add', username }),
+            body: JSON.stringify({ action: 'add', username, groupId: group.id }),
         });
         setLoadingAction(null);
         if (!res.ok) {
