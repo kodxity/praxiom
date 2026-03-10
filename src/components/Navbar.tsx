@@ -70,8 +70,10 @@ export function Navbar() {
                 {/* Logo */}
                 <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <img src="/icon.svg" alt="Praxiom logo" style={{ width: '24px', height: '24px', display: 'block' }} />
-                    <span style={{ fontFamily: 'var(--ff-display, Instrument Serif, serif)', fontSize: '22px', fontWeight: 400, color: 'var(--theme-logo-text, var(--ink))', lineHeight: 1 }}>Praxi</span>
-                    <em style={{ fontFamily: 'var(--ff-display, Instrument Serif, serif)', fontSize: '22px', fontStyle: 'italic', color: 'var(--theme-logo-accent, var(--sage))', lineHeight: 1 }}>om</em>
+                    <span style={{ fontFamily: 'var(--ff-display, Instrument Serif, serif)', fontSize: '22px', fontWeight: 400, color: 'var(--theme-logo-text, var(--ink))', lineHeight: 1 }}>
+                        Praxi
+                        <em style={{ fontFamily: 'var(--ff-display, Instrument Serif, serif)', fontSize: '22px', fontStyle: 'italic', color: 'var(--theme-logo-accent, var(--sage))', lineHeight: 1, marginLeft: '-0.1ch' }}>om</em>
+                    </span>
                 </Link>
 
                 {/* Desktop links - absolutely centered so they don't shift with asymmetric logo/user widths */}
