@@ -3,10 +3,10 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'Sign In',
     description:
-        'Sign in to your Praxis account to compete in math contests, track your rating, and solve problems.',
+        'Sign in to your Praxiom account to compete in math contests, track your rating, and solve problems.',
     openGraph: {
-        title: 'Sign In | Praxis',
-        description: 'Sign in to your Praxis account.',
+        title: 'Sign In | Praxiom',
+        description: 'Sign in to your Praxiom account.',
         url: '/login',
     },
     alternates: { canonical: '/login' },

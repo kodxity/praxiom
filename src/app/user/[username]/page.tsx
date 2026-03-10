@@ -19,12 +19,12 @@ export async function generateMetadata(
         if (!user) return { title: 'User Not Found' };
         const desc =
             user.description ??
-            `View ${user.username}'s contest history, rating ${user.rating}, and solved problems on Praxis.`;
+            `View ${user.username}'s contest history, rating ${user.rating}, and solved problems on Praxiom.`;
         return {
             title: `${user.username}'s Profile`,
             description: desc,
             openGraph: {
-                title: `${user.username} | Praxis`,
+                title: `${user.username} | Praxiom`,
                 description: desc,
                 url: `/user/${username}`,
             },

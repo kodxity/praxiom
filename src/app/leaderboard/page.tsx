@@ -5,9 +5,9 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'Leaderboard',
     description:
-        'See the top math competitors on Praxis ranked by contest rating. Track individual standings and group averages.',
+        'See the top math competitors on Praxiom ranked by contest rating. Track individual standings and group averages.',
     openGraph: {
-        title: 'Leaderboard | Praxis',
+        title: 'Leaderboard | Praxiom',
         description: 'Top-rated math competitors ranked by contest performance.',
         url: '/leaderboard',
     },

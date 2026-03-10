@@ -47,7 +47,7 @@ export default async function HomePage() {
 
             <p style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', letterSpacing: '0.25em', color: 'var(--sage)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{ width: '28px', height: '1px', background: 'var(--sage)', opacity: 0.6, display: 'inline-block', flexShrink: 0 }} />
-              COMPETITION MATHEMATICS &middot; PRAXIS
+              COMPETITION MATHEMATICS &middot; Praxiom
             </p>
 
             <h1 style={{ fontFamily: 'var(--ff-display)', fontSize: 'clamp(40px,5.5vw,64px)', fontWeight: 400, lineHeight: 1.05, letterSpacing: '-0.02em', marginBottom: '18px', color: 'var(--ink)' }}>

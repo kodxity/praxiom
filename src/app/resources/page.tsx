@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     title: 'Resources',
     description: 'Math resources, guides, and study materials from teachers and admins.',
     openGraph: {
-        title: 'Resources | Praxis',
+        title: 'Resources | Praxiom',
         description: 'Browse resources shared by teachers and administrators.',
         url: '/resources',
     },

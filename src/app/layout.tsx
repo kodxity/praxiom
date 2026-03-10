@@ -39,11 +39,11 @@ const BASE_URL = (process.env.NEXTAUTH_URL ?? 'https://mathshowup2.vercel.app').
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
-    default: 'Praxis — Math Contest Platform',
-    template: '%s | Praxis',
+    default: 'Praxiom — Math Contest Platform',
+    template: '%s | Praxiom',
   },
   description:
-    'Praxis is a competitive math platform where students solve contest problems, climb the leaderboard, and sharpen their skills for AMC, AIME, and olympiad competitions.',
+    'Praxiom is a competitive math platform where students solve contest problems, climb the leaderboard, and sharpen their skills for AMC, AIME, and olympiad competitions.',
   keywords: [
     'math contest',
     'competition math',
@@ -55,21 +55,21 @@ export const metadata: Metadata = {
     'math competition platform',
     'math practice',
   ],
-  authors: [{ name: 'Praxis' }],
-  creator: 'Praxis',
+  authors: [{ name: 'Praxiom' }],
+  creator: 'Praxiom',
   openGraph: {
     type: 'website',
     locale: 'en_US',
     url: '/',
-    siteName: 'Praxis',
-    title: 'Praxis — Math Contest Platform',
+    siteName: 'Praxiom',
+    title: 'Praxiom — Math Contest Platform',
     description:
       'Compete, solve, and climb. The premier math contest platform for AMC, AIME, and olympiad prep.',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Praxis — Math Contest Platform' }],
+    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Praxiom — Math Contest Platform' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Praxis — Math Contest Platform',
+    title: 'Praxiom — Math Contest Platform',
     description: 'Compete, solve, and climb. The premier math contest platform.',
     images: ['/opengraph-image'],
   },
@@ -116,7 +116,7 @@ export default function RootLayout({
                   '@type': 'WebSite',
                   '@id': `${BASE_URL}/#website`,
                   url: BASE_URL,
-                  name: 'Praxis',
+                  name: 'Praxiom',
                   description: 'A competitive math contest platform for AMC, AIME, and olympiad preparation.',
                   potentialAction: {
                     '@type': 'SearchAction',
@@ -127,7 +127,7 @@ export default function RootLayout({
                 {
                   '@type': 'Organization',
                   '@id': `${BASE_URL}/#organization`,
-                  name: 'Praxis',
+                  name: 'Praxiom',
                   url: BASE_URL,
                   logo: { '@type': 'ImageObject', url: `${BASE_URL}/icon.svg` },
                 },
@@ -155,7 +155,7 @@ export default function RootLayout({
               style={{ background: 'var(--theme-footer-bg, transparent)', borderTop: '1px solid var(--theme-footer-border, rgba(0,0,0,0.07))', color: 'var(--theme-footer-text, rgba(60,55,45,0.68))', padding: '24px', textAlign: 'center', fontFamily: 'var(--ff-mono)', fontSize: '11px', letterSpacing: '0.04em', transition: 'color 0.4s ease, border-color 0.4s ease, background 0.4s ease' }}
             >
               <div style={{ marginBottom: '8px' }}>
-                © {new Date().getFullYear()} Praxis. All rights reserved.
+                © {new Date().getFullYear()} Praxiom. All rights reserved.
               </div>
               <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
                 <a href="/legal" style={{ color: 'var(--theme-footer-text, rgba(60,55,45,0.68))', textDecoration: 'none' }}>Privacy Policy</a>

@@ -229,7 +229,7 @@ export default function RegisterPage() {
                     {step === 1 ? (
                         <>
                             <h1 style={{ fontFamily: 'var(--ff-display)', fontSize: '26px', fontWeight: 400, color: 'var(--ink)', marginTop: '18px', marginBottom: '6px', lineHeight: 1.1 }}>
-                                Join Praxis
+                                Join Praxiom
                             </h1>
                             <p style={{ fontSize: '14px', color: 'var(--ink4)', fontWeight: 300 }}>Who are you signing up as?</p>
                         </>

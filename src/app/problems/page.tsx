@@ -8,9 +8,9 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
     title: 'Problem Archive',
     description:
-        'Browse and solve hundreds of math contest problems from Praxis competitions. Filter by difficulty — Easy, Medium, Hard, and Expert.',
+        'Browse and solve hundreds of math contest problems from Praxiom competitions. Filter by difficulty — Easy, Medium, Hard, and Expert.',
     openGraph: {
-        title: 'Problem Archive | Praxis',
+        title: 'Problem Archive | Praxiom',
         description: 'Hundreds of AMC-style math problems to solve. Filter by difficulty and track your progress.',
         url: '/problems',
     },
@@ -71,13 +71,13 @@ export default async function ProblemsPage() {
       <div className="g page-hd fade-in" style={{ marginBottom: '36px', padding: '36px 40px', maxWidth: '680px' }}>
         <p style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', letterSpacing: '0.22em', color: 'var(--sage)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '10px' }}>
           <span style={{ width: '28px', height: '1px', background: 'var(--sage)', opacity: 0.6, display: 'inline-block' }} />
-          PRAXIS &middot; PROBLEM ARCHIVE
+          Praxiom &middot; PROBLEM ARCHIVE
         </p>
         <h1 style={{ fontFamily: 'var(--ff-display)', fontSize: 'clamp(28px,3.5vw,44px)', fontWeight: 400, lineHeight: 1.08, letterSpacing: '-0.02em', marginBottom: '12px', color: 'var(--ink)' }}>
           The Problem <em style={{ fontStyle: 'italic', color: 'var(--sage)' }}>Archive.</em>
         </h1>
         <p style={{ fontSize: '15px', fontWeight: 300, color: 'var(--ink3)', lineHeight: 1.65 }}>
-          Every problem ever posed in Praxis contests. Practice freely - submissions here don&apos;t affect your rating.
+          Every problem ever posed in Praxiom contests. Practice freely - submissions here don&apos;t affect your rating.
         </p>
       </div>
 

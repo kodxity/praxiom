@@ -81,7 +81,7 @@ export default function LegalPage() {
                 {active === 'privacy' && (
                     <>
                         <Section title="Privacy Policy">
-                            <Para>Praxis (&ldquo;we,&rdquo; &ldquo;our,&rdquo; or &ldquo;us&rdquo;) is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform.</Para>
+                            <Para>Praxiom (&ldquo;we,&rdquo; &ldquo;our,&rdquo; or &ldquo;us&rdquo;) is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform.</Para>
                         </Section>
 
                         <Section title="Information We Collect">
@@ -101,7 +101,7 @@ export default function LegalPage() {
 
                         <Section title="How We Use Your Information">
                             <BulletList items={[
-                                'To provide, maintain, and improve the Praxis platform.',
+                                'To provide, maintain, and improve the Praxiom platform.',
                                 'To authenticate your identity and manage your account.',
                                 'To track contest participation and calculate ratings.',
                                 'To display your username and statistics on public leaderboards.',
@@ -136,7 +136,7 @@ export default function LegalPage() {
                 {active === 'tos' && (
                     <>
                         <Section title="Terms of Service">
-                            <Para>By using Praxis, you agree to these Terms of Service. Please read them carefully. If you do not agree, do not use the platform.</Para>
+                            <Para>By using Praxiom, you agree to these Terms of Service. Please read them carefully. If you do not agree, do not use the platform.</Para>
                         </Section>
 
                         <Section title="Account Registration">
@@ -171,12 +171,12 @@ export default function LegalPage() {
                         </Section>
 
                         <Section title="Intellectual Property">
-                            <Para>All contest problems, editorial content, and platform materials are owned by Praxis or its licensors. You may not reproduce, distribute, or create derivative works without our express written permission.</Para>
+                            <Para>All contest problems, editorial content, and platform materials are owned by Praxiom or its licensors. You may not reproduce, distribute, or create derivative works without our express written permission.</Para>
                             <Para>By submitting content (comments, posts), you grant us a non-exclusive, royalty-free license to display and distribute that content on the platform.</Para>
                         </Section>
 
                         <Section title="Limitation of Liability">
-                            <Para>Praxis is provided &ldquo;as is&rdquo; without warranties of any kind. We are not liable for any indirect, incidental, or consequential damages arising from your use of the platform. Our total liability is limited to the amount you have paid us in the past 12 months (which, as a free service, is zero).</Para>
+                            <Para>Praxiom is provided &ldquo;as is&rdquo; without warranties of any kind. We are not liable for any indirect, incidental, or consequential damages arising from your use of the platform. Our total liability is limited to the amount you have paid us in the past 12 months (which, as a free service, is zero).</Para>
                         </Section>
 
                         <Section title="Termination">
@@ -192,7 +192,7 @@ export default function LegalPage() {
                 {active === 'cookies' && (
                     <>
                         <Section title="Cookie Notice">
-                            <Para>This notice explains how Praxis uses cookies and similar technologies on our platform.</Para>
+                            <Para>This notice explains how Praxiom uses cookies and similar technologies on our platform.</Para>
                         </Section>
 
                         <Section title="What Are Cookies?">
