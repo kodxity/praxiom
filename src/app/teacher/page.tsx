@@ -29,5 +29,5 @@ export default async function TeacherPage() {
         );
     }
 
-    return <TeacherDashboardClient group={group} />;
+    redirect(`/groups/${group.id}`);
 }

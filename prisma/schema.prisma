@@ -242,6 +242,20 @@ model GroupMessageRead {
   @@id([messageId, userId])
 }
 
+model GroupJoinRequest {
+  id        String   @id @default(cuid())
+  groupId   String
+  userId    String
+  status    String   @default("PENDING") // PENDING | ACCEPTED | REJECTED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  group OrgGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+}
+
 // ─── Team Contest Models ───────────────────────────────────────────────────
 
 model ContestTeam {

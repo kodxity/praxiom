@@ -5,6 +5,8 @@ import { authOptions } from '@/lib/auth';
 import { GroupBioEditor } from './GroupBioEditor';
 import Link from 'next/link';
 import { MessageCircle, ChevronRight } from 'lucide-react';
+import { JoinGroupButton } from '../JoinGroupButton';
+import { TeacherDashboardClient } from '@/app/teacher/TeacherDashboardClient';
 
 function getRankLabel(rating: number) {
     if (rating >= 2400) return { label: 'Archon',   cls: 'rank-archon' };
@@ -46,6 +48,15 @@ export default async function GroupPage(props: { params: Promise<{ id: string }>
     const isTeacherOfGroup = session?.user?.id === group.teacherId;
     const isMember = group.members.some((m: any) => m.id === session?.user?.id);
     const canChat = isTeacherOfGroup || isMember;
+    let hasPendingRequest = false;
+    if (session?.user?.id && !isTeacherOfGroup && !isMember) {
+        try {
+            const req = await prisma.groupJoinRequest.findUnique({
+                where: { groupId_userId: { groupId: group.id, userId: session.user.id } },
+            });
+            hasPendingRequest = req?.status === 'PENDING';
+        } catch { /* ignore */ }
+    }
     const avgRating = group.members.length > 0
         ? Math.round(group.members.reduce((s: number, m: any) => s + m.rating, 0) / group.members.length)
         : null;
@@ -54,12 +65,17 @@ export default async function GroupPage(props: { params: Promise<{ id: string }>
     return (
         <div style={{ maxWidth: '820px', margin: '0 auto', padding: '48px 1.75rem 80px', position: 'relative', zIndex: 1 }}>
 
-            {/* Breadcrumb */}
-            <p style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', letterSpacing: '0.2em', color: 'var(--sage)', marginBottom: '14px', textTransform: 'uppercase' }}>
-                <Link href="/leaderboard?tab=groups" style={{ color: 'inherit', textDecoration: 'none' }}>Groups</Link>
-                {' '}&rsaquo;{' '}
-                {group.name}
-            </p>
+            {/* Breadcrumb / back */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+                <p style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', letterSpacing: '0.2em', color: 'var(--sage)', textTransform: 'uppercase', margin: 0 }}>
+                    <Link href="/groups" style={{ color: 'inherit', textDecoration: 'none' }}>Groups</Link>
+                    {' '}&rsaquo;{' '}
+                    {group.name}
+                </p>
+                <Link href="/groups" className="btn btn-ghost btn-sm" style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px' }}>
+                    Back to groups
+                </Link>
+            </div>
 
             {/* Header */}
             <div style={{ marginBottom: '32px' }}>
@@ -95,6 +111,18 @@ export default async function GroupPage(props: { params: Promise<{ id: string }>
                             </div>
                         )}
                     </div>
+                </div>
+                <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'flex-end' }}>
+                    <JoinGroupButton
+                        groupId={group.id}
+                        status={
+                            !session ? 'login'
+                                : isTeacherOfGroup ? 'teacher'
+                                    : isMember ? 'member'
+                                        : hasPendingRequest ? 'pending'
+                                            : 'none'
+                        }
+                    />
                 </div>
             </div>
 
@@ -187,6 +215,13 @@ export default async function GroupPage(props: { params: Promise<{ id: string }>
                     })
                 )}
             </div>
+
+            {isTeacherOfGroup && (
+                <div style={{ marginTop: '28px' }}>
+                    <p className="sec-label" style={{ marginBottom: '12px' }}>Teacher Dashboard</p>
+                    <TeacherDashboardClient group={group} embedded />
+                </div>
+            )}
 
         </div>
     );

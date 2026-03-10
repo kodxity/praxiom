@@ -34,15 +34,11 @@ export function Navbar() {
         { name: 'Leaderboard', href: '/leaderboard' },
         { name: 'Blog', href: '/blog' },
         { name: 'Resources', href: '/resources' },
+        { name: 'My Group', href: '/groups' },
     ];
 
     if (session?.user?.isAdmin) {
         links.push({ name: 'Admin', href: '/admin' });
-    }
-    if (session?.user?.isTeacher) {
-        links.push({ name: 'My Group', href: '/teacher' });
-    } else if (session?.user?.groupId) {
-        links.push({ name: 'My Group', href: `/groups/${session.user.groupId}` });
     }
 
     const navBg = {

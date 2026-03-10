@@ -16,7 +16,7 @@ export async function GET() {
         });
         if (!group) return NextResponse.json([]);
 
-        const pending = await prisma.user.findMany({
+        const pendingAccounts = await prisma.user.findMany({
             where: { groupId: group.id, isApproved: false },
             orderBy: { createdAt: 'desc' },
             select: {
@@ -28,7 +28,39 @@ export async function GET() {
                 school: { select: { shortName: true } },
             },
         });
-        return NextResponse.json(pending);
+        const joinRequests = await prisma.groupJoinRequest.findMany({
+            where: { groupId: group.id, status: 'PENDING' },
+            orderBy: { createdAt: 'desc' },
+            select: {
+                id: true,
+                createdAt: true,
+                user: {
+                    select: {
+                        id: true,
+                        username: true,
+                        displayName: true,
+                        email: true,
+                        school: { select: { shortName: true } },
+                    },
+                },
+            },
+        });
+
+        const combined = [
+            ...pendingAccounts.map(p => ({ kind: 'account' as const, ...p })),
+            ...joinRequests.map(r => ({
+                kind: 'join' as const,
+                id: r.user.id,
+                username: r.user.username,
+                displayName: r.user.displayName,
+                email: r.user.email,
+                createdAt: r.createdAt,
+                school: r.user.school,
+                requestId: r.id,
+            })),
+        ];
+
+        return NextResponse.json(combined);
     } catch {
         return NextResponse.json([], { status: 200 });
     }
