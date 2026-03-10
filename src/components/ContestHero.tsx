@@ -243,7 +243,7 @@ export function ContestHero({
 
         {/* Eyebrow */}
         <div style={{ fontFamily: 'var(--ff-mono)', fontSize: '11px', letterSpacing: '0.12em', color: 'var(--ink4)', textTransform: 'uppercase', marginBottom: '12px' }}>
-          PRAXIS · CONTEST
+          Praxiom · CONTEST
         </div>
 
         {/* Title */}

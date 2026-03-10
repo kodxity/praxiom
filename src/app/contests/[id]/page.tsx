@@ -21,12 +21,12 @@ export async function generateMetadata(
             select: { title: true, description: true },
         });
         if (!contest) return { title: 'Contest Not Found' };
-        const desc = contest.description ?? `Compete in ${contest.title} on Praxis.`;
+        const desc = contest.description ?? `Compete in ${contest.title} on Praxiom.`;
         return {
             title: contest.title,
             description: desc,
             openGraph: {
-                title: `${contest.title} | Praxis`,
+                title: `${contest.title} | Praxiom`,
                 description: desc,
                 url: `/contests/${id}`,
             },

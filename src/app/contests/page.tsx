@@ -8,9 +8,9 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
     title: 'Contests',
     description:
-        'Browse upcoming, active, and past math contests on Praxis. Register to compete and push your problem-solving skills to the limit.',
+        'Browse upcoming, active, and past math contests on Praxiom. Register to compete and push your problem-solving skills to the limit.',
     openGraph: {
-        title: 'Math Contests | Praxis',
+        title: 'Math Contests | Praxiom',
         description: 'Browse and register for AMC-style math contests. Compete live, solve problems, and earn rating.',
         url: '/contests',
     },
@@ -72,7 +72,7 @@ export default async function ContestsPage() {
             <div className="g page-hd fade-in" style={{ marginBottom: '48px', padding: '36px 40px', maxWidth: '700px', position: 'relative' }}>
                 <p style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', letterSpacing: '0.22em', color: 'var(--sage)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <span style={{ width: '28px', height: '1px', background: 'var(--sage)', opacity: 0.6, display: 'inline-block' }} />
-                    PRAXIS &middot; CONTEST ARENA
+                    Praxiom &middot; CONTEST ARENA
                 </p>
                 <h1 style={{ fontFamily: 'var(--ff-display)', fontSize: 'clamp(32px,4vw,52px)', fontWeight: 400, lineHeight: 1.05, letterSpacing: '-0.02em', marginBottom: '12px', color: 'var(--ink)' }}>
                     Enter a World.<br />

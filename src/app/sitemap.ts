@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 import { prisma } from '@/lib/db';
 
-const BASE_URL = (process.env.NEXTAUTH_URL ?? 'https://mathshowup2.vercel.app').replace(/\/$/, '');
+const BASE_URL = (process.env.NEXTAUTH_URL ?? 'https://praxiom.vercel.app').replace(/\/$/, '');
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const staticRoutes: MetadataRoute.Sitemap = [

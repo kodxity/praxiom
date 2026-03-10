@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next';
 
-const BASE_URL = (process.env.NEXTAUTH_URL ?? 'https://mathshowup2.vercel.app').replace(/\/$/, '');
+const BASE_URL = (process.env.NEXTAUTH_URL ?? 'https://praxiom.vercel.app').replace(/\/$/, '');
 
 export default function robots(): MetadataRoute.Robots {
     return {

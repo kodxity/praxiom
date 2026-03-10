@@ -1,4 +1,4 @@
-# Praxis - UI Style Guide
+# Praxiom - UI Style Guide
 
 > **Reference file:** `ui.html` in the workspace root is the authoritative visual spec.  
 > All pages and components should match the component library defined there.

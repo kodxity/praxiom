@@ -12,12 +12,12 @@ export async function GET() {
     const userId = session.user.id;
 
     // Find all groups the user belongs to (as member or teacher)
-    const [memberGroups, taughtGroup] = await Promise.all([
+    const [memberGroups, taughtGroups] = await Promise.all([
         prisma.orgGroup.findMany({
-            where: { members: { some: { id: userId } } },
+            where: { members: { some: { userId } } },
             select: { id: true },
         }),
-        prisma.orgGroup.findFirst({
+        prisma.orgGroup.findMany({
             where: { teacherId: userId },
             select: { id: true },
         }),
@@ -25,7 +25,7 @@ export async function GET() {
 
     const groupIds = [
         ...memberGroups.map(g => g.id),
-        ...(taughtGroup ? [taughtGroup.id] : []),
+        ...taughtGroups.map(g => g.id),
     ];
 
     if (groupIds.length === 0) return NextResponse.json({ count: 0 });

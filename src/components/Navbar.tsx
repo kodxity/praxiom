@@ -23,9 +23,10 @@ export function Navbar() {
     const pathname = usePathname();
     const [isOpen, setIsOpen] = useState(false);
 
-    const groupId = session?.user?.groupId ?? null;
-    const unread = useUnreadCount(!!groupId);
-    const showChatIcon = !!groupId;
+    const groupIds = session?.user?.groupIds ?? [];
+    const primaryGroupId = groupIds.length === 1 ? groupIds[0] : null;
+    const unread = useUnreadCount(groupIds.length > 0);
+    const showChatIcon = !!primaryGroupId;
 
     const links = [
         { name: 'Home', href: '/' },
@@ -34,15 +35,11 @@ export function Navbar() {
         { name: 'Leaderboard', href: '/leaderboard' },
         { name: 'Blog', href: '/blog' },
         { name: 'Resources', href: '/resources' },
+        { name: 'Groups', href: '/groups' },
     ];
 
     if (session?.user?.isAdmin) {
         links.push({ name: 'Admin', href: '/admin' });
-    }
-    if (session?.user?.isTeacher) {
-        links.push({ name: 'My Group', href: '/teacher' });
-    } else if (session?.user?.groupId) {
-        links.push({ name: 'My Group', href: `/groups/${session.user.groupId}` });
     }
 
     const navBg = {
@@ -71,10 +68,10 @@ export function Navbar() {
             <div style={{ maxWidth: '1360px', margin: '0 auto', padding: '0 1.75rem', height: '64px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative' }}>
 
                 {/* Logo */}
-                <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'baseline', gap: '0' }}>
-                    <span style={{ fontFamily: 'var(--ff-display, Instrument Serif, serif)', fontSize: '20px', fontStyle: 'italic', color: 'var(--theme-logo-accent, var(--sage))', lineHeight: 1, marginRight: '3px' }}>Σ</span>
+                <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <img src="/icon.svg" alt="Praxiom logo" style={{ width: '24px', height: '24px', display: 'block' }} />
                     <span style={{ fontFamily: 'var(--ff-display, Instrument Serif, serif)', fontSize: '22px', fontWeight: 400, color: 'var(--theme-logo-text, var(--ink))', lineHeight: 1 }}>Praxi</span>
-                    <em style={{ fontFamily: 'var(--ff-display, Instrument Serif, serif)', fontSize: '22px', fontStyle: 'italic', color: 'var(--theme-logo-accent, var(--sage))', lineHeight: 1 }}>s</em>
+                    <em style={{ fontFamily: 'var(--ff-display, Instrument Serif, serif)', fontSize: '22px', fontStyle: 'italic', color: 'var(--theme-logo-accent, var(--sage))', lineHeight: 1 }}>om</em>
                 </Link>
 
                 {/* Desktop links - absolutely centered so they don't shift with asymmetric logo/user widths */}
@@ -111,9 +108,9 @@ export function Navbar() {
                             </div>
                             {showChatIcon && (
                                 <Link
-                                    href={`/groups/${groupId}/chat`}
+                                    href={`/groups/${primaryGroupId}/chat`}
                                     aria-label="Group chat"
-                                    style={{ position: 'relative', width: '34px', height: '34px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: pathname.startsWith(`/groups/${groupId}/chat`) ? 'var(--sage)' : mutedColor, background: pathname.startsWith(`/groups/${groupId}/chat`) ? 'rgba(107,148,120,0.1)' : 'transparent', transition: 'all 0.15s', textDecoration: 'none' }}
+                                    style={{ position: 'relative', width: '34px', height: '34px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: pathname.startsWith(`/groups/${primaryGroupId}/chat`) ? 'var(--sage)' : mutedColor, background: pathname.startsWith(`/groups/${primaryGroupId}/chat`) ? 'rgba(107,148,120,0.1)' : 'transparent', transition: 'all 0.15s', textDecoration: 'none' }}
                                 >
                                     <MessageCircle size={18} />
                                     {unread > 0 && (
@@ -203,7 +200,7 @@ export function Navbar() {
                                     Profile ({session.user.username})
                                 </Link>
                                 {showChatIcon && (
-                                    <Link href={`/groups/${groupId}/chat`} onClick={() => setIsOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 14px', fontFamily: 'var(--ff-ui)', fontSize: '14px', textDecoration: 'none', color: textColor, borderRadius: '9px' }}>
+                                    <Link href={`/groups/${primaryGroupId}/chat`} onClick={() => setIsOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 14px', fontFamily: 'var(--ff-ui)', fontSize: '14px', textDecoration: 'none', color: textColor, borderRadius: '9px' }}>
                                         <MessageCircle size={15} />
                                         Group Chat
                                         {unread > 0 && (

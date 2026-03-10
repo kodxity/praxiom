@@ -10,24 +10,5 @@ export default async function TeacherPage() {
         redirect('/');
     }
 
-    const teacherId = session.user.id;
-
-    const group = await prisma.orgGroup.findUnique({
-        where: { teacherId },
-        include: {
-            school: true,
-        },
-    });
-
-    if (!group) {
-        return (
-            <div style={{ maxWidth: '800px', margin: '0 auto', padding: '48px 1.75rem' }}>
-                <p style={{ color: 'var(--ink4)', fontFamily: 'var(--ff-mono)', fontSize: '13px' }}>
-                    No group found. Your account may still be pending approval.
-                </p>
-            </div>
-        );
-    }
-
-    return <TeacherDashboardClient group={group} />;
+    redirect('/groups');
 }

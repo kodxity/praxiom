@@ -285,7 +285,7 @@ export function ContestCard({ contest, active, past, isAdmin, animDelay = 0, isR
       <div style={{ position: 'relative', zIndex: 2 }}>
         {/* Eyebrow */}
         <div style={{ fontFamily: 'var(--ff-mono)', fontSize: '9px', letterSpacing: '0.22em', color: 'var(--ink5)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span>PRAXIS CONTEST</span>
+          <span>Praxiom CONTEST</span>
           {active && (
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
               <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: 'var(--rose)', display: 'inline-block', boxShadow: '0 0 6px var(--rose)' }} />

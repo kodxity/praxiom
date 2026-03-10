@@ -26,8 +26,8 @@ export const authOptions: NextAuthOptions = {
                 const user = await prisma.user.findUnique({
                     where: { username: credentials.username },
                     include: {
-                        taughtGroup: { select: { id: true } },
-                        group: { select: { id: true } },
+                        taughtGroups: { select: { id: true } },
+                        groupMemberships: { select: { groupId: true } },
                     },
                 });
 
@@ -51,7 +51,10 @@ export const authOptions: NextAuthOptions = {
                     name: user.username,
                     isAdmin: user.isAdmin,
                     isTeacher: user.isTeacher,
-                    groupId: user.group?.id ?? user.taughtGroup?.id ?? null,
+                    groupIds: [
+                        ...user.groupMemberships.map(m => m.groupId),
+                        ...user.taughtGroups.map(g => g.id),
+                    ],
                 };
             }
         })
@@ -63,7 +66,7 @@ export const authOptions: NextAuthOptions = {
                 session.user.username = token.username as string;
                 session.user.isAdmin = token.isAdmin as boolean;
                 session.user.isTeacher = token.isTeacher as boolean;
-                session.user.groupId = (token.groupId as string | null) ?? null;
+                session.user.groupIds = (token.groupIds as string[] | undefined) ?? [];
             }
             return session;
         },
@@ -73,7 +76,7 @@ export const authOptions: NextAuthOptions = {
                 token.username = user.username;
                 token.isAdmin = user.isAdmin;
                 token.isTeacher = user.isTeacher;
-                token.groupId = user.groupId;
+                token.groupIds = user.groupIds;
             }
             return token;
         }

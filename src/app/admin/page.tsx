@@ -15,15 +15,11 @@ export default async function AdminPage() {
         prisma.user.findMany({
             where: {
                 isApproved: false,
-                OR: [
-                    { isTeacher: true },
-                    { groupId: null },
-                ],
             },
             orderBy: { createdAt: 'desc' },
             include: {
                 school: { select: { shortName: true, district: true } },
-                taughtGroup: { select: { name: true } },
+                taughtGroups: { select: { name: true } },
             },
         }),
         prisma.contest.findMany({
@@ -183,4 +179,3 @@ export default async function AdminPage() {
         </div>
     );
 }
-

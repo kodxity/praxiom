@@ -14,8 +14,7 @@ const baseSchema = z.object({
     email: z.string().email('Invalid email address').optional().or(z.literal('')),
     isTeacher: z.boolean().optional().default(false),
     schoolId: z.string().optional().or(z.literal('')),
-    groupId: z.string().optional().or(z.literal('')),     // students: existing group id
-    groupName: z.string().optional().or(z.literal('')),   // teachers: new group name
+    groupIds: z.array(z.string()).optional().default([]), // students: multiple group ids
     message: z.string().max(500).optional().or(z.literal('')),  // intro message → description
 });
 
@@ -33,8 +32,7 @@ export async function POST(req: Request) {
         const { username, password, displayName, isTeacher } = parsed;
         const email = parsed.email || undefined;
         const schoolId = parsed.schoolId || undefined;
-        const groupId = parsed.groupId || undefined;
-        const groupName = parsed.groupName || undefined;
+        const groupIds = parsed.groupIds || [];
         const description = parsed.message?.trim() || null;
 
         // --- Validate email domain against school (students only; teachers use any email) ---
@@ -54,11 +52,6 @@ export async function POST(req: Request) {
                     );
                 }
             }
-        }
-
-        // --- Teachers must provide a group name ---
-        if (isTeacher && !groupName) {
-            return NextResponse.json({ message: 'Teachers must provide a group name' }, { status: 400 });
         }
 
         // --- Teachers must also have a full name ---
@@ -91,19 +84,16 @@ export async function POST(req: Request) {
                 isApproved: false,
                 schoolId: schoolId || null,
                 description: description || null,
-                groupId: (!isTeacher && groupId) ? groupId : null,
             },
         });
 
-        // If teacher: also create their OrgGroup immediately (pending, group becomes live once teacher is approved)
-        if (isTeacher && groupName) {
-            await prisma.orgGroup.create({
-                data: {
-                    name: groupName,
-                    teacherId: newUser.id,
-                    schoolId: schoolId || null,
-                },
-            });
+        // If student selected groups, create join requests for each
+        if (!isTeacher && groupIds.length > 0) {
+            await Promise.all(groupIds.map(gid => 
+                prisma.groupJoinRequest.create({
+                    data: { groupId: gid, userId: newUser.id },
+                })
+            ));
         }
 
         // eslint-disable-next-line @typescript-eslint/no-unused-vars

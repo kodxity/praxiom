@@ -153,8 +153,7 @@ export default function RegisterPage() {
         email: '',
         password: '',
         schoolId: '',
-        groupId: '',
-        groupName: '',
+        groupIds: [] as string[],
         message: '',
     });
 
@@ -166,7 +165,7 @@ export default function RegisterPage() {
 
     function handleSchoolSelect(school: School | null) {
         setSelectedSchool(school);
-        setForm(prev => ({ ...prev, schoolId: school?.id ?? '', groupId: '' }));
+        setForm(prev => ({ ...prev, schoolId: school?.id ?? '', groupIds: [] }));
     }
 
     function field(key: keyof typeof form, val: string) {
@@ -220,16 +219,16 @@ export default function RegisterPage() {
 
                 {/* Wordmark */}
                 <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-                    <Link href="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'baseline', gap: '0' }}>
-                        <span style={{ fontFamily: 'var(--ff-display)', fontSize: '20px', fontStyle: 'italic', color: 'var(--sage)', marginRight: '3px' }}>Σ</span>
+                    <Link href="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                        <img src="/icon.svg" alt="Praxiom logo" style={{ width: '24px', height: '24px', display: 'block' }} />
                         <span style={{ fontFamily: 'var(--ff-display)', fontSize: '22px', fontWeight: 400, color: 'var(--ink)' }}>Praxi</span>
-                        <em style={{ fontFamily: 'var(--ff-display)', fontSize: '22px', fontStyle: 'italic', color: 'var(--sage)' }}>s</em>
+                        <em style={{ fontFamily: 'var(--ff-display)', fontSize: '22px', fontStyle: 'italic', color: 'var(--sage)' }}>om</em>
                     </Link>
 
                     {step === 1 ? (
                         <>
                             <h1 style={{ fontFamily: 'var(--ff-display)', fontSize: '26px', fontWeight: 400, color: 'var(--ink)', marginTop: '18px', marginBottom: '6px', lineHeight: 1.1 }}>
-                                Join Praxis
+                                Join Praxiom
                             </h1>
                             <p style={{ fontSize: '14px', color: 'var(--ink4)', fontWeight: 300 }}>Who are you signing up as?</p>
                         </>
@@ -284,7 +283,7 @@ export default function RegisterPage() {
                             </div>
                             <div>
                                 <div style={{ fontFamily: 'var(--ff-ui)', fontWeight: 600, fontSize: '15px', color: 'var(--ink)', marginBottom: '3px' }}>Teacher</div>
-                                <div style={{ fontSize: '12px', color: 'var(--ink4)', lineHeight: 1.4 }}>Create a group for your students - requires admin approval</div>
+                                <div style={{ fontSize: '12px', color: 'var(--ink4)', lineHeight: 1.4 }}>Create groups after approval and invite students</div>
                             </div>
                         </button>
 
@@ -315,7 +314,7 @@ export default function RegisterPage() {
                             <div style={fieldWrap}>
                                 <label style={labelStyle}>Full name</label>
                                 <input value={form.displayName} onChange={e => field('displayName', e.target.value)} name="displayName" required className="input" placeholder="Your real name" />
-                                <span style={hint}>Only visible to admins{!isTeacher ? ' and your teacher' : ''} - never shown on your profile</span>
+                                <span style={hint}>Only visible to admins{!isTeacher ? ' and your teachers' : ''} - never shown on your profile</span>
                             </div>
 
                             {/* School picker */}
@@ -332,30 +331,61 @@ export default function RegisterPage() {
                                 )}
                             </div>
 
-                            {/* Group picker (students) or group name (teachers) */}
+                            {/* Group selection (students) */}
                             {!isTeacher && form.schoolId && (
                                 <div style={fieldWrap}>
-                                    <label style={labelStyle}>Group <span style={{ fontWeight: 400, color: 'var(--ink5)', textTransform: 'none', letterSpacing: 0 }}>(optional)</span></label>
-                                    <CustomSelect
-                                        value={form.groupId}
-                                        onChange={val => field('groupId', val)}
-                                        options={[
-                                            { value: '', label: '- None -' },
-                                            ...groups.map(g => ({ value: g.id, label: `${g.name} (by ${g.teacher.username})` }))
-                                        ]}
-                                        placeholder="- None -"
-                                        variant="field"
-                                        style={{ width: '100%' }}
-                                    />
-                                    {groups.length === 0 && <span style={hint}>No groups yet at this school</span>}
+                                    <label style={labelStyle}>Groups <span style={{ fontWeight: 400, color: 'var(--ink5)', textTransform: 'none', letterSpacing: 0 }}>(optional)</span></label>
+                                    
+                                    {groups.length === 0 ? (
+                                        <span style={hint}>No groups yet at this school</span>
+                                    ) : (
+                                        <div style={{ 
+                                            display: 'flex', 
+                                            flexDirection: 'column', 
+                                            gap: '8px', 
+                                            maxHeight: '160px', 
+                                            overflowY: 'auto', 
+                                            padding: '12px', 
+                                            background: 'rgba(0,0,0,0.03)', 
+                                            borderRadius: 'var(--r)', 
+                                            border: '1px solid rgba(0,0,0,0.08)' 
+                                        }}>
+                                            {groups.map(g => (
+                                                <label key={g.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', padding: '2px 0' }}>
+                                                    <input 
+                                                        type="checkbox" 
+                                                        checked={form.groupIds.includes(g.id)}
+                                                        onChange={e => {
+                                                            const checked = e.target.checked;
+                                                            setForm(prev => ({
+                                                                ...prev,
+                                                                groupIds: checked 
+                                                                    ? [...prev.groupIds, g.id]
+                                                                    : prev.groupIds.filter(id => id !== g.id)
+                                                            }));
+                                                        }}
+                                                        style={{ width: '15px', height: '15px', accentColor: 'var(--sage)' }}
+                                                    />
+                                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                        <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--ink)' }}>{g.name}</span>
+                                                        <span style={{ fontSize: '10px', color: 'var(--ink5)', fontFamily: 'var(--ff-mono)' }}>by {g.teacher.username}</span>
+                                                    </div>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    )}
+                                    <span style={hint}>Select any groups you'd like to join. You can join more later.</span>
                                 </div>
                             )}
 
                             {isTeacher && (
-                                <div style={fieldWrap}>
-                                    <label style={labelStyle}>Group name</label>
-                                    <input value={form.groupName} onChange={e => field('groupName', e.target.value)} name="groupName" required className="input" placeholder="e.g. Math Club 2026" />
-                                    <span style={hint}>Students will join this group</span>
+                                <div style={{ padding: '10px 12px', borderRadius: 'var(--r)', background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.06)' }}>
+                                    <div style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', letterSpacing: '0.08em', color: 'var(--ink5)', textTransform: 'uppercase', marginBottom: '6px' }}>
+                                        Groups
+                                    </div>
+                                    <div style={{ fontSize: '12px', color: 'var(--ink4)' }}>
+                                        You can create groups after your account is approved.
+                                    </div>
                                 </div>
                             )}
 
@@ -377,7 +407,7 @@ export default function RegisterPage() {
                                     className="input"
                                     placeholder={!isTeacher && requireDomain ? `you@${selectedSchool?.emailDomain}` : 'your@email.com'}
                                 />
-                                <span style={hint}>Private - only visible to admin{!isTeacher ? ' and your teacher' : ''}</span>
+                                <span style={hint}>Private - only visible to admin{!isTeacher ? ' and your teachers' : ''}</span>
                             </div>
 
                             <div style={fieldWrap}>
@@ -417,7 +447,7 @@ export default function RegisterPage() {
                                 <span style={hint}>
                                     {isTeacher
                                         ? 'Shown to admins when reviewing your account'
-                                        : 'Visible to your teacher and admins - helps them know who you are'}
+                                        : 'Visible to your teachers and admins - helps them know who you are'}
                                 </span>
                             </div>
 
@@ -452,8 +482,8 @@ export default function RegisterPage() {
                             <p style={{ fontSize: '11px', color: 'var(--ink5)', lineHeight: 1.55, fontFamily: 'var(--ff-mono)', textAlign: 'center', margin: 0 }}>
                                 {isTeacher
                                     ? 'Teacher accounts are manually approved by an admin before you can log in.'
-                                    : form.groupId
-                                        ? 'Your teacher will approve your sign-up request before you can log in.'
+                                    : form.groupIds.length > 0
+                                        ? 'Your teachers will approve your sign-up requests before you can log in.'
                                         : 'Independent accounts are approved by an admin before you can log in.'}
                             </p>
                         </div>
@@ -469,4 +499,3 @@ export default function RegisterPage() {
         </div>
     );
 }
-

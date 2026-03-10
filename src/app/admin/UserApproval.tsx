@@ -75,9 +75,9 @@ export function UserApproval({ user }: { user: any }) {
                             {user.school.shortName} · {user.school.district}
                         </span>
                     )}
-                    {user.taughtGroup && (
+                    {user.taughtGroups?.length > 0 && (
                         <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', color: 'var(--ink4)', background: 'rgba(107,148,120,0.08)', padding: '1px 7px', borderRadius: '99px' }}>
-                            Group: {user.taughtGroup.name}
+                            Groups: {user.taughtGroups.length}
                         </span>
                     )}
                     <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', color: 'var(--ink6, var(--ink5))' }}>
@@ -110,4 +110,3 @@ export function UserApproval({ user }: { user: any }) {
         </div>
     );
 }
-

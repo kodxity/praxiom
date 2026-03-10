@@ -19,12 +19,12 @@ export async function generateMetadata(
         if (!user) return { title: 'User Not Found' };
         const desc =
             user.description ??
-            `View ${user.username}'s contest history, rating ${user.rating}, and solved problems on Praxis.`;
+            `View ${user.username}'s contest history, rating ${user.rating}, and solved problems on Praxiom.`;
         return {
             title: `${user.username}'s Profile`,
             description: desc,
             openGraph: {
-                title: `${user.username} | Praxis`,
+                title: `${user.username} | Praxiom`,
                 description: desc,
                 url: `/user/${username}`,
             },
@@ -47,8 +47,8 @@ export default async function UserProfile(props: { params: Promise<{ username: s
             include: {
                 ratingHistory: { orderBy: { createdAt: 'asc' } },
                 school: { select: { name: true, shortName: true, district: true } },
-                group: { select: { id: true, name: true } },
-                taughtGroup: { select: { id: true, name: true } },
+                groupMemberships: { select: { group: { select: { id: true, name: true } } } },
+                taughtGroups: { select: { id: true, name: true } },
             },
         });
     } catch {
@@ -86,7 +86,7 @@ export default async function UserProfile(props: { params: Promise<{ username: s
                 where: { userId: user.id },
                 orderBy: { createdAt: 'desc' },
                 take: 10,
-                include: { problem: { select: { title: true, points: true } } },
+                include: { problem: { select: { title: true, points: true, contestId: true } } },
             }),
             // Heatmap: only last 112 days, dates only
             prisma.submission.findMany({
@@ -156,15 +156,18 @@ export default async function UserProfile(props: { params: Promise<{ username: s
                                     {user.school.shortName} · {user.school.district}
                                 </span>
                             )}
-                            {(user.group || user.taughtGroup) && (() => {
-                                const g = user.group ?? user.taughtGroup;
-                                return (
-                                    <a href={`/groups/${g.id}`} style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', padding: '2px 9px', borderRadius: '99px', background: 'rgba(107,148,120,0.1)', border: '1px solid rgba(107,148,120,0.2)', color: 'var(--sage)', letterSpacing: '0.04em', textDecoration: 'none' }}>
-                                        {user.taughtGroup ? '📚 ' : ''}
-                                        {g.name}
-                                    </a>
-                                );
-                            })()}
+                        {(() => {
+                            const memberGroups = (user.groupMemberships ?? []).map((m: any) => m.group);
+                            const taughtGroups = user.taughtGroups ?? [];
+                            const allGroups = [...taughtGroups, ...memberGroups];
+                            if (allGroups.length === 0) return null;
+                            return allGroups.slice(0, 3).map((g: any, idx: number) => (
+                                <a key={g.id + idx} href={`/groups/${g.id}`} style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', padding: '2px 9px', borderRadius: '99px', background: 'rgba(107,148,120,0.1)', border: '1px solid rgba(107,148,120,0.2)', color: 'var(--sage)', letterSpacing: '0.04em', textDecoration: 'none' }}>
+                                    {taughtGroups.some((tg: any) => tg.id === g.id) ? '📚 ' : ''}
+                                    {g.name}
+                                </a>
+                            ));
+                        })()}
                         </div>
                     </div>
                     {isOwnProfile && (
@@ -250,40 +253,60 @@ export default async function UserProfile(props: { params: Promise<{ username: s
                             <div style={{ padding: '16px 24px 14px', borderBottom: '1px solid rgba(0,0,0,0.06)', fontFamily: 'var(--ff-ui)', fontSize: '14px', fontWeight: 500, color: 'var(--ink)' }}>
                                 Recent Submissions
                             </div>
-                            {submissions.map((sub: any) => (
-                                <div key={sub.id} className="sub-row">
-                                    <span className={`verdict-chip ${sub.isCorrect ? 'v-correct' : 'v-wrong'}`}>
-                                        {sub.isCorrect ? '✓ Correct' : '✕ Wrong'}
-                                    </span>
-                                    <div style={{ flex: 1 }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                            <span style={{ fontFamily: 'var(--ff-ui)', fontSize: '14px', fontWeight: 500, color: 'var(--ink)' }}>
-                                                {sub.problem?.title ?? 'Problem'}
-                                            </span>
-                                            {sub.isUpsolve && (
-                                                <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '9px', letterSpacing: '0.1em', padding: '1px 6px', borderRadius: '99px', background: 'var(--amber-bg, rgba(180,140,60,0.1))', border: '1px solid var(--amber-border, rgba(180,140,60,0.25))', color: 'var(--amber)', whiteSpace: 'nowrap' }}>
-                                                    UPSOLVE
+                            {submissions.map((sub: any) => {
+                                const problemHref = sub.problem?.contestId
+                                    ? `/contests/${sub.problem.contestId}/problems/${sub.problemId}`
+                                    : null;
+                                const Row = (
+                                    <>
+                                        <span className={`verdict-chip ${sub.isCorrect ? 'v-correct' : 'v-wrong'}`}>
+                                            {sub.isCorrect ? '✓ Correct' : '✕ Wrong'}
+                                        </span>
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                <span style={{ fontFamily: 'var(--ff-ui)', fontSize: '14px', fontWeight: 500, color: 'var(--ink)' }}>
+                                                    {sub.problem?.title ?? 'Problem'}
                                                 </span>
+                                                {sub.isUpsolve && (
+                                                    <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '9px', letterSpacing: '0.1em', padding: '1px 6px', borderRadius: '99px', background: 'var(--amber-bg, rgba(180,140,60,0.1))', border: '1px solid var(--amber-border, rgba(180,140,60,0.25))', color: 'var(--amber)', whiteSpace: 'nowrap' }}>
+                                                        UPSOLVE
+                                                    </span>
+                                                )}
+                                            </div>
+                                            {(canSeeSubmissions || viewerSolvedProblemIds.has(sub.problemId)) && (
+                                            <div style={{ fontSize: '12px', color: 'var(--ink5)', fontFamily: 'var(--ff-mono)' }}>
+                                                Answer: {sub.answer}
+                                            </div>
                                             )}
                                         </div>
-                                        {(canSeeSubmissions || viewerSolvedProblemIds.has(sub.problemId)) && (
-                                        <div style={{ fontSize: '12px', color: 'var(--ink5)', fontFamily: 'var(--ff-mono)' }}>
-                                            Answer: {sub.answer}
-                                        </div>
+                                        {sub.isCorrect && sub.problem?.points && !sub.isUpsolve ? (
+                                            <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '11px', color: 'var(--amber)', whiteSpace: 'nowrap' }}>
+                                                +{sub.problem.points} XP
+                                            </span>
+                                        ) : (
+                                            <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '11px', color: 'var(--ink5)' }}>-</span>
                                         )}
-                                    </div>
-                                    {sub.isCorrect && sub.problem?.points && !sub.isUpsolve ? (
-                                        <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '11px', color: 'var(--amber)', whiteSpace: 'nowrap' }}>
-                                            +{sub.problem.points} XP
+                                        <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', color: 'var(--ink5)', whiteSpace: 'nowrap' }}>
+                                            {timeAgo(sub.createdAt)}
                                         </span>
-                                    ) : (
-                                        <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '11px', color: 'var(--ink5)' }}>-</span>
-                                    )}
-                                    <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', color: 'var(--ink5)', whiteSpace: 'nowrap' }}>
-                                        {timeAgo(sub.createdAt)}
-                                    </span>
-                                </div>
-                            ))}
+                                    </>
+                                );
+
+                                return problemHref ? (
+                                    <Link
+                                        key={sub.id}
+                                        href={problemHref}
+                                        className="sub-row"
+                                        style={{ textDecoration: 'none', color: 'inherit' }}
+                                    >
+                                        {Row}
+                                    </Link>
+                                ) : (
+                                    <div key={sub.id} className="sub-row">
+                                        {Row}
+                                    </div>
+                                );
+                            })}
                         </div>
                     )}
                 </div>
@@ -434,4 +457,3 @@ function timeAgo(date: Date): string {
     if (months < 12)  return `${months}mo ago`;
     return `${years}y ago`;
 }
-
