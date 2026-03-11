@@ -31,6 +31,8 @@ export async function GET(req: Request) {
                         id: true,
                         username: true,
                         rating: true,
+                        isAdmin: true,
+                        isTeacher: true,
                         createdAt: true,
                         ratingHistory: { orderBy: { createdAt: 'desc' }, take: 1, select: { newRating: true, change: true } },
                         _count: { select: { submissions: true } },

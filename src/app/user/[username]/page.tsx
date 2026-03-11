@@ -4,6 +4,7 @@ import { RatingGraph } from './RatingGraph';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { UserSettings } from './UserSettings';
+import { AdminUserControls } from './AdminUserControls';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 
@@ -139,6 +140,7 @@ export default async function UserProfile(props: { params: Promise<{ username: s
 
             {/* ── Profile Hero ── */}
             <div className="g profile-hero fade-in" style={{ marginBottom: '20px' }}>
+                {isAdmin && !isOwnProfile && <AdminUserControls user={user} />}
                 <div className="profile-top">
                     {/* Avatar */}
                     <div className="avatar">{initials}</div>
@@ -147,6 +149,10 @@ export default async function UserProfile(props: { params: Promise<{ username: s
                         <div className="profile-handle">@{user.username} · joined {new Date(user.createdAt ?? Date.now()).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginTop: '8px' }}>
                             <span className={rank.cls}>⬡ {rank.label}</span>
+                            {(() => {
+                                const role = getRoleBadge(user);
+                                return <span className={role.cls} style={{ opacity: 0.85 }}>{role.label}</span>;
+                            })()}
                             <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '13px', fontWeight: 600, color: getRatingColor(user.rating) }}>{user.rating}</span>
                         </div>
                         {/* Org badges */}
@@ -431,6 +437,12 @@ function getRankLabel(rating: number): { label: string; cls: string } {
     if (rating >= 2000) return { label: 'Legend',   cls: 'rank-badge rank-legend' };
     if (rating >= 1400) return { label: 'Seeker',   cls: 'rank-badge rank-seeker' };
     return                     { label: 'Initiate', cls: 'rank-badge rank-initiate' };
+}
+
+function getRoleBadge(user: { isAdmin: boolean; isTeacher: boolean }) {
+    if (user.isAdmin) return { label: 'Admin', cls: 'rank-badge rank-archon' };
+    if (user.isTeacher) return { label: 'Teacher', cls: 'rank-badge rank-legend' };
+    return { label: 'Student', cls: 'rank-badge rank-initiate' };
 }
 
 function getRatingColor(rating: number): string {

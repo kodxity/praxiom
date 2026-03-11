@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { Users, ClipboardList, BarChart2, CheckCircle, XCircle } from 'lucide-react';
 
 type Group = { id: string; name: string; bio: string | null; school: { name: string; shortName: string; district: string } | null };
-type PendingUser = { id: string; username: string; displayName: string | null; email: string | null; createdAt: string; school: { shortName: string } | null; kind: 'account' | 'join' };
-type Student = { id: string; username: string; rating: number; createdAt: string; _count: { submissions: number } };
+type PendingUser = { id: string; username: string; displayName: string | null; email: string | null; createdAt: string; school: { shortName: string } | null; kind: 'account' | 'join'; isAdmin: boolean; isTeacher: boolean };
+type Student = { id: string; username: string; rating: number; createdAt: string; isAdmin: boolean; isTeacher: boolean; _count: { submissions: number } };
 type ContestResult = { contest: { id: string; title: string; endTime: string }; results: { username: string; change: number; newRating: number }[] };
 
 type Tab = 'pending' | 'students' | 'results';
@@ -69,6 +69,12 @@ export function TeacherDashboardClient({ group, embedded = false }: { group: Gro
         if (rating >= 1600) return 'var(--slate)';
         if (rating >= 1400) return 'var(--sage)';
         return 'var(--ink3)';
+    }
+
+    function getRoleBadge(user: { isAdmin: boolean; isTeacher: boolean }) {
+        if (user.isAdmin) return { label: 'Admin', cls: 'rank-archon' };
+        if (user.isTeacher) return { label: 'Teacher', cls: 'rank-legend' };
+        return { label: 'Student', cls: 'rank-initiate' };
     }
 
     const tabStyle = (active: boolean): React.CSSProperties => ({
@@ -159,7 +165,13 @@ export function TeacherDashboardClient({ group, embedded = false }: { group: Gro
                                             {u.username}
                                         </div>
                                         {u.displayName && <div style={{ fontSize: '12px', color: 'var(--ink3)' }}>{u.displayName}</div>}
-                                        {u.email     && <div style={{ fontFamily: 'var(--ff-mono)', fontSize: '11px', color: 'var(--ink5)' }}>{u.email}</div>}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginTop: '3px' }}>
+                                            {u.email && <div style={{ fontFamily: 'var(--ff-mono)', fontSize: '11px', color: 'var(--ink5)' }}>{u.email}</div>}
+                                            {(() => {
+                                                const role = getRoleBadge(u);
+                                                return <span className={`rank-badge ${role.cls}`} style={{ fontSize: '9px', padding: '1px 6px', opacity: 0.85 }}>{role.label}</span>;
+                                            })()}
+                                        </div>
                                         <div style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', color: 'var(--ink6, var(--ink5))', marginTop: '4px' }}>
                                             {u.kind === 'join' ? 'Requested' : 'Applied'} {new Date(u.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                                         </div>
@@ -239,9 +251,15 @@ export function TeacherDashboardClient({ group, embedded = false }: { group: Gro
                                         <tr key={s.id} style={{ borderBottom: '1px solid var(--border)' }}>
                                             <td style={{ padding: '10px 12px', fontFamily: 'var(--ff-mono)', fontSize: '12px', color: 'var(--ink5)' }}>{i + 1}</td>
                                             <td style={{ padding: '10px 12px' }}>
-                                                <Link href={`/user/${s.username}`} style={{ color: 'var(--ink)', textDecoration: 'none', fontWeight: 500 }}>
-                                                    {s.username}
-                                                </Link>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <Link href={`/user/${s.username}`} style={{ color: 'var(--ink)', textDecoration: 'none', fontWeight: 500 }}>
+                                                        {s.username}
+                                                    </Link>
+                                                    {(() => {
+                                                        const role = getRoleBadge(s);
+                                                        return <span className={`rank-badge ${role.cls}`} style={{ fontSize: '9px', padding: '1px 6px', opacity: 0.85 }}>{role.label}</span>;
+                                                    })()}
+                                                </div>
                                             </td>
                                             <td style={{ padding: '10px 12px', fontFamily: 'var(--ff-mono)', fontSize: '13px', fontWeight: 600, color: getRatingColor(s.rating) }}>
                                                 {s.rating}
