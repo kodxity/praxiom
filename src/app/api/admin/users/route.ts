@@ -6,7 +6,7 @@ import { z } from "zod";
 
 const adminActionSchema = z.object({
     userId: z.string().min(1, 'userId is required'),
-    action: z.enum(['approve', 'deny']),
+    action: z.enum(['approve', 'deny', 'setTeacher', 'setStudent']),
 });
 
 export async function PUT(req: Request) {
@@ -32,6 +32,22 @@ export async function PUT(req: Request) {
                 id: true, username: true, email: true, isApproved: true,
                 isTeacher: true, isAdmin: true, createdAt: true,
             },
+        });
+        return NextResponse.json(user);
+    }
+
+    if (action === 'setTeacher') {
+        const user = await prisma.user.update({
+            where: { id: userId },
+            data: { isTeacher: true },
+        });
+        return NextResponse.json(user);
+    }
+
+    if (action === 'setStudent') {
+        const user = await prisma.user.update({
+            where: { id: userId },
+            data: { isTeacher: false },
         });
         return NextResponse.json(user);
     }

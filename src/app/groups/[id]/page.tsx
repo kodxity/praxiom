@@ -17,6 +17,12 @@ function getRankLabel(rating: number) {
     return                     { label: 'Initiate', cls: 'rank-initiate' };
 }
 
+function getRoleBadge(user: { isAdmin: boolean; isTeacher: boolean }) {
+    if (user.isAdmin) return { label: 'Admin', cls: 'rank-archon' };
+    if (user.isTeacher) return { label: 'Teacher', cls: 'rank-legend' };
+    return { label: 'Student', cls: 'rank-initiate' };
+}
+
 function getRatingColor(rating: number) {
     if (rating >= 2400) return 'var(--amber)';
     if (rating >= 2000) return 'var(--violet)';
@@ -41,7 +47,7 @@ export default async function GroupPage(props: { params: Promise<{ id: string }>
                     orderBy: { user: { rating: 'desc' } },
                     select: {
                         user: {
-                            select: { id: true, username: true, rating: true, isApproved: true },
+                            select: { id: true, username: true, rating: true, isAdmin: true, isTeacher: true, isApproved: true },
                         },
                     },
                 },
@@ -210,6 +216,10 @@ export default async function GroupPage(props: { params: Promise<{ id: string }>
                                         {member.username}
                                     </Link>
                                     <span className={`rank-badge ${rank.cls}`} style={{ marginLeft: '8px' }}>{rank.label}</span>
+                                    {(() => {
+                                        const role = getRoleBadge(member);
+                                        return <span className={`rank-badge ${role.cls}`} style={{ marginLeft: '6px', opacity: 0.85 }}>{role.label}</span>;
+                                    })()}
                                 </div>
                                 <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '14px', fontWeight: 600, color: getRatingColor(member.rating) }}>
                                     {member.rating}

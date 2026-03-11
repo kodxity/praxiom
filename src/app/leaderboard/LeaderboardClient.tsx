@@ -2,13 +2,19 @@
 import { useState } from 'react';
 import Link from 'next/link';
 
-type User  = { id: string; username: string; rating: number; school: { shortName: string; district: string } | null; groupMemberships: { group: { id: string; name: string; school: { shortName: string; district: string } | null } }[]; _count: { ratingHistory: number } };
+type User  = { id: string; username: string; rating: number; isAdmin: boolean; isTeacher: boolean; school: { shortName: string; district: string } | null; groupMemberships: { group: { id: string; name: string; school: { shortName: string; district: string } | null } }[]; _count: { ratingHistory: number } };
 
 function getRankLabel(rating: number) {
     if (rating >= 2400) return { label: 'Archon',   cls: 'rank-badge rank-archon' };
     if (rating >= 2000) return { label: 'Legend',   cls: 'rank-badge rank-legend' };
     if (rating >= 1600) return { label: 'Seeker',   cls: 'rank-badge rank-seeker' };
     return                     { label: 'Initiate', cls: 'rank-badge rank-initiate' };
+}
+
+function getRoleBadge(user: User) {
+    if (user.isAdmin) return { label: 'Admin', cls: 'rank-badge rank-archon' };
+    if (user.isTeacher) return { label: 'Teacher', cls: 'rank-badge rank-legend' };
+    return { label: 'Student', cls: 'rank-badge rank-initiate' };
 }
 
 function getRatingColor(rating: number) {
@@ -78,6 +84,10 @@ export function LeaderboardClient({ users }: { users: User[] }) {
                                 </Link>
                                 <div className="lb-sub-info" style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginTop: '3px' }}>
                                     <span className={rank.cls} style={{ padding: '2px 8px', fontSize: '9px' }}>{rank.label}</span>
+                                    {(() => {
+                                        const role = getRoleBadge(user);
+                                        return <span className={role.cls} style={{ padding: '2px 8px', fontSize: '9px', opacity: 0.85 }}>{role.label}</span>;
+                                    })()}
                                     <span>{user._count.ratingHistory} contest{user._count.ratingHistory !== 1 ? 's' : ''}</span>
                                 </div>
                             </div>

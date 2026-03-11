@@ -25,6 +25,8 @@ export default async function LeaderboardPage() {
                 id: true,
                 username: true,
                 rating: true,
+                isAdmin: true,
+                isTeacher: true,
                 schoolId: true,
                 school: { select: { shortName: true, district: true } },
                 groupMemberships: { select: { group: { select: { id: true, name: true, school: { select: { shortName: true, district: true } } } } } },
