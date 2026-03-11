@@ -169,15 +169,19 @@ export default function NewContestPage() {
                         />
                     </div>
 
-                    {/* Times */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    {/* Times & Duration */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
                         <div>
-                            <label style={LABEL_STYLE}>Start Time</label>
+                            <label style={LABEL_STYLE}>Contest Window Start</label>
                             <input name="startTime" type="datetime-local" required className="input" style={{ width: '100%' }} />
                         </div>
                         <div>
-                            <label style={LABEL_STYLE}>End Time</label>
+                            <label style={LABEL_STYLE}>Contest Window End</label>
                             <input name="endTime" type="datetime-local" required className="input" style={{ width: '100%' }} />
+                        </div>
+                        <div>
+                            <label style={LABEL_STYLE}>Duration (min)</label>
+                            <input name="duration" type="number" defaultValue="120" min="1" required className="input" style={{ width: '100%' }} />
                         </div>
                     </div>
 

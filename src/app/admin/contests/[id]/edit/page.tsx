@@ -39,6 +39,7 @@ export default function EditContestPage() {
     const [description, setDescription] = useState('');
     const [startTime, setStartTime] = useState('');
     const [endTime, setEndTime] = useState('');
+    const [duration, setDuration] = useState(120);
     const [themeSlug, setThemeSlug] = useState('global');
     const [accentColor, setAccentColor] = useState('');
     const [status, setStatus] = useState('SCHEDULED');
@@ -59,6 +60,7 @@ export default function EditContestPage() {
                 setDescription(data.description ?? '');
                 setStartTime(toLocal(data.startTime));
                 setEndTime(toLocal(data.endTime));
+                setDuration(data.duration ?? 120);
                 setThemeSlug(data.themeSlug ?? 'global');
                 setAccentColor(data.accentColor ?? '');
                 setStatus(data.status ?? 'SCHEDULED');
@@ -77,7 +79,7 @@ export default function EditContestPage() {
         const res = await fetch(`/api/contests/${contestId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title, description, startTime, endTime, themeSlug, accentColor: accentColor || null, status, contestType }),
+            body: JSON.stringify({ title, description, startTime, endTime, duration, themeSlug, accentColor: accentColor || null, status, contestType }),
         });
         setSaving(false);
         if (res.ok) {
@@ -157,14 +159,18 @@ export default function EditContestPage() {
                         </div>
 
                         {/* Times */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
                             <div>
-                                <label style={LABEL}>Start Time</label>
+                                <label style={LABEL}>Contest Window Start</label>
                                 <input type="datetime-local" value={startTime} onChange={e => setStartTime(e.target.value)} required className="input" style={{ width: '100%' }} />
                             </div>
                             <div>
-                                <label style={LABEL}>End Time</label>
+                                <label style={LABEL}>Contest Window End</label>
                                 <input type="datetime-local" value={endTime} onChange={e => setEndTime(e.target.value)} required className="input" style={{ width: '100%' }} />
+                            </div>
+                            <div>
+                                <label style={LABEL}>Duration (min)</label>
+                                <input type="number" min="1" value={duration} onChange={e => setDuration(parseInt(e.target.value) || 120)} required className="input" style={{ width: '100%' }} />
                             </div>
                         </div>
 

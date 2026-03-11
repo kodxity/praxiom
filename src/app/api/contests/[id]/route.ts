@@ -9,6 +9,7 @@ const updateContestSchema = z.object({
     description: z.string().max(5000, 'Description too long').optional(),
     startTime: z.string().optional(),
     endTime: z.string().optional(),
+    duration: z.coerce.number().min(1).optional(),
     themeSlug: z.string().regex(/^[a-z0-9-]*$/, 'Invalid theme slug').max(50).optional(),
     accentColor: z.string().regex(/^(#[0-9A-Fa-f]{6})?$/, 'Invalid hex color').nullable().optional(),
     status: z.enum(['SCHEDULED', 'ACTIVE', 'ENDED']).optional(),
@@ -59,7 +60,7 @@ export async function PATCH(req: Request, props: { params: Promise<{ id: string 
     if (!result.success) {
         return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 });
     }
-    const { title, description, startTime, endTime, themeSlug, accentColor, status, contestType } = result.data;
+    const { title, description, startTime, endTime, duration, themeSlug, accentColor, status, contestType } = result.data;
 
     // Validate dates if provided
     let start: Date | undefined, end: Date | undefined;
@@ -77,6 +78,7 @@ export async function PATCH(req: Request, props: { params: Promise<{ id: string 
                 ...(description !== undefined && { description }),
                 ...(start !== undefined && { startTime: start }),
                 ...(end !== undefined && { endTime: end }),
+                ...(duration !== undefined && { duration }),
                 ...(themeSlug !== undefined && { themeSlug }),
                 ...(accentColor !== undefined && { accentColor: accentColor || null }),
                 ...(status !== undefined && { status }),

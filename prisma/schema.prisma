@@ -25,11 +25,11 @@ model OrgGroup {
   schoolId     String?
   teacherId    String
   createdAt    DateTime           @default(now())
+  joinRequests GroupJoinRequest[]
+  members      GroupMember[]
   messages     GroupMessage[]
   school       School?            @relation(fields: [schoolId], references: [id])
   teacher      User               @relation("TeacherGroups", fields: [teacherId], references: [id])
-  members      GroupMember[]
-  joinRequests GroupJoinRequest[]
 }
 
 model User {
@@ -53,12 +53,12 @@ model User {
   receivedInvites   ContestTeamInvite[]      @relation("ReceivedInvites")
   joinRequests      ContestTeamJoinRequest[]
   teamMemberships   ContestTeamMember[]
+  groupJoinRequests GroupJoinRequest[]
+  groupMemberships  GroupMember[]
   sentMessages      GroupMessage[]
   messageReads      GroupMessageRead[]
   hintReveals       HintReveal[]
   taughtGroups      OrgGroup[]               @relation("TeacherGroups")
-  groupMemberships  GroupMember[]
-  groupJoinRequests GroupJoinRequest[]
   ratingHistory     RatingHistory[]
   registrations     Registration[]
   resources         Resource[]
@@ -72,9 +72,8 @@ model GroupMember {
   groupId   String
   userId    String
   createdAt DateTime @default(now())
-
-  group OrgGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  user  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group     OrgGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([groupId, userId])
 }
@@ -83,12 +82,11 @@ model GroupJoinRequest {
   id        String   @id @default(cuid())
   groupId   String
   userId    String
-  status    String   @default("PENDING") // PENDING | ACCEPTED | REJECTED
+  status    String   @default("PENDING")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  group OrgGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  user  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group     OrgGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([groupId, userId])
 }
@@ -103,12 +101,13 @@ model Theme {
 }
 
 model Registration {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   userId    String
   contestId String
-  createdAt DateTime @default(now())
-  contest   Contest  @relation(fields: [contestId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime  @default(now())
+  startTime DateTime?
+  contest   Contest   @relation(fields: [contestId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
 
   @@unique([userId, contestId])
 }
@@ -123,6 +122,7 @@ model Contest {
   themeSlug     String                   @default("global")
   accentColor   String?
   contestType   String                   @default("individual")
+  duration      Int                      @default(120)
   teams         ContestTeam[]
   teamInvites   ContestTeamInvite[]
   joinRequests  ContestTeamJoinRequest[]
@@ -261,6 +261,7 @@ model ContestTeam {
   status       String                   @default("FORMING")
   createdAt    DateTime                 @default(now())
   updatedAt    DateTime                 @updatedAt
+  startTime    DateTime?
   contest      Contest                  @relation(fields: [contestId], references: [id], onDelete: Cascade)
   leader       User                     @relation("TeamLeader", fields: [leaderUserId], references: [id])
   invites      ContestTeamInvite[]
