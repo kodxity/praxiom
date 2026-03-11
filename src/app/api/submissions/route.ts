@@ -51,12 +51,13 @@ export async function POST(req: Request) {
     }
 
     // Mark as upsolve if submitting after contest ended (not counted for ratings)
-    const isUpsolve = !session.user.isAdmin && now > contest.endTime;
+    let isUpsolve = !session.user.isAdmin && now > contest.endTime;
 
     // ── Team/relay checks ──────────────────────────────────────────────────
     let teamId: string | null = null;
+    let personalStartTime: Date | null = null;
 
-    if (!isUpsolve && !session.user.isAdmin && contest.contestType !== 'individual') {
+    if (!session.user.isAdmin && contest.contestType !== 'individual') {
         // Must be a member of a team for this contest
         const membership = await prisma.contestTeamMember.findFirst({
             where: { userId: session.user.id, team: { contestId } },
@@ -66,8 +67,21 @@ export async function POST(req: Request) {
         if (!membership) {
             return new NextResponse('You must be on a team to submit in this contest.', { status: 403 });
         }
+        
+        personalStartTime = membership.team.startTime;
+        teamId = membership.teamId;
 
-        if (contest.contestType === 'relay') {
+        if (!isUpsolve) {
+            if (!personalStartTime) {
+                return new NextResponse('You must start the contest before submitting.', { status: 403 });
+            }
+            const personalEndTime = new Date(personalStartTime.getTime() + contest.duration * 60000);
+            if (now > personalEndTime) {
+                isUpsolve = true;
+            }
+        }
+
+        if (!isUpsolve && contest.contestType === 'relay') {
             // Validate relay slot authorization
             const allProblems = await prisma.problem.findMany({
                 where: { contestId },
@@ -107,12 +121,23 @@ export async function POST(req: Request) {
     }
 
     // During an active individual contest, only registered users may submit
-    if (!isUpsolve && !session.user.isAdmin && contest.contestType === 'individual') {
+    if (!session.user.isAdmin && contest.contestType === 'individual') {
         const reg = await prisma.registration.findUnique({
             where: { userId_contestId: { userId: session.user.id, contestId } },
         });
         if (!reg) {
             return new NextResponse('You must register for this contest to submit.', { status: 403 });
+        }
+        personalStartTime = reg.startTime;
+
+        if (!isUpsolve) {
+            if (!personalStartTime) {
+                return new NextResponse('You must start the contest before submitting.', { status: 403 });
+            }
+            const personalEndTime = new Date(personalStartTime.getTime() + contest.duration * 60000);
+            if (now > personalEndTime) {
+                isUpsolve = true;
+            }
         }
     }
 

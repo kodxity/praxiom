@@ -76,15 +76,41 @@ export default async function ContestPage(props: { params: Promise<{ id: string 
         );
     }
 
-    // Check if current user is registered (separate check to not affect count)
     let isRegistered = false;
-    if (session?.user?.id) {
-        try {
-            const reg = await prisma.registration.findUnique({
-                where: { userId_contestId: { userId: session.user.id, contestId: params.id } },
-            });
-            isRegistered = !!reg;
-        } catch { /* ignore */ }
+    let hasStarted = false;
+    let personalEndTime: Date | null = null;
+
+    if (session?.user?.id && contest) {
+        if (contest.contestType === 'individual') {
+            try {
+                const reg = await prisma.registration.findUnique({
+                    where: { userId_contestId: { userId: session.user.id, contestId: params.id } },
+                });
+                if (reg) {
+                    isRegistered = true;
+                    if (reg.startTime) {
+                        hasStarted = true;
+                        personalEndTime = new Date(reg.startTime.getTime() + contest.duration * 60000);
+                        if (personalEndTime > contest.endTime) personalEndTime = contest.endTime;
+                    }
+                }
+            } catch { /* ignore */ }
+        } else {
+            try {
+                const membership = await prisma.contestTeamMember.findFirst({
+                    where: { userId: session.user.id, team: { contestId: params.id } },
+                    include: { team: true }
+                });
+                if (membership) {
+                    isRegistered = true;
+                    if (membership.team.startTime) {
+                        hasStarted = true;
+                        personalEndTime = new Date(membership.team.startTime.getTime() + contest.duration * 60000);
+                        if (personalEndTime > contest.endTime) personalEndTime = contest.endTime;
+                    }
+                }
+            } catch { /* ignore */ }
+        }
     }
 
     const now = new Date();
@@ -129,6 +155,8 @@ export default async function ContestPage(props: { params: Promise<{ id: string 
                 problemCount={contest.problems.length}
                 participantCount={contest._count.registrations}
                 isRegistered={isRegistered}
+                hasStarted={hasStarted}
+                personalEndTime={personalEndTime}
                 isActive={isActive}
                 isPast={isPast}
                 isUpcoming={isUpcoming}
@@ -175,11 +203,11 @@ export default async function ContestPage(props: { params: Promise<{ id: string 
                 {/* Problems Tab */}
                 {(!isTeamContest || activeTab === 'problems') && (
                     <>
-                        {isUpcoming && !session?.user?.isAdmin ? (
+                        {(!hasStarted && !isPast && !session?.user?.isAdmin) ? (
                             <div style={{ textAlign: 'center', padding: '64px 20px', color: 'var(--ink4)', fontFamily: 'var(--ff-mono)', fontSize: '13px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
                                 <div style={{ fontSize: '28px' }}>🔒</div>
                                 <div style={{ fontFamily: 'var(--ff-display)', fontStyle: 'italic', fontSize: '18px', color: 'var(--ink)' }}>Problems Hidden</div>
-                                <div>Problems will be revealed when the contest starts.</div>
+                                <div>{isUpcoming ? 'Problems will be revealed when the contest starts.' : 'Click "Start Contest" to reveal the problems and start your timer.'}</div>
                             </div>
                         ) : contest.problems.length > 0 ? (
                             <div>

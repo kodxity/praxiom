@@ -37,7 +37,14 @@ export default async function StandingsPage(props: { params: Promise<{ id: strin
         i < 26 ? String.fromCharCode(65 + i) : `A${i - 25}`
     );
 
-    const contestDurationMins = Math.floor((contest.endTime.getTime() - contest.startTime.getTime()) / 60000);
+    const contestDurationMins = contest.duration ?? Math.floor((contest.endTime.getTime() - contest.startTime.getTime()) / 60000);
+
+    const entityStartTimes = new Map<string, Date>();
+    if (isTeamContest) {
+        (contest as any).teams.forEach((t: any) => { if (t.startTime) entityStartTimes.set(t.id, t.startTime); });
+    } else {
+        (contest as any).registrations.forEach((r: any) => { if (r.startTime) entityStartTimes.set(r.userId, r.startTime); });
+    }
 
     // Filter to live (non-upsolve) submissions within the contest window
     const liveSubs = (contest as any).submissions.filter((s: any) =>
@@ -56,8 +63,10 @@ export default async function StandingsPage(props: { params: Promise<{ id: strin
         return `${m}m`;
     };
 
-    const elapsedMins = (date: Date) =>
-        Math.max(0, Math.min(Math.floor((date.getTime() - contest.startTime.getTime()) / 60000), contestDurationMins));
+    const elapsedMins = (date: Date, entityKey: string) => {
+        const start = entityStartTimes.get(entityKey) ?? contest.startTime;
+        return Math.max(0, Math.min(Math.floor((date.getTime() - start.getTime()) / 60000), contestDurationMins));
+    };
 
     // Build per-problem stats for a set of submissions belonging to one entity
     type ProblemStat = { solved: boolean; solveTime: Date | null; waPenalty: number };
@@ -84,14 +93,14 @@ export default async function StandingsPage(props: { params: Promise<{ id: strin
     );
 
     // ICPC scoring: for each solved problem, add elapsedMins(solveTime) + WA penalty
-    const computeScore = (problems: Record<string, ProblemStat>) => {
+    const computeScore = (problems: Record<string, ProblemStat>, entityKey: string) => {
         let solvedCount = 0;
         let totalTime = 0;
         let totalScore = 0;
         for (const [pid, ps] of Object.entries(problems)) {
             if (!ps.solved) continue;
             solvedCount++;
-            totalTime += elapsedMins(ps.solveTime!) + ps.waPenalty;
+            totalTime += elapsedMins(ps.solveTime!, entityKey) + ps.waPenalty;
             totalScore += problemPointsMap.get(pid) ?? 0;
         }
         return { solvedCount, totalTime, totalScore };
@@ -117,7 +126,7 @@ export default async function StandingsPage(props: { params: Promise<{ id: strin
         standings = (contest as any).teams.map((team: any) => {
             const subs = subsByTeam.get(team.id) ?? [];
             const problems = buildEntityStats(subs);
-            const { solvedCount, totalTime, totalScore } = computeScore(problems);
+            const { solvedCount, totalTime, totalScore } = computeScore(problems, team.id);
             return { key: team.id, name: team.name, members: team.members, problems, solvedCount, totalTime, totalScore };
         });
     } else {
@@ -129,7 +138,7 @@ export default async function StandingsPage(props: { params: Promise<{ id: strin
         standings = (contest as any).registrations.map((reg: any) => {
             const subs = subsByUser.get(reg.userId) ?? [];
             const problems = buildEntityStats(subs);
-            const { solvedCount, totalTime, totalScore } = computeScore(problems);
+            const { solvedCount, totalTime, totalScore } = computeScore(problems, reg.userId);
             return { key: reg.userId, user: reg.user, problems, solvedCount, totalTime, totalScore };
         });
         // Also include unregistered submitters (edge case)
@@ -139,7 +148,7 @@ export default async function StandingsPage(props: { params: Promise<{ id: strin
             seenKeys.add(sub.userId);
             const subs = subsByUser.get(sub.userId) ?? [];
             const problems = buildEntityStats(subs);
-            const { solvedCount, totalTime, totalScore } = computeScore(problems);
+            const { solvedCount, totalTime, totalScore } = computeScore(problems, sub.userId);
             standings.push({ key: sub.userId, user: sub.user ?? { username: '?', displayName: null, rating: null, id: sub.userId }, problems, solvedCount, totalTime, totalScore });
         }
     }
@@ -330,7 +339,7 @@ export default async function StandingsPage(props: { params: Promise<{ id: strin
                                                         </div>
                                                         {ps.solveTime && (
                                                             <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '9px', color: isFirstSolve ? '#b87a28' : 'var(--ink4)', whiteSpace: 'nowrap', letterSpacing: '0.02em' }}>
-                                                                {formatMins(elapsedMins(ps.solveTime))}
+                                                                {formatMins(elapsedMins(ps.solveTime, row.key))}
                                                             </span>
                                                         )}
                                                     </div>

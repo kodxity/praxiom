@@ -16,6 +16,8 @@ interface Props {
   problemCount?: number
   participantCount?: number
   isRegistered?: boolean
+  hasStarted?: boolean
+  personalEndTime?: Date | null
   isActive?: boolean
   isPast?: boolean
   isUpcoming?: boolean
@@ -52,6 +54,8 @@ export function ContestHero({
   problemCount = 0,
   participantCount = 0,
   isRegistered = false,
+  hasStarted = false,
+  personalEndTime = null,
   isActive = false,
   isPast = false,
   isUpcoming = false,
@@ -63,7 +67,19 @@ export function ContestHero({
   const isDark = theme.navVariant === 'dark'
   const router = useRouter()
   const [registering, setRegistering] = useState(false)
+  const [starting, setStarting] = useState(false)
   const isTeamContest = contestType === 'team' || contestType === 'relay'
+
+  async function handleStartContest() {
+    if (starting) return
+    setStarting(true)
+    try {
+      await fetch(`/api/contests/${contestId}/start`, { method: 'POST' })
+      router.refresh()
+    } finally {
+      setStarting(false)
+    }
+  }
 
   async function handleRegister() {
     if (registering) return
@@ -153,7 +169,19 @@ export function ContestHero({
                     {contestType === 'relay' ? 'Form a Relay Team →' : 'Form a Team →'}
                   </Link>
                 )}
-                {isLoggedIn && !isPast && isRegistered && (
+                {isLoggedIn && !isPast && isRegistered && !hasStarted && (
+                  <button onClick={handleStartContest} disabled={starting} style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '6px',
+                    padding: '12px 28px', borderRadius: '10px',
+                    fontFamily: 'var(--ff-ui)', fontSize: '14px', fontWeight: 500,
+                    background: theme.accentBg, border: `1px solid ${theme.accentBorder}`,
+                    color: theme.textPrimary, transition: 'all 0.15s',
+                    cursor: starting ? 'wait' : 'pointer', opacity: starting ? 0.7 : 1,
+                  }}>
+                    {starting ? 'Starting…' : 'Start Contest'}
+                  </button>
+                )}
+                {isLoggedIn && !isPast && isRegistered && hasStarted && (
                   <Link href={`/contests/${contestId}`} style={{
                     display: 'inline-flex', alignItems: 'center', gap: '6px',
                     padding: '10px 20px', borderRadius: '10px', textDecoration: 'none',
@@ -162,7 +190,7 @@ export function ContestHero({
                     color: theme.textPrimary,
                   }}>
                     <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: theme.accent }} />
-                    In Progress
+                    In Progress {personalEndTime && <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', marginLeft: '6px', opacity: 0.7 }}>Ends {personalEndTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</span>}
                   </Link>
                 )}
                 <Link href={`/contests/${contestId}/standings`} style={{
@@ -332,7 +360,25 @@ export function ContestHero({
               {contestType === 'relay' ? 'Form a Relay Team' : 'Form a Team'}
             </Link>
           )}
-          {isLoggedIn && !isPast && isRegistered && (
+          {isLoggedIn && !isPast && isRegistered && !hasStarted && (
+            <button
+              onClick={handleStartContest}
+              disabled={starting}
+              className="btn"
+              style={{
+                padding: '12px 28px',
+                background: 'var(--sage)',
+                color: '#fff',
+                boxShadow: '0 4px 16px rgba(107,148,120,0.25)',
+                fontSize: '15px',
+                cursor: starting ? 'wait' : 'pointer',
+                opacity: starting ? 0.7 : 1,
+              }}
+            >
+              {starting ? 'Starting…' : 'Start Contest'}
+            </button>
+          )}
+          {isLoggedIn && !isPast && isRegistered && hasStarted && (
             <Link
               href={`/contests/${contestId}`}
               className="btn"
@@ -346,7 +392,7 @@ export function ContestHero({
               }}
             >
               <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: 'rgba(255,255,255,0.7)', flexShrink: 0 }} />
-              In Progress
+              In Progress {personalEndTime && <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '11px', marginLeft: '6px', opacity: 0.8 }}>Ends {personalEndTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</span>}
             </Link>
           )}
           <Link
