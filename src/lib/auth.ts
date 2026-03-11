@@ -72,11 +72,36 @@ export const authOptions: NextAuthOptions = {
         },
         async jwt({ token, user }) {
             if (user) {
+                // Fresh login — seed the token from the authorize() return value
                 token.id = user.id;
                 token.username = user.username;
                 token.isAdmin = user.isAdmin;
                 token.isTeacher = user.isTeacher;
                 token.groupIds = user.groupIds;
+                token._syncedAt = Date.now();
+            } else if (token.id) {
+                // Subsequent requests — re-sync from DB at most once per 60 s
+                const now = Date.now();
+                if (!token._syncedAt || now - (token._syncedAt as number) > 60_000) {
+                    const dbUser = await prisma.user.findUnique({
+                        where: { id: token.id as string },
+                        select: {
+                            isTeacher: true,
+                            isAdmin: true,
+                            taughtGroups: { select: { id: true } },
+                            groupMemberships: { select: { groupId: true } },
+                        },
+                    });
+                    if (dbUser) {
+                        token.isTeacher = dbUser.isTeacher;
+                        token.isAdmin = dbUser.isAdmin;
+                        token.groupIds = [
+                            ...dbUser.groupMemberships.map((m: { groupId: string }) => m.groupId),
+                            ...dbUser.taughtGroups.map((g: { id: string }) => g.id),
+                        ];
+                    }
+                    token._syncedAt = now;
+                }
             }
             return token;
         }

@@ -15,6 +15,7 @@ export default async function AdminPage() {
         prisma.user.findMany({
             where: {
                 isApproved: false,
+                username: { not: { startsWith: 'deleted-' } },
             },
             orderBy: { createdAt: 'desc' },
             include: {

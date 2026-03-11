@@ -2,10 +2,11 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTheme } from '@/context/ThemeContext'
 import { Calendar, Clock, Users, BookOpen } from 'lucide-react'
 import { Badge } from '@/components/Badge'
+import { formatDuration } from '@/lib/utils'
 
 interface Props {
   contestId: string
@@ -18,6 +19,7 @@ interface Props {
   isRegistered?: boolean
   hasStarted?: boolean
   personalEndTime?: Date | null
+  duration?: number
   isActive?: boolean
   isPast?: boolean
   isUpcoming?: boolean
@@ -36,14 +38,7 @@ function formatDate(d: Date) {
   })
 }
 
-function getDuration(start: Date, end: Date) {
-  const ms = end.getTime() - start.getTime()
-  const h = Math.floor(ms / 3600000)
-  const m = Math.floor((ms % 3600000) / 60000)
-  if (h === 0) return `${m}m`
-  if (m === 0) return `${h}h`
-  return `${h}h ${m}m`
-}
+
 
 export function ContestHero({
   contestId,
@@ -56,6 +51,7 @@ export function ContestHero({
   isRegistered = false,
   hasStarted = false,
   personalEndTime = null,
+  duration = 0,
   isActive = false,
   isPast = false,
   isUpcoming = false,
@@ -69,6 +65,50 @@ export function ContestHero({
   const [registering, setRegistering] = useState(false)
   const [starting, setStarting] = useState(false)
   const isTeamContest = contestType === 'team' || contestType === 'relay'
+
+  // Live countdown
+  const [msLeft, setMsLeft] = useState(() =>
+    isActive ? Math.max(0, endTime.getTime() - Date.now())
+    : isUpcoming ? Math.max(0, startTime.getTime() - Date.now())
+    : 0
+  )
+  useEffect(() => {
+    if (!isActive && !isUpcoming) return
+    const tick = () => setMsLeft(
+      isActive
+        ? Math.max(0, endTime.getTime() - Date.now())
+        : Math.max(0, startTime.getTime() - Date.now())
+    )
+    tick()
+    const id = setInterval(tick, 1000)
+    return () => clearInterval(id)
+  }, [isActive, isUpcoming, endTime, startTime])
+
+  // Personal countdown (user's own time window)
+  const personalTarget = isActive && personalEndTime ? personalEndTime : null
+  const [personalMsLeft, setPersonalMsLeft] = useState(() =>
+    personalTarget ? Math.max(0, personalTarget.getTime() - Date.now()) : 0
+  )
+  useEffect(() => {
+    if (!personalTarget) return
+    const tick = () => setPersonalMsLeft(Math.max(0, personalTarget.getTime() - Date.now()))
+    tick()
+    const id = setInterval(tick, 1000)
+    return () => clearInterval(id)
+  }, [personalTarget])
+
+  const countdownLabel = isActive
+    ? (msLeft <= 0 ? null : `Ends in ${formatDuration(msLeft)}`)
+    : isUpcoming
+    ? (msLeft <= 0 ? null : `Starts in ${formatDuration(msLeft)}`)
+    : null
+
+  function dateRange(start: Date, end: Date) {
+    const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }
+    const s = start.toLocaleString('en-US', opts)
+    const e = end.toLocaleString('en-US', { ...opts, year: 'numeric' })
+    return `${s} – ${e}`
+  }
 
   async function handleStartContest() {
     if (starting) return
@@ -139,8 +179,9 @@ export function ContestHero({
               )}
               {/* Metadata */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', fontFamily: 'var(--ff-mono)', fontSize: '12px', color: theme.textMuted, marginBottom: '24px' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><Calendar style={{ width: '13px', height: '13px' }} />{formatDate(startTime)}</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><Clock style={{ width: '13px', height: '13px' }} />{getDuration(startTime, endTime)}</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><Calendar style={{ width: '13px', height: '13px' }} />{dateRange(startTime, endTime)}</span>
+                {countdownLabel && <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><Clock style={{ width: '13px', height: '13px' }} />{countdownLabel}</span>}
+                {duration > 0 && <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><Clock style={{ width: '13px', height: '13px' }} />{formatDuration(duration * 60_000)}</span>}
                 <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><BookOpen style={{ width: '13px', height: '13px' }} />{problemCount} problems</span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><Users style={{ width: '13px', height: '13px' }} />{participantCount} participants</span>
               </div>
@@ -182,16 +223,18 @@ export function ContestHero({
                   </button>
                 )}
                 {isLoggedIn && !isPast && isRegistered && hasStarted && (
-                  <Link href={`/contests/${contestId}`} style={{
-                    display: 'inline-flex', alignItems: 'center', gap: '6px',
-                    padding: '10px 20px', borderRadius: '10px', textDecoration: 'none',
-                    fontFamily: 'var(--ff-ui)', fontSize: '14px', fontWeight: 500,
-                    background: theme.accentBg, border: `1px solid ${theme.accentBorder}`,
-                    color: theme.textPrimary,
-                  }}>
-                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: theme.accent }} />
-                    In Progress {personalEndTime && <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', marginLeft: '6px', opacity: 0.7 }}>Ends {personalEndTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</span>}
-                  </Link>
+                  personalEndTime && personalMsLeft <= 0
+                    ? null
+                    : <Link href={`/contests/${contestId}`} style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '6px',
+                        padding: '10px 20px', borderRadius: '10px', textDecoration: 'none',
+                        fontFamily: 'var(--ff-ui)', fontSize: '14px', fontWeight: 500,
+                        background: theme.accentBg, border: `1px solid ${theme.accentBorder}`,
+                        color: theme.textPrimary,
+                      }}>
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: theme.accent }} />
+                        In Progress
+                      </Link>
                 )}
                 <Link href={`/contests/${contestId}/standings`} style={{
                   display: 'inline-flex', alignItems: 'center', gap: '6px',
@@ -202,6 +245,9 @@ export function ContestHero({
                 }}>
                   Standings
                 </Link>
+                {isLoggedIn && isRegistered && hasStarted && personalEndTime && personalMsLeft <= 0 && (
+                  <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '11px', color: theme.textMuted, letterSpacing: '0.05em' }}>Your window has ended</span>
+                )}
                 <Link href={`/contests/${contestId}/submissions`} style={{
                   display: 'inline-flex', alignItems: 'center', gap: '6px',
                   padding: '10px 20px', borderRadius: '10px', textDecoration: 'none',
@@ -308,12 +354,20 @@ export function ContestHero({
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', marginBottom: '2.5rem', color: 'var(--ink4)', fontSize: '13px', fontFamily: 'var(--ff-mono)' }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Calendar style={{ width: '14px', height: '14px' }} />
-            {formatDate(startTime)}
+            {dateRange(startTime, endTime)}
           </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Clock style={{ width: '14px', height: '14px' }} />
-            {getDuration(startTime, endTime)}
-          </span>
+          {countdownLabel && (
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Clock style={{ width: '14px', height: '14px' }} />
+              {countdownLabel}
+            </span>
+          )}
+          {duration > 0 && (
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Clock style={{ width: '14px', height: '14px' }} />
+              {formatDuration(duration * 60_000)}
+            </span>
+          )}
           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <BookOpen style={{ width: '14px', height: '14px' }} />
             {problemCount} problems
@@ -379,21 +433,23 @@ export function ContestHero({
             </button>
           )}
           {isLoggedIn && !isPast && isRegistered && hasStarted && (
-            <Link
-              href={`/contests/${contestId}`}
-              className="btn"
-              style={{
-                padding: '12px 28px',
-                background: 'var(--sage)',
-                color: '#fff',
-                fontSize: '15px',
-                textDecoration: 'none',
-                display: 'inline-flex', alignItems: 'center', gap: '8px',
-              }}
-            >
-              <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: 'rgba(255,255,255,0.7)', flexShrink: 0 }} />
-              In Progress {personalEndTime && <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '11px', marginLeft: '6px', opacity: 0.8 }}>Ends {personalEndTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</span>}
-            </Link>
+            personalEndTime && personalMsLeft <= 0
+              ? null
+              : <Link
+                  href={`/contests/${contestId}`}
+                  className="btn"
+                  style={{
+                    padding: '12px 28px',
+                    background: 'var(--sage)',
+                    color: '#fff',
+                    fontSize: '15px',
+                    textDecoration: 'none',
+                    display: 'inline-flex', alignItems: 'center', gap: '8px',
+                  }}
+                >
+                  <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: 'rgba(255,255,255,0.7)', flexShrink: 0 }} />
+                  In Progress
+                </Link>
           )}
           <Link
             href={`/contests/${contestId}/standings`}
@@ -402,6 +458,9 @@ export function ContestHero({
           >
             Standings
           </Link>
+          {isLoggedIn && isRegistered && hasStarted && personalEndTime && personalMsLeft <= 0 && (
+            <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '12px', color: 'var(--ink4)', letterSpacing: '0.05em' }}>Your window has ended</span>
+          )}
           {isAdmin && (
             <Link
               href={`/admin/contests/${contestId}/edit`}
