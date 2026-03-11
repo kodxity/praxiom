@@ -45,6 +45,20 @@ export default async function GroupsPage() {
         console.error('Database Error in GroupsPage:', e);
     }
 
+    // IDs of groups the student is actually a member of (empty for teachers)
+    const userMemberIds = session && !session.user.isTeacher ? (session.user.groupIds ?? []) : [];
+
+    // Pin the user's own group(s) to the top of the list
+    const sortedGroups = [...groups].sort((a, b) => {
+        const aIsMine = (session?.user?.isTeacher && a.teacher.id === session.user.id)
+            || userMemberIds.includes(a.id);
+        const bIsMine = (session?.user?.isTeacher && b.teacher.id === session.user.id)
+            || userMemberIds.includes(b.id);
+        if (aIsMine && !bIsMine) return -1;
+        if (!aIsMine && bIsMine) return 1;
+        return 0;
+    });
+
     return (
         <div style={{ maxWidth: '980px', margin: '0 auto', padding: '48px 1.75rem 80px', position: 'relative', zIndex: 1 }}>
             <div style={{ marginBottom: '28px' }}>
@@ -66,23 +80,30 @@ export default async function GroupsPage() {
                     No groups yet.
                 </div>
             ) : (
-                <div className="g" style={{ overflow: 'hidden' }}>
-                    {groups.map((g, i) => {
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 0, background: 'var(--glass)', backdropFilter: 'blur(22px) saturate(1.5)', WebkitBackdropFilter: 'blur(22px) saturate(1.5)', border: '1px solid var(--glass-border)', boxShadow: 'var(--shadow)', borderRadius: 'var(--r-lg)', overflow: 'visible' }}>
+                    {sortedGroups.map((g, i) => {
                         const isTeacher = session?.user?.isTeacher && g.teacher.id === session.user.id;
-                        const isMember = !isTeacher && (session?.user?.groupIds ?? []).includes(g.id);
-                        const status: 'member' | 'teacher' | 'pending' | 'none' | 'login' = !session
+                        const isMember = !isTeacher && userMemberIds.includes(g.id);
+                        const isMyGroup = isTeacher || isMember;
+                        const isInOtherGroup = !isMember && !isTeacher && userMemberIds.length > 0;
+                        const status: 'member' | 'teacher' | 'pending' | 'none' | 'login' | 'other_group' = !session
                             ? 'login'
                             : isTeacher
                                 ? 'teacher'
                                 : isMember
                                     ? 'member'
-                                    : pendingSet.has(g.id)
-                                        ? 'pending'
-                                        : 'none';
+                                    : isInOtherGroup
+                                        ? 'other_group'
+                                        : pendingSet.has(g.id)
+                                            ? 'pending'
+                                            : 'none';
 
                         return (
+                            <div key={g.id} style={{ position: 'relative' }}>
+                            {isMyGroup && (
+                                <div style={{ position: 'absolute', left: '-16px', top: '50%', transform: 'translateY(-50%)', height: 'calc(100% - 14px)', width: '3px', background: 'var(--sage)', borderRadius: '99px' }} />
+                            )}
                             <div
-                                key={g.id}
                                 className="lb-row"
                                 style={{
                                     animationDelay: `${0.02 + i * 0.02}s`,
@@ -90,14 +111,23 @@ export default async function GroupsPage() {
                                     gridTemplateColumns: '1fr auto',
                                     gap: '12px',
                                     alignItems: 'center',
+                                    borderRadius: i === 0 ? 'var(--r-lg) var(--r-lg) 0 0' : i === sortedGroups.length - 1 ? '0 0 var(--r-lg) var(--r-lg)' : undefined,
+                                    ...(isMyGroup ? { background: 'var(--sage-tint, rgba(var(--sage-rgb,80,160,120),0.06))' } : {}),
                                 }}
                             >
                                 <div style={{ minWidth: 0 }}>
-                                    <Link href={`/groups/${g.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                                        <div style={{ fontFamily: 'var(--ff-ui)', fontWeight: 600, fontSize: '15px', color: 'var(--ink)', marginBottom: '2px' }}>
-                                            {g.name}
-                                        </div>
-                                    </Link>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
+                                        <Link href={`/groups/${g.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                                            <span style={{ fontFamily: 'var(--ff-ui)', fontWeight: 600, fontSize: '15px', color: 'var(--ink)' }}>
+                                                {g.name}
+                                            </span>
+                                        </Link>
+                                        {isMyGroup && (
+                                            <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--sage)', background: 'transparent', border: '1px solid var(--sage)', borderRadius: '4px', padding: '1px 5px', lineHeight: '1.6' }}>
+                                                Your group
+                                            </span>
+                                        )}
+                                    </div>
                                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
                                         {g.school ? (
                                             <>
@@ -115,9 +145,17 @@ export default async function GroupsPage() {
                                         </span>
                                     </div>
                                 </div>
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'flex-end' }}>
                                     <JoinGroupButton groupId={g.id} status={status} compact />
+                                    <Link
+                                        href={`/groups/${g.id}`}
+                                        className="btn btn-ghost btn-sm"
+                                        style={{ fontSize: '11px', whiteSpace: 'nowrap' }}
+                                    >
+                                        Open →
+                                    </Link>
                                 </div>
+                            </div>
                             </div>
                         );
                     })}
