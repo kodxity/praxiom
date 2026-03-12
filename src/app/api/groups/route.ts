@@ -63,17 +63,6 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'User is not marked as teacher in DB' }, { status: 403 });
         }
 
-        // Block if already teaching a group or already a member of one
-        const existing = await prisma.user.findUnique({
-            where: { id: userId },
-            select: {
-                taughtGroups: { select: { id: true }, take: 1 },
-                groupMemberships: { select: { groupId: true }, take: 1 },
-            },
-        });
-        if (existing && (existing.taughtGroups.length > 0 || existing.groupMemberships.length > 0)) {
-            return NextResponse.json({ error: 'You are already part of a group' }, { status: 409 });
-        }
 
         const group = await prisma.orgGroup.create({
             data: {

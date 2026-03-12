@@ -72,7 +72,7 @@ export default async function GroupsPage() {
     // IDs of groups the student is actually a member of (empty for teachers)
     const userMemberIds = !dbIsTeacher ? dbGroupIds : [];
 
-    const canCreateGroup = dbIsTeacher && !dbIsMemberOrTeacher;
+    const canCreateGroup = dbIsTeacher;
 
     // Pin the user's own group(s) to the top of the list
     const sortedGroups = [...groups].sort((a, b) => {
@@ -111,18 +111,15 @@ export default async function GroupsPage() {
                         const isTeacher = dbIsTeacher && g.teacher.id === session?.user?.id;
                         const isMember = !isTeacher && userMemberIds.includes(g.id);
                         const isMyGroup = isTeacher || isMember;
-                        const isInOtherGroup = !isMember && !isTeacher && userMemberIds.length > 0;
                         const status: 'member' | 'teacher' | 'pending' | 'none' | 'login' | 'other_group' = !session
                             ? 'login'
                             : isTeacher
                                 ? 'teacher'
                                 : isMember
                                     ? 'member'
-                                    : isInOtherGroup
-                                        ? 'other_group'
-                                        : pendingSet.has(g.id)
-                                            ? 'pending'
-                                            : 'none';
+                                    : pendingSet.has(g.id)
+                                        ? 'pending'
+                                        : 'none';
 
                         return (
                             <div key={g.id} style={{ position: 'relative' }}>
