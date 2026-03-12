@@ -177,9 +177,9 @@ export default async function UserProfile(props: { params: Promise<{ username: s
                         })()}
                         </div>
                     </div>
-                    {isOwnProfile && (
+                    {(isOwnProfile || isAdmin) && (
                         <div style={{ flexShrink: 0 }}>
-                            <UserSettings user={user} />
+                            <UserSettings user={user} isAdmin={isAdmin} isOwnProfile={isOwnProfile} />
                         </div>
                     )}
                 </div>

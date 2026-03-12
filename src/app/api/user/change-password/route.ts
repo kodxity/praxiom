@@ -7,7 +7,8 @@ import { z } from 'zod';
 import { checkRateLimit, rateLimitResponse, getIp } from '@/lib/rateLimit';
 
 const schema = z.object({
-    currentPassword: z.string().min(1),
+    username: z.string().optional(),
+    currentPassword: z.string().optional(),
     newPassword: z.string().min(8, 'New password must be at least 8 characters'),
 });
 
@@ -38,26 +39,49 @@ export async function POST(req: Request) {
         );
     }
 
-    const { currentPassword, newPassword } = parsed.data;
+    const { username, currentPassword, newPassword } = parsed.data;
 
-    const user = await prisma.user.findUnique({
+    const sessionUser = await prisma.user.findUnique({
         where: { id: session.user.id },
+        select: { id: true, isAdmin: true }
+    });
+
+    let targetUserId = session.user.id;
+    if (username) {
+        const targetUser = await prisma.user.findUnique({
+            where: { username },
+            select: { id: true }
+        });
+        if (!targetUser) return new NextResponse('Not found', { status: 404 });
+        if (targetUser.id !== session.user.id && !sessionUser?.isAdmin) {
+            return new NextResponse('Unauthorized', { status: 401 });
+        }
+        targetUserId = targetUser.id;
+    }
+
+    const targetUserFull = await prisma.user.findUnique({
+        where: { id: targetUserId },
         select: { password: true },
     });
 
-    if (!user) {
+    if (!targetUserFull) {
         return NextResponse.json({ error: 'User not found.' }, { status: 404 });
     }
 
-    const isValid = await compare(currentPassword, user.password);
-    if (!isValid) {
-        return NextResponse.json({ error: 'Current password is incorrect.' }, { status: 400 });
+    if (!sessionUser?.isAdmin || targetUserId === session.user.id) {
+        if (!currentPassword) {
+            return NextResponse.json({ error: 'Current password is required.' }, { status: 400 });
+        }
+        const isValid = await compare(currentPassword, targetUserFull.password);
+        if (!isValid) {
+            return NextResponse.json({ error: 'Current password is incorrect.' }, { status: 400 });
+        }
     }
 
     const hashedPassword = await hash(newPassword, 12);
 
     await prisma.user.update({
-        where: { id: session.user.id },
+        where: { id: targetUserId },
         data: { password: hashedPassword },
     });
 
