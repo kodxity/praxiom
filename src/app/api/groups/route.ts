@@ -63,6 +63,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'User is not marked as teacher in DB' }, { status: 403 });
         }
 
+
         const group = await prisma.orgGroup.create({
             data: {
                 name: result.data.name.trim(),

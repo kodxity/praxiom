@@ -30,7 +30,7 @@ export default async function HomePage() {
   } catch { /* DB unavailable */ }
 
   try { problemCount = await prisma.problem.count(); } catch { }
-  try { userCount = await prisma.user.count(); } catch { }
+  try { userCount = await prisma.user.count({ where: { isApproved: true, username: { not: { startsWith: 'deleted-' } } } }); } catch { }
   try { contestCount = await prisma.contest.count(); } catch { }
 
   return (

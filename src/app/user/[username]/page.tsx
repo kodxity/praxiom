@@ -5,8 +5,10 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { UserSettings } from './UserSettings';
 import { AdminUserControls } from './AdminUserControls';
+import { AdminBadgeManager } from './AdminBadgeManager';
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { timeAgo } from '@/lib/utils';
 
 export async function generateMetadata(
     props: { params: Promise<{ username: string }> },
@@ -156,29 +158,38 @@ export default async function UserProfile(props: { params: Promise<{ username: s
                             <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '13px', fontWeight: 600, color: getRatingColor(user.rating) }}>{user.rating}</span>
                         </div>
                         {/* Org badges */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginTop: '8px' }}>
-                            {user.school && (
-                                <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', padding: '2px 9px', borderRadius: '99px', background: 'rgba(88,120,160,0.1)', border: '1px solid rgba(88,120,160,0.2)', color: 'var(--slate, #5878a0)', letterSpacing: '0.04em' }}>
-                                    {user.school.shortName} · {user.school.district}
-                                </span>
-                            )}
-                        {(() => {
-                            const memberGroups = (user.groupMemberships ?? []).map((m: any) => m.group);
-                            const taughtGroups = user.taughtGroups ?? [];
-                            const allGroups = [...taughtGroups, ...memberGroups];
-                            if (allGroups.length === 0) return null;
-                            return allGroups.slice(0, 3).map((g: any, idx: number) => (
-                                <a key={g.id + idx} href={`/groups/${g.id}`} style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', padding: '2px 9px', borderRadius: '99px', background: 'rgba(107,148,120,0.1)', border: '1px solid rgba(107,148,120,0.2)', color: 'var(--sage)', letterSpacing: '0.04em', textDecoration: 'none' }}>
-                                    {taughtGroups.some((tg: any) => tg.id === g.id) ? '📚 ' : ''}
-                                    {g.name}
-                                </a>
-                            ));
-                        })()}
-                        </div>
+                        {isAdmin ? (
+                            <AdminBadgeManager 
+                                userId={user.id} 
+                                school={user.school} 
+                                memberGroups={(user.groupMemberships ?? []).map((m: any) => m.group)} 
+                                taughtGroups={user.taughtGroups ?? []}
+                            />
+                        ) : (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginTop: '8px' }}>
+                                {user.school && (
+                                    <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', padding: '2px 9px', borderRadius: '99px', background: 'rgba(88,120,160,0.1)', border: '1px solid rgba(88,120,160,0.2)', color: 'var(--slate, #5878a0)', letterSpacing: '0.04em' }}>
+                                        {user.school.shortName} · {user.school.district}
+                                    </span>
+                                )}
+                                {(() => {
+                                    const memberGroups = (user.groupMemberships ?? []).map((m: any) => m.group);
+                                    const taughtGroups = user.taughtGroups ?? [];
+                                    const allGroups = [...taughtGroups, ...memberGroups];
+                                    if (allGroups.length === 0) return null;
+                                    return allGroups.slice(0, 3).map((g: any, idx: number) => (
+                                        <a key={g.id + idx} href={`/groups/${g.id}`} style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', padding: '2px 9px', borderRadius: '99px', background: 'rgba(107,148,120,0.1)', border: '1px solid rgba(107,148,120,0.2)', color: 'var(--sage)', letterSpacing: '0.04em', textDecoration: 'none' }}>
+                                            {taughtGroups.some((tg: any) => tg.id === g.id) ? '📚 ' : ''}
+                                            {g.name}
+                                        </a>
+                                    ));
+                                })()}
+                            </div>
+                        )}
                     </div>
-                    {isOwnProfile && (
+                    {(isOwnProfile || isAdmin) && (
                         <div style={{ flexShrink: 0 }}>
-                            <UserSettings user={user} />
+                            <UserSettings user={user} isAdmin={isAdmin} isOwnProfile={isOwnProfile} />
                         </div>
                     )}
                 </div>
@@ -452,20 +463,4 @@ function getRatingColor(rating: number): string {
     return 'var(--ink3)';
 }
 
-function timeAgo(date: Date): string {
-    const diff   = Date.now() - new Date(date).getTime();
-    const secs   = Math.floor(diff / 1000);
-    const mins   = Math.floor(secs  / 60);
-    const hours  = Math.floor(mins  / 60);
-    const days   = Math.floor(hours / 24);
-    const weeks  = Math.floor(days  / 7);
-    const months = Math.floor(days  / 30);
-    const years  = Math.floor(days  / 365);
-    if (secs   < 60)  return `${secs}s ago`;
-    if (mins   < 60)  return `${mins}m ago`;
-    if (hours  < 24)  return `${hours}h ago`;
-    if (days   < 7)   return `${days}d ago`;
-    if (weeks  < 5)   return `${weeks}w ago`;
-    if (months < 12)  return `${months}mo ago`;
-    return `${years}y ago`;
-}
+

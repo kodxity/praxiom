@@ -96,18 +96,11 @@ export function LeaderboardClient({ users }: { users: User[] }) {
                             {(() => {
                                 const primaryGroup = user.groupMemberships?.[0]?.group ?? null;
                                 const displaySchool = user.school ?? primaryGroup?.school ?? null;
-                                return (primaryGroup || displaySchool) ? (
+                                return displaySchool ? (
                                     <div className="lb-pills-col" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-                                        {primaryGroup && (
-                                            <Link href={`/groups/${primaryGroup.id}`} style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', color: 'var(--sage)', background: 'rgba(107,148,120,0.1)', padding: '2px 9px', borderRadius: '99px', textDecoration: 'none', border: '1px solid rgba(107,148,120,0.25)', letterSpacing: '0.02em', whiteSpace: 'nowrap' }}>
-                                                {primaryGroup.name}
-                                            </Link>
-                                        )}
-                                        {displaySchool && (
-                                            <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', color: 'var(--ink3)', background: 'rgba(0,0,0,0.05)', padding: '2px 9px', borderRadius: '99px', whiteSpace: 'nowrap' }}>
-                                                {displaySchool.shortName}
-                                            </span>
-                                        )}
+                                        <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', color: 'var(--ink3)', background: 'rgba(0,0,0,0.05)', padding: '2px 9px', borderRadius: '99px', whiteSpace: 'nowrap' }}>
+                                            {displaySchool.shortName}
+                                        </span>
                                     </div>
                                 ) : null;
                             })()}

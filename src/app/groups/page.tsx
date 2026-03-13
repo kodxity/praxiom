@@ -45,14 +45,40 @@ export default async function GroupsPage() {
         console.error('Database Error in GroupsPage:', e);
     }
 
+    // Always read teacher status and group membership fresh from DB — JWT can be stale
+    let dbIsTeacher = false;
+    let dbIsMemberOrTeacher = false;
+    let dbGroupIds: string[] = [];
+    if (session?.user?.id) {
+        try {
+            const dbUser = await prisma.user.findUnique({
+                where: { id: session.user.id },
+                select: {
+                    isTeacher: true,
+                    taughtGroups: { select: { id: true } },
+                    groupMemberships: { select: { groupId: true } },
+                },
+            });
+            if (dbUser) {
+                dbIsTeacher = dbUser.isTeacher;
+                const taughtIds = dbUser.taughtGroups.map(g => g.id);
+                const memberIds = dbUser.groupMemberships.map(m => m.groupId);
+                dbGroupIds = [...taughtIds, ...memberIds];
+                dbIsMemberOrTeacher = dbGroupIds.length > 0;
+            }
+        } catch { /* non-fatal */ }
+    }
+
     // IDs of groups the student is actually a member of (empty for teachers)
-    const userMemberIds = session && !session.user.isTeacher ? (session.user.groupIds ?? []) : [];
+    const userMemberIds = !dbIsTeacher ? dbGroupIds : [];
+
+    const canCreateGroup = dbIsTeacher;
 
     // Pin the user's own group(s) to the top of the list
     const sortedGroups = [...groups].sort((a, b) => {
-        const aIsMine = (session?.user?.isTeacher && a.teacher.id === session.user.id)
+        const aIsMine = (dbIsTeacher && a.teacher.id === session?.user?.id)
             || userMemberIds.includes(a.id);
-        const bIsMine = (session?.user?.isTeacher && b.teacher.id === session.user.id)
+        const bIsMine = (dbIsTeacher && b.teacher.id === session?.user?.id)
             || userMemberIds.includes(b.id);
         if (aIsMine && !bIsMine) return -1;
         if (!aIsMine && bIsMine) return 1;
@@ -73,7 +99,7 @@ export default async function GroupsPage() {
                 </p>
             </div>
 
-            {session?.user?.isTeacher && <CreateGroupForm />}
+            {canCreateGroup && <CreateGroupForm />}
 
             {groups.length === 0 ? (
                 <div className="g" style={{ padding: '28px', textAlign: 'center', color: 'var(--ink5)', fontFamily: 'var(--ff-mono)', fontSize: '12px' }}>
@@ -82,21 +108,18 @@ export default async function GroupsPage() {
             ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 0, background: 'var(--glass)', backdropFilter: 'blur(22px) saturate(1.5)', WebkitBackdropFilter: 'blur(22px) saturate(1.5)', border: '1px solid var(--glass-border)', boxShadow: 'var(--shadow)', borderRadius: 'var(--r-lg)', overflow: 'visible' }}>
                     {sortedGroups.map((g, i) => {
-                        const isTeacher = session?.user?.isTeacher && g.teacher.id === session.user.id;
+                        const isTeacher = dbIsTeacher && g.teacher.id === session?.user?.id;
                         const isMember = !isTeacher && userMemberIds.includes(g.id);
                         const isMyGroup = isTeacher || isMember;
-                        const isInOtherGroup = !isMember && !isTeacher && userMemberIds.length > 0;
                         const status: 'member' | 'teacher' | 'pending' | 'none' | 'login' | 'other_group' = !session
                             ? 'login'
                             : isTeacher
                                 ? 'teacher'
                                 : isMember
                                     ? 'member'
-                                    : isInOtherGroup
-                                        ? 'other_group'
-                                        : pendingSet.has(g.id)
-                                            ? 'pending'
-                                            : 'none';
+                                    : pendingSet.has(g.id)
+                                        ? 'pending'
+                                        : 'none';
 
                         return (
                             <div key={g.id} style={{ position: 'relative' }}>

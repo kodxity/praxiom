@@ -19,13 +19,18 @@ export async function GET() {
             },
             include: {
                 contest: {
-                    select: { id: true, title: true, endTime: true, startTime: true },
+                    select: { id: true, title: true, endTime: true, startTime: true, duration: true },
                 },
             },
         });
 
         if (!reg) return NextResponse.json({ contest: null });
-        return NextResponse.json({ contest: reg.contest });
+
+        const personalEndTime = reg.startTime
+            ? new Date(reg.startTime.getTime() + reg.contest.duration * 60_000)
+            : reg.contest.endTime;
+
+        return NextResponse.json({ contest: { ...reg.contest, personalEndTime } });
     } catch {
         return NextResponse.json({ contest: null });
     }

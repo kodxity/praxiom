@@ -163,6 +163,7 @@ export default async function ContestPage(props: { params: Promise<{ id: string 
                 isLoggedIn={!!session}
                 isAdmin={session?.user?.isAdmin ?? false}
                 contestType={contest.contestType}
+                duration={contest.duration}
             />
 
             {/* Page body */}

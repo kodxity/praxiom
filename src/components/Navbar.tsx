@@ -175,11 +175,17 @@ export function Navbar() {
                 <div
                     className="mobile-menu nav-mobile"
                     style={{
+                        position: 'absolute',
+                        top: '64px',
+                        left: 0,
+                        right: 0,
+                        zIndex: 49,
                         flexDirection: 'column',
                         borderTop: '1px solid var(--theme-nav-border, rgba(0,0,0,0.06))',
                         padding: '12px 1.75rem 20px',
                         background: 'var(--theme-nav-mobile-bg, rgba(238,234,227,0.97))',
                         transition: 'background 0.4s ease',
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
                     }}
                 >
                     <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '2px' }}>

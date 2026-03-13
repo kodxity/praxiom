@@ -8,7 +8,7 @@ const SECTIONS = [
     { id: 'gdpr',     label: 'GDPR' },
 ];
 
-const LAST_UPDATED = 'January 1, 2025';
+const LAST_UPDATED = 'March 2026';
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
     return (
@@ -120,7 +120,7 @@ export default function LegalPage() {
                         </Section>
 
                         <Section title="Data Retention">
-                            <Para>We retain your personal information for as long as your account is active or as needed to provide services. You may request deletion of your account and associated data at any time by contacting us.</Para>
+                            <Para>We retain your personal information for as long as your account is active or as needed to provide services. You may delete your account at any time directly from your profile settings. Deleting your account anonymizes your profile — your username, email, and bio are wiped and you are removed from any groups, but your contest history remains attributed to a deleted-user placeholder to preserve leaderboard integrity.</Para>
                         </Section>
 
                         <Section title="Security">
@@ -180,7 +180,8 @@ export default function LegalPage() {
                         </Section>
 
                         <Section title="Termination">
-                            <Para>We reserve the right to suspend or terminate accounts that violate these Terms or that we determine to be abusive or harmful, at our sole discretion.</Para>
+                            <Para>You may delete your own account at any time from your profile settings. Account deletion is permanent and immediate — your personal information will be anonymized and you will be signed out.</Para>
+                            <Para>We also reserve the right to suspend or terminate accounts that violate these Terms or that we determine to be abusive or harmful, at our sole discretion.</Para>
                         </Section>
 
                         <Section title="Changes to Terms">
@@ -244,7 +245,7 @@ export default function LegalPage() {
                             <BulletList items={[
                                 'Right of access: You may request a copy of the personal data we hold about you.',
                                 'Right to rectification: You may request correction of inaccurate or incomplete data.',
-                                'Right to erasure: You may request deletion of your personal data (&ldquo;right to be forgotten&rdquo;).',
+                                'Right to erasure: You may request deletion of your personal data (\u201cright to be forgotten\u201d). You can exercise this right directly from your account settings at any time.',
                                 'Right to restriction: You may request that we restrict processing of your data in certain circumstances.',
                                 'Right to data portability: You may request your data in a machine-readable format.',
                                 'Right to object: You may object to processing based on legitimate interests.',
@@ -265,7 +266,7 @@ export default function LegalPage() {
                         </Section>
 
                         <Section title="Exercising Your Rights">
-                            <Para>To exercise any of the rights above, please contact us through the platform. We will respond within 30 days. We may need to verify your identity before processing your request.</Para>
+                            <Para>For the right to erasure, you can delete your account directly from your profile settings — no need to contact us. For all other rights, please contact us through the platform. We will respond within 30 days. We may need to verify your identity before processing your request.</Para>
                         </Section>
                     </>
                 )}

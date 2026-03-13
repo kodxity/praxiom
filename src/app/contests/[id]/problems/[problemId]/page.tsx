@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth';
 import Link from 'next/link';
 import UpsolvePanel from './UpsolvePanel';
 import ActiveSubmitPanel from './ActiveSubmitPanel';
+import { ContestCountdown } from '@/components/ContestCountdown';
 
 function getPointsLabel(pts: number) {
     if (pts <= 80)  return { label: 'E', title: 'Easy',   cls: 'diff-e' };
@@ -359,7 +360,7 @@ export default async function ProblemViewPage(props: { params: Promise<{ id: str
                                 <div style={{ fontFamily: 'var(--ff-mono)', fontSize: '9px', letterSpacing: '0.1em', color: labelColor, textTransform: 'uppercase' }}>Points</div>
                             </div>
                             <div style={{ marginLeft: 'auto', fontFamily: 'var(--ff-mono)', fontSize: '11px', color: labelColor }}>
-                                {isActive ? 'Ends' : 'Ended'} {new Date(contest.endTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                <ContestCountdown endTime={contest.endTime} isActive={isActive} />
                             </div>
                         </div>
                     </div>

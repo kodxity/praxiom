@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import Link from 'next/link'
+import { formatDuration } from '@/lib/utils'
 
 // Theme configuration for dark-themed contest cards
 const DARK_THEMES: Record<string, {
@@ -156,9 +157,7 @@ function dateDiff(from: Date, to: Date) {
   return days
 }
 
-function durationMinutes(start: Date, end: Date) {
-  return Math.round((end.getTime() - start.getTime()) / 60000)
-}
+
 
 function shortDate(d: Date) {
   return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
@@ -167,7 +166,8 @@ function shortDate(d: Date) {
 export function ContestCard({ contest, active, past, isAdmin, animDelay = 0, isRegistered = false }: Props) {
   const participants = contest._count?.registrations ?? 0
   const problemCount = contest._count?.problems ?? 0
-  const duration = durationMinutes(new Date(contest.startTime), new Date(contest.endTime))
+  const durationMs = new Date(contest.endTime).getTime() - new Date(contest.startTime).getTime()
+  const duration = durationMs > 0 ? formatDuration(durationMs) : '-'
   const now = new Date()
   const daysUntil = dateDiff(now, new Date(contest.startTime))
   const themeSlug = contest.themeSlug ?? 'global'
@@ -223,7 +223,7 @@ export function ContestCard({ contest, active, past, isAdmin, animDelay = 0, isR
             {[
               { val: participants > 0 ? participants : '-', label: active ? 'Live' : 'Registered' },
               { val: problemCount > 0 ? problemCount : '-', label: 'Problems' },
-              { val: duration > 0 ? `${duration}m` : '-', label: active ? 'Remaining' : 'Duration' },
+              { val: duration, label: 'Contest Window' },
             ].map(({ val, label }) => (
               <div key={label} style={{ flex: 1, background: t.statsBg, border: `1px solid ${t.statsBorder}`, borderRadius: 'var(--r)', padding: '10px 8px', textAlign: 'center' }}>
                 <div style={{ fontFamily: 'var(--ff-display)', fontStyle: 'italic', fontSize: '20px', color: t.statsTextVal }}>{val}</div>
@@ -311,7 +311,7 @@ export function ContestCard({ contest, active, past, isAdmin, animDelay = 0, isR
           {[
             { val: participants > 0 ? participants : '-', label: active ? 'Live' : 'Registered' },
             { val: problemCount > 0 ? problemCount : '-', label: 'Problems' },
-            { val: duration > 0 ? `${duration}m` : '-', label: active ? 'Remaining' : 'Duration' },
+            { val: duration, label: 'Contest Window' },
           ].map(({ val, label }) => (
             <div key={label} style={{ flex: 1, background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.07)', borderRadius: 'var(--r)', padding: '10px 8px', textAlign: 'center' }}>
               <div style={{ fontFamily: 'var(--ff-display)', fontStyle: 'italic', fontSize: '20px', color: 'var(--ink)' }}>{val}</div>
