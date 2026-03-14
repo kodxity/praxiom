@@ -77,7 +77,7 @@ export function AddProblemForm({ contestId }: { contestId: string }) {
                     className="btn btn-ghost btn-sm"
                     style={{ alignSelf: 'flex-start' }}
                 >
-                    Edit this problem ->
+                    Edit this problem â†’
                 </Link>
             )}
         </form>

@@ -292,7 +292,7 @@ export default async function ContestPage(props: { params: Promise<{ id: string 
                                                     href={`/admin/contests/${contest.id}/problems/${p.id}/edit`}
                                                     style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', color: 'var(--sage)', textDecoration: 'none', background: 'rgba(107,148,120,0.10)', border: '1px solid rgba(107,148,120,0.25)', padding: '4px 10px', borderRadius: '8px', whiteSpace: 'nowrap' }}
                                                 >
-                                                    Edit ->
+                                                    Edit â†’
                                                 </Link>
                                             </div>
                                             <div style={{ fontFamily: 'var(--ff-mono)', fontSize: '12px', color: 'var(--ink4)', marginTop: '3px' }}>Answer: {p.correctAnswer} · {p.points} pts</div>
