@@ -36,7 +36,7 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
 
     const contest = await prisma.contest.findUnique({
         where: { id: contestId },
-        select: { contestType: true, startTime: true, endTime: true, status: true },
+        select: { contestType: true, startTime: true, endTime: true},
     });
     if (!contest) return new NextResponse("Contest not found", { status: 404 });
     if (contest.contestType === 'individual') {
