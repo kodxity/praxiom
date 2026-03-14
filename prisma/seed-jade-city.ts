@@ -98,7 +98,6 @@ async function main() {
                 'Featuring problems in algebra, combinatorics, and geometry.',
             startTime: new Date('2024-11-27T09:00:00Z'),
             endTime:   new Date('2024-11-27T11:30:00Z'),
-            status: 'ENDED',
             themeSlug: 'jade-city',
         },
     });

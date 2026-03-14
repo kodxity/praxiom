@@ -4,6 +4,18 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
 
+const contestSelect = {
+    id: true,
+    title: true,
+    description: true,
+    startTime: true,
+    endTime: true,
+    duration: true,
+    themeSlug: true,
+    accentColor: true,
+    contestType: true,
+} as const;
+
 const createContestSchema = z.object({
     title: z.string().min(1, 'Title is required').max(200, 'Title too long').trim(),
     description: z.string().max(5000, 'Description too long').optional(),
@@ -46,11 +58,11 @@ export async function POST(req: Request) {
             startTime: start,
             endTime: end,
             duration,
-            status: 'SCHEDULED',
             themeSlug: themeSlug || 'global',
             accentColor: accentColor || null,
             contestType,
-        }
+        },
+        select: contestSelect,
     });
 
     return NextResponse.json(contest);

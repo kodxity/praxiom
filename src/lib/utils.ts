@@ -67,3 +67,16 @@ export function timeAgo(date: Date | string): string {
     if (months < 12)  return `${months}mo ago`;
     return `${years}y ago`;
 }
+
+/**
+ * Get the status of a contest based on current time vs start/end times.
+ */
+export function getContestStatus(startTime: Date | string, endTime: Date | string): 'SCHEDULED' | 'ACTIVE' | 'ENDED' {
+    const now = new Date();
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+
+    if (now < start) return 'SCHEDULED';
+    if (now >= start && now <= end) return 'ACTIVE';
+    return 'ENDED';
+}

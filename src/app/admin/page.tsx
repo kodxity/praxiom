@@ -4,6 +4,7 @@ import { PendingApprovals } from './PendingApprovals';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+import { getContestStatus } from '@/lib/utils';
 
 export default async function AdminPage() {
     const session = await getServerSession(authOptions);
@@ -25,12 +26,12 @@ export default async function AdminPage() {
         }),
         prisma.contest.findMany({
             orderBy: { startTime: 'desc' },
-            select: { id: true, title: true, status: true, themeSlug: true, startTime: true },
+            select: { id: true, title: true, themeSlug: true, startTime: true, endTime: true },
         }),
     ]);
 
-    const liveCount = contests.filter((c: any) => c.status === 'ACTIVE').length;
-    const upcomingCount = contests.filter((c: any) => c.status === 'SCHEDULED').length;
+    const liveCount = contests.filter((c: any) => getContestStatus(c.startTime, c.endTime) === 'ACTIVE').length;
+    const upcomingCount = contests.filter((c: any) => getContestStatus(c.startTime, c.endTime) === 'SCHEDULED').length;
 
     return (
         <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '48px 1.75rem 80px' }}>
@@ -147,9 +148,10 @@ export default async function AdminPage() {
                             <tbody>
                                 {contests.map((c: any) => {
                                     const start = new Date(c.startTime);
-                                    const statusLabel = c.status === 'ACTIVE' ? '● Live' : c.status === 'SCHEDULED' ? 'Upcoming' : 'Ended';
-                                    const statusColor = c.status === 'ACTIVE' ? 'rgba(60,150,80,0.95)' : c.status === 'SCHEDULED' ? 'rgba(80,120,180,0.9)' : 'var(--ink5)';
-                                    const statusBg = c.status === 'ACTIVE' ? 'rgba(80,170,100,0.1)' : c.status === 'SCHEDULED' ? 'rgba(100,140,200,0.1)' : 'rgba(0,0,0,0.04)';
+                                    const status = getContestStatus(c.startTime, c.endTime);
+                                    const statusLabel = status === 'ACTIVE' ? '● Live' : status === 'SCHEDULED' ? 'Upcoming' : 'Ended';
+                                    const statusColor = status === 'ACTIVE' ? 'rgba(60,150,80,0.95)' : status === 'SCHEDULED' ? 'rgba(80,120,180,0.9)' : 'var(--ink5)';
+                                    const statusBg = status === 'ACTIVE' ? 'rgba(80,170,100,0.1)' : status === 'SCHEDULED' ? 'rgba(100,140,200,0.1)' : 'rgba(0,0,0,0.04)';
                                     return (
                                         <tr key={c.id} style={{ borderBottom: '1px solid var(--border)' }}>
                                             <td style={{ padding: '13px 14px', color: 'var(--ink)', fontWeight: 500 }}>{c.title}</td>

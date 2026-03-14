@@ -21,6 +21,11 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
 
     if (!contest) return new NextResponse("Contest not found", { status: 404 });
 
+    const now = new Date();
+    if (now <= contest.endTime) {
+        return NextResponse.json({ message: "Contest must be ended before calculating ratings." }, { status: 400 });
+    }
+
     const existingHistory = await prisma.ratingHistory.findFirst({ where: { contestId } });
     if (existingHistory) {
         return NextResponse.json({ message: "Ratings already calculated" }, { status: 400 });
@@ -126,11 +131,6 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
                 data: { rating: newRating }
             });
         }
-
-        await tx.contest.update({
-            where: { id: contestId },
-            data: { status: 'ENDED' }
-        });
     });
 
     return NextResponse.json({ success: true, count: participants.length });

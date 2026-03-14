@@ -4,6 +4,18 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
 
+const contestBaseSelect = {
+    id: true,
+    title: true,
+    description: true,
+    startTime: true,
+    endTime: true,
+    duration: true,
+    themeSlug: true,
+    accentColor: true,
+    contestType: true,
+} as const;
+
 const updateContestSchema = z.object({
     title: z.string().min(1, 'Title is required').max(200, 'Title too long').trim().optional(),
     description: z.string().max(5000, 'Description too long').optional(),
@@ -12,7 +24,6 @@ const updateContestSchema = z.object({
     duration: z.coerce.number().min(1).optional(),
     themeSlug: z.string().regex(/^[a-z0-9-]*$/, 'Invalid theme slug').max(50).optional(),
     accentColor: z.string().regex(/^(#[0-9A-Fa-f]{6})?$/, 'Invalid hex color').nullable().optional(),
-    status: z.enum(['SCHEDULED', 'ACTIVE', 'ENDED']).optional(),
     contestType: z.enum(['individual', 'team', 'relay']).optional(),
 });
 
@@ -23,7 +34,8 @@ export async function GET(_req: Request, props: { params: Promise<{ id: string }
     try {
         const contest = await prisma.contest.findUnique({
             where: { id: params.id },
-            include: {
+            select: {
+                ...contestBaseSelect,
                 problems: {
                     orderBy: { id: 'asc' },
                     // Never expose correctAnswer to non-admin clients
@@ -60,7 +72,7 @@ export async function PATCH(req: Request, props: { params: Promise<{ id: string 
     if (!result.success) {
         return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 });
     }
-    const { title, description, startTime, endTime, duration, themeSlug, accentColor, status, contestType } = result.data;
+    const { title, description, startTime, endTime, duration, themeSlug, accentColor, contestType } = result.data;
 
     // Validate dates if provided
     let start: Date | undefined, end: Date | undefined;
@@ -81,9 +93,9 @@ export async function PATCH(req: Request, props: { params: Promise<{ id: string 
                 ...(duration !== undefined && { duration }),
                 ...(themeSlug !== undefined && { themeSlug }),
                 ...(accentColor !== undefined && { accentColor: accentColor || null }),
-                ...(status !== undefined && { status }),
                 ...(contestType !== undefined && { contestType }),
             },
+            select: contestBaseSelect,
         });
         return NextResponse.json(contest);
     } catch (e) {

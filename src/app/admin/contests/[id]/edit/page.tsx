@@ -42,7 +42,6 @@ export default function EditContestPage() {
     const [duration, setDuration] = useState(120);
     const [themeSlug, setThemeSlug] = useState('global');
     const [accentColor, setAccentColor] = useState('');
-    const [status, setStatus] = useState('SCHEDULED');
     const [contestType, setContestType] = useState<'individual' | 'team' | 'relay'>('individual');
     const [problems, setProblems] = useState<any[]>([]);
     const [removingProblem, setRemovingProblem] = useState<string | null>(null);
@@ -63,7 +62,6 @@ export default function EditContestPage() {
                 setDuration(data.duration ?? 120);
                 setThemeSlug(data.themeSlug ?? 'global');
                 setAccentColor(data.accentColor ?? '');
-                setStatus(data.status ?? 'SCHEDULED');
                 setContestType(data.contestType ?? 'individual');
                 setProblems(data.problems ?? []);
                 setLoading(false);
@@ -79,7 +77,7 @@ export default function EditContestPage() {
         const res = await fetch(`/api/contests/${contestId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title, description, startTime, endTime, duration, themeSlug, accentColor: accentColor || null, status, contestType }),
+            body: JSON.stringify({ title, description, startTime, endTime, duration, themeSlug, accentColor: accentColor || null, contestType }),
         });
         setSaving(false);
         if (res.ok) {
@@ -171,18 +169,6 @@ export default function EditContestPage() {
                             <div>
                                 <label style={LABEL}>Duration (min)</label>
                                 <input type="number" min="1" value={duration} onChange={e => setDuration(parseInt(e.target.value) || 120)} required className="input" style={{ width: '100%' }} />
-                            </div>
-                        </div>
-
-                        {/* Status */}
-                        <div>
-                            <label style={LABEL}>Status</label>
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                                {['SCHEDULED', 'ACTIVE', 'ENDED'].map(s => (
-                                    <button key={s} type="button" onClick={() => setStatus(s)} style={{ fontFamily: MONO, fontSize: '10px', letterSpacing: '0.1em', padding: '6px 14px', borderRadius: '6px', border: 'none', cursor: 'pointer', background: status === s ? 'var(--sage-bg)' : 'rgba(0,0,0,0.04)', color: status === s ? 'var(--sage)' : 'var(--ink4)', fontWeight: status === s ? 700 : 400 }}>
-                                        {s}
-                                    </button>
-                                ))}
                             </div>
                         </div>
 
@@ -333,4 +319,3 @@ export default function EditContestPage() {
         </div>
     );
 }
-

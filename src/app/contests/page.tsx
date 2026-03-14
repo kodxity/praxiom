@@ -42,7 +42,7 @@ export default async function ContestsPage() {
             prisma.contest.findMany({
                 where: { endTime: { lt: now } },
                 orderBy: { endTime: 'desc' },
-                take: 10,
+                // take: 10, // 10 most recent past contests
                 include: { _count: { select: { registrations: true, problems: true } } },
             }),
         ])

@@ -118,7 +118,6 @@ model Contest {
   description   String?
   startTime     DateTime
   endTime       DateTime
-  status        String                   @default("SCHEDULED")
   themeSlug     String                   @default("global")
   accentColor   String?
   contestType   String                   @default("individual")
