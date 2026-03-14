@@ -57,7 +57,7 @@ export async function POST(req: Request) {
     let teamId: string | null = null;
     let personalStartTime: Date | null = null;
 
-    if (!session.user.isAdmin && contest.contestType !== 'individual') {
+    if (!session.user.isAdmin && !isUpsolve && contest.contestType !== 'individual') {
         // Must be a member of a team for this contest
         const membership = await prisma.contestTeamMember.findFirst({
             where: { userId: session.user.id, team: { contestId } },
@@ -121,7 +121,7 @@ export async function POST(req: Request) {
     }
 
     // During an active individual contest, only registered users may submit
-    if (!session.user.isAdmin && contest.contestType === 'individual') {
+    if (!session.user.isAdmin && !isUpsolve && contest.contestType === 'individual') {
         const reg = await prisma.registration.findUnique({
             where: { userId_contestId: { userId: session.user.id, contestId } },
         });
@@ -130,14 +130,12 @@ export async function POST(req: Request) {
         }
         personalStartTime = reg.startTime;
 
-        if (!isUpsolve) {
-            if (!personalStartTime) {
-                return new NextResponse('You must start the contest before submitting.', { status: 403 });
-            }
-            const personalEndTime = new Date(personalStartTime.getTime() + contest.duration * 60000);
-            if (now > personalEndTime) {
-                isUpsolve = true;
-            }
+        if (!personalStartTime) {
+            return new NextResponse('You must start the contest before submitting.', { status: 403 });
+        }
+        const personalEndTime = new Date(personalStartTime.getTime() + contest.duration * 60000);
+        if (now > personalEndTime) {
+            isUpsolve = true;
         }
     }
 
