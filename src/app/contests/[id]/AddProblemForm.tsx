@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 
@@ -6,11 +7,13 @@ export function AddProblemForm({ contestId }: { contestId: string }) {
     const router = useRouter();
     const formRef = useRef<HTMLFormElement>(null);
     const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+    const [createdProblemId, setCreatedProblemId] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
 
     async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         setStatus(null);
+        setCreatedProblemId(null);
         setSubmitting(true);
         const form = new FormData(e.currentTarget);
         const data = Object.fromEntries(form);
@@ -23,9 +26,11 @@ export function AddProblemForm({ contestId }: { contestId: string }) {
             });
 
             if (res.ok) {
+                const created = await res.json().catch(() => null) as { id?: string } | null;
                 formRef.current?.reset();
                 router.refresh();
                 setStatus({ type: 'success', message: 'Problem added!' });
+                if (created?.id) setCreatedProblemId(created.id);
             } else {
                 let message = res.statusText;
                 try {
@@ -65,6 +70,15 @@ export function AddProblemForm({ contestId }: { contestId: string }) {
                 }}>
                     {status.message}
                 </div>
+            )}
+            {createdProblemId && (
+                <Link
+                    href={`/admin/contests/${contestId}/problems/${createdProblemId}/edit`}
+                    className="btn btn-ghost btn-sm"
+                    style={{ alignSelf: 'flex-start' }}
+                >
+                    Edit this problem ->
+                </Link>
             )}
         </form>
     );
