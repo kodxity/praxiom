@@ -42,46 +42,62 @@ export function AdminBadgeManager({
     // Since this is wrapping the statically rendered ones, we actually want to render the badges OURSELVES to include X icons.
     return (
         <div style={{ position: 'relative' }}>
-            {/* Render the badges with X icons */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginTop: '8px' }}>
-                {school && (
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontFamily: 'var(--ff-mono)', fontSize: '10px', padding: '2px 4px 2px 9px', borderRadius: '99px', background: 'rgba(88,120,160,0.1)', border: '1px solid rgba(88,120,160,0.2)', color: 'var(--slate, #5878a0)', letterSpacing: '0.04em' }}>
-                        <span>{school.shortName} · {school.district}</span>
-                        <button onClick={() => handleAction('removeSchool')} title="Remove School" style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', padding: '2px', color: 'inherit', opacity: 0.6 }}>
-                            <X size={10} />
-                        </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
+                {/* School */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', color: 'var(--ink5)' }}>
+                        school:
                     </span>
-                )}
-                
-                {[...taughtGroups, ...memberGroups].slice(0, 10).map((g: any, idx: number) => {
-                    const isTaught = taughtGroups.some((tg: any) => tg.id === g.id);
-                    return (
-                        <span key={g.id + idx} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontFamily: 'var(--ff-mono)', fontSize: '10px', padding: '2px 4px 2px 9px', borderRadius: '99px', background: 'rgba(107,148,120,0.1)', border: '1px solid rgba(107,148,120,0.2)', color: 'var(--sage)', letterSpacing: '0.04em', textDecoration: 'none' }}>
-                            <Link href={`/groups/${g.id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
-                                {isTaught ? '📚 ' : ''}{g.name}
-                            </Link>
-                            {!isTaught && (
-                                <button onClick={() => handleAction('removeGroup', g.id)} title="Remove Group" style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', padding: '2px', color: 'inherit', opacity: 0.6 }}>
-                                    <X size={10} />
-                                </button>
-                            )}
+                    {school && (
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontFamily: 'var(--ff-mono)', fontSize: '10px', padding: '2px 4px 2px 9px', borderRadius: '99px', background: 'rgba(88,120,160,0.1)', border: '1px solid rgba(88,120,160,0.2)', color: 'var(--slate, #5878a0)', letterSpacing: '0.04em' }}>
+                            <span>{school.shortName} · {school.district}</span>
+                            <button onClick={() => handleAction('removeSchool')} title="Remove School" style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', padding: '2px', color: 'inherit', opacity: 0.6 }}>
+                                <X size={10} />
+                            </button>
                         </span>
-                    );
-                })}
-
-                <div style={{ position: 'relative', display: 'flex', gap: '4px' }}>
-                    <button onClick={() => setAddingBadge(addingBadge === 'school' ? null : 'school')} className="btn btn-outline btn-xs" style={{ padding: '0 6px', fontSize: '10px', height: '22px', borderRadius: '99px', borderColor: 'rgba(0,0,0,0.1)' }}>
-                        <Plus size={10} style={{ marginRight: '2px' }} /> School
-                    </button>
-                    <button onClick={() => setAddingBadge(addingBadge === 'group' ? null : 'group')} className="btn btn-outline btn-xs" style={{ padding: '0 6px', fontSize: '10px', height: '22px', borderRadius: '99px', borderColor: 'rgba(0,0,0,0.1)' }}>
-                        <Plus size={10} style={{ marginRight: '2px' }} /> Group
-                    </button>
-
-                    {addingBadge && (
-                        <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '4px', zIndex: 100, minWidth: '240px' }}>
-                            <SearchDropdown type={addingBadge} onSelect={(id) => handleAction(addingBadge === 'school' ? 'setSchool' : 'addGroup', id)} onClose={() => setAddingBadge(null)} />
-                        </div>
                     )}
+                    <div style={{ position: 'relative', display: 'flex' }}>
+                        <button onClick={() => setAddingBadge(addingBadge === 'school' ? null : 'school')} className="btn btn-outline btn-xs" style={{ padding: '0 6px', fontSize: '10px', height: '22px', borderRadius: '99px', borderColor: 'rgba(0,0,0,0.1)' }}>
+                            <Plus size={10} style={{ marginRight: '2px' }} /> School
+                        </button>
+                        {addingBadge === 'school' && (
+                            <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '4px', zIndex: 100, minWidth: '240px' }}>
+                                <SearchDropdown type="school" onSelect={(id) => handleAction('setSchool', id)} onClose={() => setAddingBadge(null)} />
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Groups */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', color: 'var(--ink5)' }}>
+                        groups:
+                    </span>
+                    {[...taughtGroups, ...memberGroups].slice(0, 10).map((g: any, idx: number) => {
+                        const isTaught = taughtGroups.some((tg: any) => tg.id === g.id);
+                        return (
+                            <span key={g.id + idx} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontFamily: 'var(--ff-mono)', fontSize: '10px', padding: '2px 4px 2px 9px', borderRadius: '99px', background: 'rgba(107,148,120,0.1)', border: '1px solid rgba(107,148,120,0.2)', color: 'var(--sage)', letterSpacing: '0.04em', textDecoration: 'none' }}>
+                                <Link href={`/groups/${g.id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                                    {isTaught ? '📚 ' : ''}{g.name}
+                                </Link>
+                                {!isTaught && (
+                                    <button onClick={() => handleAction('removeGroup', g.id)} title="Remove Group" style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', padding: '2px', color: 'inherit', opacity: 0.6 }}>
+                                        <X size={10} />
+                                    </button>
+                                )}
+                            </span>
+                        );
+                    })}
+                    <div style={{ position: 'relative', display: 'flex' }}>
+                        <button onClick={() => setAddingBadge(addingBadge === 'group' ? null : 'group')} className="btn btn-outline btn-xs" style={{ padding: '0 6px', fontSize: '10px', height: '22px', borderRadius: '99px', borderColor: 'rgba(0,0,0,0.1)' }}>
+                            <Plus size={10} style={{ marginRight: '2px' }} /> Group
+                        </button>
+                        {addingBadge === 'group' && (
+                            <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '4px', zIndex: 100, minWidth: '240px' }}>
+                                <SearchDropdown type="group" onSelect={(id) => handleAction('addGroup', id)} onClose={() => setAddingBadge(null)} />
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

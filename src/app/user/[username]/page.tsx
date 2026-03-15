@@ -115,7 +115,11 @@ export default async function UserProfile(props: { params: Promise<{ username: s
 
     const maxRating = Math.max(user.rating ?? 1200, 1200, ...user.ratingHistory.map((r: any) => r.newRating));
     const rank = getRankLabel(user.rating);
+    const role = getRoleBadge(user);
     const initials = user.username[0].toUpperCase();
+    const taughtGroups = user.taughtGroups ?? [];
+    const memberGroups = (user.groupMemberships ?? []).map((m: any) => m.group);
+    const allGroups = [...taughtGroups, ...memberGroups];
     // Heatmap: 16 weeks × 7 days = 112 cells, newest day = today
     const today = new Date(); today.setHours(23, 59, 59, 999);
     const DAYS = 112;
@@ -149,43 +153,56 @@ export default async function UserProfile(props: { params: Promise<{ username: s
                     <div style={{ flex: 1 }}>
                         <div className="profile-name">{user.username}</div>
                         <div className="profile-handle">@{user.username} · joined {new Date(user.createdAt ?? Date.now()).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginTop: '8px' }}>
-                            <span className={rank.cls}>⬡ {rank.label}</span>
-                            {(() => {
-                                const role = getRoleBadge(user);
-                                return <span className={role.cls} style={{ opacity: 0.85 }}>{role.label}</span>;
-                            })()}
-                            <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '13px', fontWeight: 600, color: getRatingColor(user.rating) }}>{user.rating}</span>
+
+                        <div style={{ marginTop: '8px', fontFamily: 'var(--ff-mono)', fontSize: '16px', fontWeight: 700, color: getRatingColor(user.rating) }}>
+                            {user.rating}
                         </div>
-                        {/* Org badges */}
-                        {isAdmin ? (
-                            <AdminBadgeManager 
-                                userId={user.id} 
-                                school={user.school} 
-                                memberGroups={(user.groupMemberships ?? []).map((m: any) => m.group)} 
-                                taughtGroups={user.taughtGroups ?? []}
-                            />
-                        ) : (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginTop: '8px' }}>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '15px', fontWeight: 700, color: 'var(--ink5)' }}>
+                                    Badges:
+                                </span>
+                                <span className={rank.cls} style={{ opacity: 0.85, fontSize: '10px', padding: '2px 9px', borderRadius: '99px'}}>
+                                    ⬡ {rank.label}
+                                </span>
+                                <span className={role.cls} style={{ opacity: 0.85, fontSize: '10px', padding: '2px 9px', borderRadius: '99px'}}>
+                                    {role.label}
+                                </span>
                                 {user.school && (
-                                    <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', padding: '2px 9px', borderRadius: '99px', background: 'rgba(88,120,160,0.1)', border: '1px solid rgba(88,120,160,0.2)', color: 'var(--slate, #5878a0)', letterSpacing: '0.04em' }}>
+                                    <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', padding: '2px 9px', borderRadius: '99px', background: 'rgba(88,120,160,0.1)', border: '1px solid rgba(88,120,160,0.2)', color: 'var(--slate, #5878a0)', letterSpacing: '0.04em' , textDecoration: 'none' }}>
                                         {user.school.shortName} · {user.school.district}
                                     </span>
                                 )}
-                                {(() => {
-                                    const memberGroups = (user.groupMemberships ?? []).map((m: any) => m.group);
-                                    const taughtGroups = user.taughtGroups ?? [];
-                                    const allGroups = [...taughtGroups, ...memberGroups];
-                                    if (allGroups.length === 0) return null;
-                                    return allGroups.slice(0, 3).map((g: any, idx: number) => (
+                            </div>
+
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '15px', fontWeight: 700, color: 'var(--ink5)' }}>
+                                    Groups:
+                                </span>
+                                {allGroups.length === 0 ? (
+                                    <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', color: 'var(--ink5)' }}>none</span>
+                                ) : (
+                                    allGroups.map((g: any, idx: number) => (
                                         <a key={g.id + idx} href={`/groups/${g.id}`} style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', padding: '2px 9px', borderRadius: '99px', background: 'rgba(107,148,120,0.1)', border: '1px solid rgba(107,148,120,0.2)', color: 'var(--sage)', letterSpacing: '0.04em', textDecoration: 'none' }}>
                                             {taughtGroups.some((tg: any) => tg.id === g.id) ? '📚 ' : ''}
                                             {g.name}
                                         </a>
-                                    ));
-                                })()}
+                                    ))
+                                )}
                             </div>
-                        )}
+
+                            {isAdmin && (
+                                <div style={{ marginTop: '4px' }}>
+                                    <AdminBadgeManager
+                                        userId={user.id}
+                                        school={user.school}
+                                        memberGroups={memberGroups}
+                                        taughtGroups={taughtGroups}
+                                    />
+                                </div>
+                            )}
+                        </div>
                     </div>
                     {(isOwnProfile || isAdmin) && (
                         <div style={{ flexShrink: 0 }}>
@@ -462,5 +479,3 @@ function getRatingColor(rating: number): string {
     if (rating >= 1400) return 'var(--slate)';
     return 'var(--ink3)';
 }
-
-
