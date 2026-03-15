@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/db';
 import Link from 'next/link';
 import { PendingApprovals } from './PendingApprovals';
+import { AdminBadgesSection } from './AdminBadgesSection';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
@@ -12,7 +13,7 @@ export default async function AdminPage() {
         redirect('/');
     }
 
-    const [pendingUsers, contests] = await Promise.all([
+    const [pendingUsers, contests, badges] = await Promise.all([
         prisma.user.findMany({
             where: {
                 isApproved: false,
@@ -27,6 +28,10 @@ export default async function AdminPage() {
         prisma.contest.findMany({
             orderBy: { startTime: 'desc' },
             select: { id: true, title: true, themeSlug: true, startTime: true, endTime: true },
+        }),
+        prisma.badge.findMany({
+            orderBy: { createdAt: 'desc' },
+            include: { _count: { select: { users: true } } },
         }),
     ]);
 
@@ -121,6 +126,11 @@ export default async function AdminPage() {
             {/* ── Pending Approvals ── */}
             <div className="g" style={{ padding: '28px 32px', marginBottom: '24px' }}>
                 <PendingApprovals users={pendingUsers} />
+            </div>
+
+            {/* ── Manage Badges ── */}
+            <div className="g" style={{ padding: '28px 32px', marginBottom: '24px' }}>
+                <AdminBadgesSection initialBadges={JSON.parse(JSON.stringify(badges))} />
             </div>
 
             {/* ── Manage Contests ── */}

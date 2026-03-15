@@ -52,6 +52,7 @@ export default async function UserProfile(props: { params: Promise<{ username: s
                 school: { select: { name: true, shortName: true, district: true } },
                 groupMemberships: { select: { group: { select: { id: true, name: true } } } },
                 taughtGroups: { select: { id: true, name: true } },
+                badges: { include: { badge: true } },
             },
         });
     } catch {
@@ -120,6 +121,15 @@ export default async function UserProfile(props: { params: Promise<{ username: s
     const taughtGroups = user.taughtGroups ?? [];
     const memberGroups = (user.groupMemberships ?? []).map((m: any) => m.group);
     const allGroups = [...taughtGroups, ...memberGroups];
+    const userBadges = (user.badges ?? []).map((ub: any) => ub.badge);
+
+    // Fetch all badges for admin assignment
+    let allBadges: any[] = [];
+    if (isAdmin) {
+        try {
+            allBadges = await prisma.badge.findMany({ orderBy: { name: 'asc' } });
+        } catch { /* ignore */ }
+    }
     // Heatmap: 16 weeks × 7 days = 112 cells, newest day = today
     const today = new Date(); today.setHours(23, 59, 59, 999);
     const DAYS = 112;
@@ -160,31 +170,53 @@ export default async function UserProfile(props: { params: Promise<{ username: s
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                                <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '15px', fontWeight: 700, color: 'var(--ink5)' }}>
+                                <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '15px', fontWeight: 300, color: 'var(--ink3)'}}>
                                     Badges:
                                 </span>
-                                <span className={rank.cls} style={{ opacity: 0.85, fontSize: '10px', padding: '2px 9px', borderRadius: '99px'}}>
+                                <span className={rank.cls} style={{ opacity: 0.85, fontSize: '9px', padding: '2px 9px', borderRadius: '99px'}}>
                                     ⬡ {rank.label}
                                 </span>
-                                <span className={role.cls} style={{ opacity: 0.85, fontSize: '10px', padding: '2px 9px', borderRadius: '99px'}}>
+                                <span className={role.cls} style={{ opacity: 0.85, fontSize: '9px', padding: '2px 9px', borderRadius: '99px'}}>
                                     {role.label}
                                 </span>
                                 {user.school && (
-                                    <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', padding: '2px 9px', borderRadius: '99px', background: 'rgba(88,120,160,0.1)', border: '1px solid rgba(88,120,160,0.2)', color: 'var(--slate, #5878a0)', letterSpacing: '0.04em' , textDecoration: 'none' }}>
+                                    <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '9px', padding: '2px 9px', borderRadius: '99px', background: 'rgba(88,120,160,0.1)', border: '1px solid rgba(88,120,160,0.2)', color: 'var(--slate, #5878a0)', letterSpacing: '0.04em' , textDecoration: 'none' }}>
                                         {user.school.shortName} · {user.school.district}
                                     </span>
                                 )}
+                                {userBadges.map((b: any) => (
+                                    <span
+                                        key={b.id}
+                                        style={{
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '4px',
+                                            fontFamily: 'var(--ff-mono)',
+                                            fontSize: '9px',
+                                            letterSpacing: '0.06em',
+                                            padding: '2px 9px',
+                                            borderRadius: '99px',
+                                            background: b.textureUrl || 'rgba(107,148,120,0.12)',
+                                            color: b.textureUrl ? 'rgba(255,255,255,0.92)' : 'var(--sage)',
+                                            border: b.textureUrl ? '1px solid rgba(255,255,255,0.2)' : '1px solid var(--sage-border)',
+                                            textShadow: b.textureUrl ? '0 1px 2px rgba(0,0,0,0.3)' : 'none',
+                                            fontWeight: 500,
+                                        }}
+                                    >
+                                        ✦ {b.name}
+                                    </span>
+                                ))}
                             </div>
 
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                                <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '15px', fontWeight: 700, color: 'var(--ink5)' }}>
+                                <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '15px', fontWeight: 300, color: 'var(--ink3)'}}>
                                     Groups:
                                 </span>
                                 {allGroups.length === 0 ? (
-                                    <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', color: 'var(--ink5)' }}>none</span>
+                                    <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '9px', color: 'var(--ink5)' }}>none</span>
                                 ) : (
                                     allGroups.map((g: any, idx: number) => (
-                                        <a key={g.id + idx} href={`/groups/${g.id}`} style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', padding: '2px 9px', borderRadius: '99px', background: 'rgba(107,148,120,0.1)', border: '1px solid rgba(107,148,120,0.2)', color: 'var(--sage)', letterSpacing: '0.04em', textDecoration: 'none' }}>
+                                        <a key={g.id + idx} href={`/groups/${g.id}`} style={{ fontFamily: 'var(--ff-mono)', fontSize: '9px', padding: '2px 9px', borderRadius: '99px', background: 'rgba(107,148,120,0.1)', border: '1px solid rgba(107,148,120,0.2)', color: 'var(--sage)', letterSpacing: '0.04em', textDecoration: 'none' }}>
                                             {taughtGroups.some((tg: any) => tg.id === g.id) ? '📚 ' : ''}
                                             {g.name}
                                         </a>
@@ -194,11 +226,13 @@ export default async function UserProfile(props: { params: Promise<{ username: s
 
                             {isAdmin && (
                                 <div style={{ marginTop: '4px' }}>
-                                    <AdminBadgeManager
+                                <AdminBadgeManager
                                         userId={user.id}
                                         school={user.school}
                                         memberGroups={memberGroups}
                                         taughtGroups={taughtGroups}
+                                        userBadges={userBadges}
+                                        allBadges={allBadges}
                                     />
                                 </div>
                             )}

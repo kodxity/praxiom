@@ -66,6 +66,25 @@ model User {
   school               School?                  @relation(fields: [schoolId], references: [id])
   votes                Vote[]
   passwordResetTokens  PasswordResetToken[]
+  badges               UserBadge[]
+}
+
+model Badge {
+  id         String      @id @default(cuid())
+  name       String      @unique
+  textureUrl String?
+  createdAt  DateTime    @default(now())
+  users      UserBadge[]
+}
+
+model UserBadge {
+  userId    String
+  badgeId   String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge     Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@id([userId, badgeId])
 }
 
 model GroupMember {
