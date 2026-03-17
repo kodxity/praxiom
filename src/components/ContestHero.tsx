@@ -313,15 +313,6 @@ export function ContestHero({
                 {isLoggedIn && (isRegistered || isVirtualParticipant) && hasStarted && personalEndTime && personalMsLeft <= 0 && (
                   <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '11px', color: theme.textMuted, letterSpacing: '0.05em' }}>Your window has ended</span>
                 )}
-                <Link href={`/contests/${contestId}/submissions`} style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '6px',
-                  padding: '10px 20px', borderRadius: '10px', textDecoration: 'none',
-                  fontFamily: 'var(--ff-ui)', fontSize: '14px', fontWeight: 400,
-                  background: 'rgba(255,255,255,0.06)', border: `1px solid ${theme.surfaceBorder}`,
-                  color: theme.textSecondary, transition: 'all 0.15s',
-                }}>
-                  Submissions
-                </Link>
                 {isAdmin && (
                   <Link href={`/admin/contests/${contestId}/edit`} style={{
                     display: 'inline-flex', alignItems: 'center', gap: '6px',

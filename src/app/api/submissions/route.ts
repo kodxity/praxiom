@@ -202,13 +202,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ id: existingContestSolve.id, isCorrect: true, isUpsolve: false, isVirtual: existingContestSolve.isVirtual, alreadySolved: true });
         }
     } else {
-        // Upsolving: allow even if solved during contest, but block duplicate upsolves
-        const existingUpsolveSolve = await prisma.submission.findFirst({
-            where: { userId: session.user.id, problemId, isCorrect: true, isUpsolve: true },
-        });
-        if (existingUpsolveSolve) {
-            return NextResponse.json({ id: existingUpsolveSolve.id, isCorrect: true, isUpsolve: true, alreadySolved: true });
-        }
+        // Upsolving: allow unlimited attempts (even after a correct upsolve)
     }
 
     const isCorrect = problem.correctAnswer.trim().toLowerCase() === answer.trim().toLowerCase();

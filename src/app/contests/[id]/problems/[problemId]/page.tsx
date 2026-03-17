@@ -133,8 +133,13 @@ export default async function ProblemViewPage(props: { params: Promise<{ id: str
     const userSolved = solvedLive || solvedVirtual || solvedUpsolve;
     const nonLiveSolved = solvedVirtual || solvedUpsolve;
     // Attempts split by context
-    const activeAttempts = submissions.filter((s: any) => !s.isUpsolve).length;
+    const curRegId = (contest as any).currentRegId;
+    const activeSubmissions = isVirtual && curRegId
+        ? submissions.filter((s: any) => s.registrationId === curRegId)
+        : submissions.filter((s: any) => !s.isUpsolve);
+    const activeAttempts = activeSubmissions.length;
     const upsolveAttempts = submissions.filter((s: any) => s.isUpsolve).length;
+    const activeSolved = activeSubmissions.some((s: any) => s.isCorrect);
 
     // Total attempts (across all users)
     const totalAttempts = problem._count.submissions;
@@ -315,7 +320,7 @@ export default async function ProblemViewPage(props: { params: Promise<{ id: str
                     <ActiveSubmitPanel
                         contestId={params.id}
                         problemId={params.problemId}
-                        initialSolved={userSolved}
+                        initialSolved={activeSolved}
                         initialAttempts={activeAttempts}
                         labelColor={labelColor}
                         xpPoints={problem.points}
@@ -347,7 +352,7 @@ export default async function ProblemViewPage(props: { params: Promise<{ id: str
                 )}
 
                 {/* Upsolve / Answer panel (past contests only) */}
-                {isPast && session && (
+                {isPast && session && !isVirtual && (
                     <UpsolvePanel
                         contestId={params.id}
                         problemId={params.problemId}
