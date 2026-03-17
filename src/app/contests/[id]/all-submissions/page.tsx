@@ -143,7 +143,7 @@ export default async function AllSubmissionsPage(props: { params: Promise<{ id: 
                         <tbody>
                             {allSubs.map((sub: any, i: number) => {
                                 const label = problemLabels.get(sub.problemId) ?? '?';
-                                const canSeeAnswer = session?.user?.isAdmin || viewerSolvedIds.has(sub.problemId);
+                                const canSeeAnswer = session?.user?.isAdmin || sub.user.id === session?.user?.id;
                                 return (
                                     <tr key={sub.id} style={{ animation: `fade-in 0.3s ${i * 0.015}s both` }}>
                                         <td style={td('left')}>
@@ -180,7 +180,7 @@ export default async function AllSubmissionsPage(props: { params: Promise<{ id: 
                                                 </span>
                                             ) : (
                                                 <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '11px', color: 'var(--ink5)' }}>
-                                                    — solve to reveal
+                                                    —
                                                 </span>
                                             )}
                                         </td>

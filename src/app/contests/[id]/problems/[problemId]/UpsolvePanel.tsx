@@ -107,60 +107,20 @@ export default function UpsolvePanel({
         }
     }
 
-    // Solved during live contest → show answer (locked)
-    if (solvedDuringContest) {
-        return (
-            <div className="g answer-panel" style={{ padding: '20px 24px' }}>
-                <p style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', letterSpacing: '0.14em', color: labelColor, textTransform: 'uppercase', marginBottom: '14px' }}>
-                    Answer
-                    <span className="answer-type-indicator" style={{ marginLeft: '8px' }}>
-                        Solved
-                    </span>
-                </p>
-
-                <div style={{
-                    display: 'inline-flex', alignItems: 'center', gap: '6px',
-                    padding: '4px 10px', borderRadius: '99px', marginBottom: '14px',
-                    background: 'var(--sage-bg)',
-                    border: '1px solid var(--sage-border)',
-                    fontFamily: 'var(--ff-mono)', fontSize: '10px',
-                    color: 'var(--sage)',
-                }}>
-                    ✓ Solved{attempts > 0 ? ` in ${attempts} attempt${attempts !== 1 ? 's' : ''}` : ''}
-                </div>
-
-                <div style={{
-                    padding: '16px 18px', borderRadius: 'var(--r-lg)',
-                    background: 'var(--sage-bg)',
-                    border: '1px solid var(--sage-border)',
-                    fontFamily: 'var(--ff-mono)', fontSize: '20px', fontWeight: 400,
-                    color: 'var(--sage)',
-                    textAlign: 'center', letterSpacing: '0.08em',
-                }}>
-                    {correctAnswer}
-                </div>
-
-                <p style={{ marginTop: '8px', textAlign: 'center', fontFamily: 'var(--ff-mono)', fontSize: '10px', color: labelColor }}>
-                    This was the correct answer.
-                </p>
-            </div>
-        );
-    }
-
     // Upsolve form (always available)
     return (
         <div className="g answer-panel" style={{ padding: '20px 24px' }}>
             <p style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', letterSpacing: '0.14em', color: labelColor, textTransform: 'uppercase', marginBottom: '6px' }}>
                 Upsolve
             </p>
-            {solved && (
+            {(solved || solvedDuringContest) && (
                 <div style={{
                     display: 'inline-flex', alignItems: 'center', gap: '6px',
                     padding: '4px 10px', borderRadius: '99px', marginBottom: '12px',
                     background: 'var(--sage-bg)', border: '1px solid var(--sage-border)',
                     fontFamily: 'var(--ff-mono)', fontSize: '10px', color: 'var(--sage)',
                 }}>
-                    ✓ Solved
+                    ✓ {solvedDuringContest ? 'Solved during contest' : 'Solved'}
                 </div>
             )}
             <p style={{ fontFamily: 'var(--ff-body)', fontSize: '13px', color: 'var(--ink3)', marginBottom: '16px' }}>
