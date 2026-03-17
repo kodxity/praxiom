@@ -9,9 +9,10 @@ export async function GET() {
 
     const now = new Date();
     try {
-        const reg = await prisma.registration.findFirst({
+        const liveReg = await prisma.registration.findFirst({
             where: {
                 userId: session.user.id,
+                isVirtual: false,
                 contest: {
                     startTime: { lte: now },
                     endTime: { gte: now },
@@ -24,13 +25,34 @@ export async function GET() {
             },
         });
 
-        if (!reg) return NextResponse.json({ contest: null });
+        if (liveReg) {
+            const personalEndTime = liveReg.startTime
+                ? new Date(liveReg.startTime.getTime() + liveReg.contest.duration * 60_000)
+                : liveReg.contest.endTime;
 
-        const personalEndTime = reg.startTime
-            ? new Date(reg.startTime.getTime() + reg.contest.duration * 60_000)
-            : reg.contest.endTime;
+            return NextResponse.json({ contest: { ...liveReg.contest, personalEndTime, mode: 'live' } });
+        }
 
-        return NextResponse.json({ contest: { ...reg.contest, personalEndTime } });
+        const virtualReg = await prisma.registration.findFirst({
+            where: {
+                userId: session.user.id,
+                isVirtual: true,
+                startTime: { not: null },
+            },
+            orderBy: { startTime: 'desc' },
+            include: {
+                contest: {
+                    select: { id: true, title: true, endTime: true, startTime: true, duration: true },
+                },
+            },
+        });
+
+        if (!virtualReg?.startTime) return NextResponse.json({ contest: null });
+
+        const personalEndTime = new Date(virtualReg.startTime.getTime() + virtualReg.contest.duration * 60_000);
+        if (personalEndTime.getTime() <= now.getTime()) return NextResponse.json({ contest: null });
+
+        return NextResponse.json({ contest: { ...virtualReg.contest, personalEndTime, mode: 'virtual' } });
     } catch {
         return NextResponse.json({ contest: null });
     }

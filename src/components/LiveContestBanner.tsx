@@ -9,6 +9,7 @@ interface LiveContest {
     title: string;
     endTime: string;
     personalEndTime: string;
+    mode?: 'live' | 'virtual';
 }
 
 function useCountdown(endTime: string | null) {
@@ -116,7 +117,7 @@ export function LiveContestBanner() {
                     letterSpacing: '0.16em', color: 'var(--sage)',
                     textTransform: 'uppercase', flexShrink: 0, fontWeight: 600,
                 }}>
-                    Live
+                    {contest.mode === 'virtual' ? 'Virtual' : 'Live'}
                 </span>
 
                 <span style={{

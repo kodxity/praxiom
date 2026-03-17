@@ -66,6 +66,7 @@ export function ContestHero({
   const router = useRouter()
   const [registering, setRegistering] = useState(false)
   const [starting, setStarting] = useState(false)
+  const [endingVirtual, setEndingVirtual] = useState(false)
   const isTeamContest = contestType === 'team' || contestType === 'relay'
 
   // Live countdown
@@ -147,6 +148,22 @@ export function ContestHero({
       }
     } finally {
       setStarting(false)
+    }
+  }
+
+  async function handleEndVirtual() {
+    if (endingVirtual) return
+    setEndingVirtual(true)
+    try {
+      const res = await fetch(`/api/contests/${contestId}/virtual`, { method: 'DELETE' })
+      if (res.ok) {
+        router.refresh()
+      } else {
+        const json = await res.json()
+        alert(json.error || "Failed to end virtual participation.")
+      }
+    } finally {
+      setEndingVirtual(false)
     }
   }
 
@@ -270,6 +287,18 @@ export function ContestHero({
                     cursor: starting ? 'wait' : 'pointer', opacity: starting ? 0.7 : 1,
                   }}>
                     {starting ? 'Starting…' : 'Virtual Participation →'}
+                  </button>
+                )}
+                {isLoggedIn && isVirtualParticipant && (
+                  <button onClick={handleEndVirtual} disabled={endingVirtual} style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '6px',
+                    padding: '10px 20px', borderRadius: '10px',
+                    fontFamily: 'var(--ff-ui)', fontSize: '13px', fontWeight: 600,
+                    background: 'rgba(255,255,255,0.06)', border: `1px solid ${theme.surfaceBorder}`,
+                    color: theme.textSecondary, transition: 'all 0.15s',
+                    cursor: endingVirtual ? 'wait' : 'pointer', opacity: endingVirtual ? 0.7 : 1,
+                  }}>
+                    {endingVirtual ? 'Ending…' : 'End Virtual'}
                   </button>
                 )}
                 <Link href={`/contests/${contestId}/standings`} style={{
@@ -504,6 +533,21 @@ export function ContestHero({
               }}
             >
               {starting ? 'Starting…' : 'Virtual Participation'}
+            </button>
+          )}
+          {isLoggedIn && isVirtualParticipant && (
+            <button
+              onClick={handleEndVirtual}
+              disabled={endingVirtual}
+              className="btn btn-ghost"
+              style={{
+                padding: '11px 22px',
+                fontSize: '14px',
+                cursor: endingVirtual ? 'wait' : 'pointer',
+                opacity: endingVirtual ? 0.7 : 1,
+              }}
+            >
+              {endingVirtual ? 'Ending…' : 'End Virtual'}
             </button>
           )}
           <Link
