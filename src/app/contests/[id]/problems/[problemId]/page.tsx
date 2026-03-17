@@ -126,10 +126,12 @@ export default async function ProblemViewPage(props: { params: Promise<{ id: str
     const problemIndex = allProblems.findIndex((p: any) => p.id === params.problemId);
     const letter = String.fromCharCode(65 + problemIndex);
 
-    // Solved by user?
-    const userSolved = submissions.some((s: any) => s.isCorrect);
-    // Solved correctly via upsolve specifically (determines if upsolve form should still show)
-    const upsolveSolvedCorrectly = submissions.some((s: any) => s.isCorrect && s.isUpsolve);
+    // Solved by user (split by mode)
+    const solvedLive = submissions.some((s: any) => s.isCorrect && !s.isUpsolve && !s.isVirtual);
+    const solvedVirtual = submissions.some((s: any) => s.isCorrect && s.isVirtual);
+    const solvedUpsolve = submissions.some((s: any) => s.isCorrect && s.isUpsolve);
+    const userSolved = solvedLive || solvedVirtual || solvedUpsolve;
+    const nonLiveSolved = solvedVirtual || solvedUpsolve;
     // Attempts split by context
     const activeAttempts = submissions.filter((s: any) => !s.isUpsolve).length;
     const upsolveAttempts = submissions.filter((s: any) => s.isUpsolve).length;
@@ -350,10 +352,10 @@ export default async function ProblemViewPage(props: { params: Promise<{ id: str
                         contestId={params.id}
                         problemId={params.problemId}
                         correctAnswer={problem.correctAnswer}
-                        initialSolved={upsolveSolvedCorrectly}
+                        initialSolved={nonLiveSolved}
                         initialAttempts={upsolveAttempts}
                         labelColor={labelColor}
-                        solvedDuringContest={userSolved && !upsolveSolvedCorrectly}
+                        solvedDuringContest={solvedLive}
                         hasHint={!!problem.hint}
                         hintCost={Math.floor(problem.points / 2)}
                         userXp={userXp}
