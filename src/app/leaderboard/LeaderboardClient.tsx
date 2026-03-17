@@ -5,10 +5,11 @@ import Link from 'next/link';
 type User  = { id: string; username: string; rating: number; isAdmin: boolean; isTeacher: boolean; school: { shortName: string; district: string } | null; groupMemberships: { group: { id: string; name: string; school: { shortName: string; district: string } | null } }[]; _count: { ratingHistory: number } };
 
 function getRankLabel(rating: number) {
-    if (rating >= 2400) return { label: 'Archon',   cls: 'rank-badge rank-archon' };
-    if (rating >= 2000) return { label: 'Legend',   cls: 'rank-badge rank-legend' };
-    if (rating >= 1600) return { label: 'Seeker',   cls: 'rank-badge rank-seeker' };
-    return                     { label: 'Initiate', cls: 'rank-badge rank-initiate' };
+    if (rating >= 2400) return { label: 'Grandmaster', cls: 'rank-badge rank-grandmaster' };
+    if (rating >= 2000) return { label: 'Master',      cls: 'rank-badge rank-master' };
+    if (rating >= 1600) return { label: 'Expert',      cls: 'rank-badge rank-expert' };
+    if (rating >= 1200) return { label: 'Pupil',       cls: 'rank-badge rank-pupil' };
+    return                     { label: 'Newbie',      cls: 'rank-badge rank-newbie' };
 }
 
 function getRoleBadge(user: User) {
@@ -18,11 +19,11 @@ function getRoleBadge(user: User) {
 }
 
 function getRatingColor(rating: number) {
-    if (rating >= 2400) return 'var(--amber)';
-    if (rating >= 2000) return 'var(--violet)';
+    if (rating >= 2400) return 'var(--rose)';
+    if (rating >= 2000) return 'var(--amber)';
     if (rating >= 1600) return 'var(--slate)';
-    if (rating >= 1400) return 'var(--sage)';
-    return 'var(--ink3)';
+    if (rating >= 1200) return 'var(--sage)';
+    return 'var(--ink4)';
 }
 
 export function LeaderboardClient({ users }: { users: User[] }) {
@@ -40,7 +41,7 @@ export function LeaderboardClient({ users }: { users: User[] }) {
                     The <em style={{ fontStyle: 'italic', color: 'var(--sage)' }}>Conclave</em>
                 </h1>
                 <p style={{ fontSize: '15px', fontWeight: 300, color: 'var(--ink3)', lineHeight: 1.6 }}>
-                    Ratings update after each contest. Climb from Initiate to Archon.
+                    Ratings update after each contest. Climb from Newbie to Grandmaster.
                 </p>
             </div>
 

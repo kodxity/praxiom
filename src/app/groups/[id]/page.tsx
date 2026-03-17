@@ -11,10 +11,11 @@ import { TeacherDashboardClient } from '@/app/teacher/TeacherDashboardClient';
 export const dynamic = 'force-dynamic';
 
 function getRankLabel(rating: number) {
-    if (rating >= 2400) return { label: 'Archon',   cls: 'rank-archon' };
-    if (rating >= 2000) return { label: 'Legend',   cls: 'rank-legend' };
-    if (rating >= 1600) return { label: 'Seeker',   cls: 'rank-seeker' };
-    return                     { label: 'Initiate', cls: 'rank-initiate' };
+    if (rating >= 2400) return { label: 'Grandmaster', cls: 'rank-grandmaster' };
+    if (rating >= 2000) return { label: 'Master',      cls: 'rank-master' };
+    if (rating >= 1600) return { label: 'Expert',      cls: 'rank-expert' };
+    if (rating >= 1200) return { label: 'Pupil',       cls: 'rank-pupil' };
+    return                     { label: 'Newbie',      cls: 'rank-newbie' };
 }
 
 function getRoleBadge(user: { isAdmin: boolean; isTeacher: boolean }) {
@@ -24,11 +25,11 @@ function getRoleBadge(user: { isAdmin: boolean; isTeacher: boolean }) {
 }
 
 function getRatingColor(rating: number) {
-    if (rating >= 2400) return 'var(--amber)';
-    if (rating >= 2000) return 'var(--violet)';
+    if (rating >= 2400) return 'var(--rose)';
+    if (rating >= 2000) return 'var(--amber)';
     if (rating >= 1600) return 'var(--slate)';
-    if (rating >= 1400) return 'var(--sage)';
-    return 'var(--ink3)';
+    if (rating >= 1200) return 'var(--sage)';
+    return 'var(--ink4)';
 }
 
 export default async function GroupPage(props: { params: Promise<{ id: string }> }) {

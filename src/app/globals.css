@@ -232,10 +232,15 @@ next-dev-overlay { cursor: none !important; }
 
 /* Rank badges */
 .rank-badge    { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 100px; font-family: var(--ff-mono); font-size: 11px; font-weight: 500; }
-.rank-archon   { background: var(--amber-bg);  color: var(--amber);  border: 1px solid var(--amber-border); }
-.rank-seeker   { background: var(--slate-bg);  color: var(--slate);  border: 1px solid var(--slate-border); }
-.rank-initiate { background: rgba(0,0,0,0.05); color: var(--ink4);   border: 1px solid var(--ink5); }
-.rank-legend   { background: var(--violet-bg); color: var(--violet); border: 1px solid var(--violet-border); }
+.rank-newbie      { background: rgba(0,0,0,0.05); color: var(--ink4);   border: 1px solid var(--ink5); }
+.rank-pupil       { background: var(--sage-bg);   color: var(--sage);   border: 1px solid var(--sage-border); }
+.rank-expert      { background: var(--slate-bg);  color: var(--slate);  border: 1px solid var(--slate-border); }
+.rank-master      { background: var(--amber-bg);  color: var(--amber);  border: 1px solid var(--amber-border); }
+.rank-grandmaster { background: var(--rose-bg);   color: var(--rose);   border: 1px solid var(--rose-border); }
+.rank-archon      { background: var(--amber-bg);  color: var(--amber);  border: 1px solid var(--amber-border); }
+.rank-seeker      { background: var(--slate-bg);  color: var(--slate);  border: 1px solid var(--slate-border); }
+.rank-initiate    { background: rgba(0,0,0,0.05); color: var(--ink4);   border: 1px solid var(--ink5); }
+.rank-legend      { background: var(--violet-bg); color: var(--violet); border: 1px solid var(--violet-border); }
 
 /* Inputs */
 .input { background: rgba(255,255,255,0.5); border: 1.5px solid rgba(0,0,0,0.10); border-radius: var(--r); padding: 11px 14px; font-family: var(--ff-body); font-size: 15px; color: var(--ink); outline: none; transition: all 0.15s; width: 100%; }
