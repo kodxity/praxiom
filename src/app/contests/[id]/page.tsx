@@ -79,19 +79,34 @@ export default async function ContestPage(props: { params: Promise<{ id: string 
     let isRegistered = false;
     let hasStarted = false;
     let personalEndTime: Date | null = null;
+    let isVirtualParticipant = false;
+    let currentRegId: string | null = null;
 
     if (session?.user?.id && contest) {
         if (contest.contestType === 'individual') {
             try {
-                const reg = await prisma.registration.findUnique({
-                    where: { userId_contestId: { userId: session.user.id, contestId: params.id } },
+                const regs = await prisma.registration.findMany({
+                    where: { userId: session.user.id, contestId: params.id },
+                    orderBy: { createdAt: 'desc' }
                 });
+
+                // Prefer an active virtual registration or the live one
+                const now = new Date();
+                const virtualReg = regs.find(r => r.isVirtual && r.startTime && (new Date(r.startTime.getTime() + contest.duration * 60000) > now));
+                const liveReg = regs.find(r => !r.isVirtual);
+                const reg = virtualReg || liveReg;
+
                 if (reg) {
                     isRegistered = true;
+                    currentRegId = reg.id;
+                    isVirtualParticipant = !!reg.isVirtual;
                     if (reg.startTime) {
                         hasStarted = true;
                         personalEndTime = new Date(reg.startTime.getTime() + contest.duration * 60000);
-                        if (personalEndTime > contest.endTime) personalEndTime = contest.endTime;
+                        // Only cap live participation end time at contest end time
+                        if (!reg.isVirtual && personalEndTime > contest.endTime) {
+                            personalEndTime = contest.endTime;
+                        }
                     }
                 }
             } catch { /* ignore */ }
@@ -130,9 +145,17 @@ export default async function ContestPage(props: { params: Promise<{ id: string 
 
     // Compute locked problem IDs for sequential ordering (active contest + registered only)
     let lockedIds: string[] = [];
-    if (isActive && isRegistered && session && contest.contestType === 'individual') {
+    if ((isActive || isVirtualParticipant) && isRegistered && session && contest.contestType === 'individual') {
         const solvedIds = new Set(
-            submissions.filter((s: any) => s.isCorrect && !s.isUpsolve).map((s: any) => s.problemId)
+            submissions
+                .filter((s: any) => {
+                    if (isVirtualParticipant) {
+                        // During virtual redo, only solves FROM THIS registration count for the lock
+                        return s.isCorrect && s.registrationId === currentRegId;
+                    }
+                    return s.isCorrect && !s.isUpsolve;
+                })
+                .map((s: any) => s.problemId)
         );
         const firstUnsolved = contest.problems.findIndex((p: any) => !solvedIds.has(p.id));
         if (firstUnsolved !== -1) {
@@ -157,10 +180,11 @@ export default async function ContestPage(props: { params: Promise<{ id: string 
                 isRegistered={isRegistered}
                 hasStarted={hasStarted}
                 personalEndTime={personalEndTime}
-                isActive={isActive}
-                isPast={isPast}
+                isActive={isActive || isVirtualParticipant}
+                isPast={isPast && !isVirtualParticipant}
                 isUpcoming={isUpcoming}
                 isLoggedIn={!!session}
+                isVirtualParticipant={isVirtualParticipant}
                 isAdmin={session?.user?.isAdmin ?? false}
                 contestType={contest.contestType}
                 duration={contest.duration}
@@ -204,13 +228,13 @@ export default async function ContestPage(props: { params: Promise<{ id: string 
                 {/* Problems Tab */}
                 {(!isTeamContest || activeTab === 'problems') && (
                     <>
-                        {(!hasStarted && !isPast && !session?.user?.isAdmin) ? (
+                        {(!hasStarted && !isPast && !isVirtualParticipant && !session?.user?.isAdmin) ? (
                             <div style={{ textAlign: 'center', padding: '64px 20px', color: 'var(--ink4)', fontFamily: 'var(--ff-mono)', fontSize: '13px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
                                 <div style={{ fontSize: '28px' }}>🔒</div>
                                 <div style={{ fontFamily: 'var(--ff-display)', fontStyle: 'italic', fontSize: '18px', color: 'var(--ink)' }}>Problems Hidden</div>
                                 <div>{isUpcoming ? 'Problems will be revealed when the contest starts.' : 'Click "Start Contest" to reveal the problems and start your timer.'}</div>
                             </div>
-                        ) : contest.problems.length > 0 ? (
+                        ) : (contest.problems.length > 0) ? (
                             <div>
                                 <h2
                                     style={{ fontFamily: 'var(--ff-display)', fontStyle: 'italic', fontSize: '22px', color: 'var(--ink)', marginBottom: '14px' }}
@@ -220,7 +244,11 @@ export default async function ContestPage(props: { params: Promise<{ id: string 
                                 <ProblemsList
                                     problems={contest.problems}
                                     contestId={contest.id}
-                                    initialSubmissions={submissions}
+                                    initialSubmissions={
+                                        isVirtualParticipant 
+                                            ? submissions.filter(s => s.registrationId === currentRegId)
+                                            : submissions
+                                    }
                                     lockedIds={lockedIds}
                                 />
                             </div>

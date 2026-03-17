@@ -52,6 +52,7 @@ export async function POST(req: Request) {
 
     // Mark as upsolve if submitting after contest ended (not counted for ratings)
     let isUpsolve = !session.user.isAdmin && now > contest.endTime;
+    let isVirtual = false;
 
     // ── Team/relay checks ──────────────────────────────────────────────────
     let teamId: string | null = null;
@@ -121,21 +122,36 @@ export async function POST(req: Request) {
     }
 
     // During an active individual contest, only registered users may submit
-    if (!session.user.isAdmin && !isUpsolve && contest.contestType === 'individual') {
-        const reg = await prisma.registration.findUnique({
-            where: { userId_contestId: { userId: session.user.id, contestId } },
+    let registrationId: string | null = null;
+    if (!session.user.isAdmin && contest.contestType === 'individual') {
+        const regs = await prisma.registration.findMany({
+            where: { userId: session.user.id, contestId },
+            orderBy: { createdAt: 'desc' }
         });
-        if (!reg) {
-            return new NextResponse('You must register for this contest to submit.', { status: 403 });
-        }
-        personalStartTime = reg.startTime;
 
-        if (!personalStartTime) {
-            return new NextResponse('You must start the contest before submitting.', { status: 403 });
-        }
-        const personalEndTime = new Date(personalStartTime.getTime() + contest.duration * 60000);
-        if (now > personalEndTime) {
-            isUpsolve = true;
+        const virtualReg = regs.find(r => r.isVirtual && r.startTime && (new Date(r.startTime.getTime() + contest.duration * 60000) > now));
+        const liveReg = regs.find(r => !r.isVirtual);
+        const reg = virtualReg || liveReg;
+
+        if (reg) {
+            registrationId = reg.id;
+            if (reg.isVirtual) {
+                isVirtual = true;
+                isUpsolve = false;
+                personalStartTime = reg.startTime;
+            } else if (!isUpsolve) {
+                personalStartTime = reg.startTime;
+                if (personalStartTime) {
+                    const personalEndTime = new Date(personalStartTime.getTime() + contest.duration * 60000);
+                    if (now > personalEndTime) {
+                        isUpsolve = true;
+                    }
+                } else {
+                    return new NextResponse('You must start the contest before submitting.', { status: 403 });
+                }
+            }
+        } else if (!isUpsolve) {
+             return new NextResponse('You must register for this contest to submit.', { status: 403 });
         }
     }
 
@@ -150,7 +166,14 @@ export async function POST(req: Request) {
         if (problemIndex > 0) {
             const solvedIds = new Set(
                 (await prisma.submission.findMany({
-                    where: { userId: session.user.id, contestId, isCorrect: true, isUpsolve: false },
+                    where: {
+                        userId: session.user.id,
+                        contestId,
+                        isCorrect: true,
+                        isUpsolve: false,
+                        // If it's a virtual participation, only count solves WITHIN THIS VIRTUAL participation
+                        ...(isVirtual ? { registrationId } : { isVirtual: false })
+                    },
                     select: { problemId: true },
                 })).map(s => s.problemId)
             );
@@ -166,11 +189,17 @@ export async function POST(req: Request) {
         // For team/relay: check team solve; for individual: check user solve
         const solveWhere = teamId
             ? { teamId, problemId, isCorrect: true, isUpsolve: false }
-            : { userId: session.user.id, problemId, isCorrect: true, isUpsolve: false };
+            : {
+                userId: session.user.id,
+                problemId,
+                isCorrect: true,
+                isUpsolve: false,
+                ...(isVirtual ? { registrationId } : { isVirtual: false })
+              };
 
         const existingContestSolve = await prisma.submission.findFirst({ where: solveWhere });
         if (existingContestSolve) {
-            return NextResponse.json({ id: existingContestSolve.id, isCorrect: true, isUpsolve: false, alreadySolved: true });
+            return NextResponse.json({ id: existingContestSolve.id, isCorrect: true, isUpsolve: false, isVirtual: existingContestSolve.isVirtual, alreadySolved: true });
         }
     } else {
         // Upsolving: allow even if solved during contest, but block duplicate upsolves
@@ -192,9 +221,9 @@ export async function POST(req: Request) {
 
     // Award XP for the first ever correct solve of this problem (contest or upsolve)
     let xpAwarded = 0;
-    if (isCorrect) {
+    if (isCorrect && !isVirtual) {
         const alreadySolvedAny = await prisma.submission.findFirst({
-            where: { userId: session.user.id, problemId, isCorrect: true },
+            where: { userId: session.user.id, problemId, isCorrect: true, isVirtual: false },
         });
         if (!alreadySolvedAny) {
             xpAwarded = problem.points;
@@ -210,10 +239,12 @@ export async function POST(req: Request) {
             userId: session.user.id,
             contestId,
             problemId,
+            registrationId,
             teamId: teamId || null,
             answer,
             isCorrect,
             isUpsolve,
+            isVirtual,
             hintUsed,
         }
     });
@@ -223,6 +254,7 @@ export async function POST(req: Request) {
         isCorrect: submission.isCorrect,
         xpAwarded,
         isUpsolve: submission.isUpsolve,
+        isVirtual: submission.isVirtual,
         hintUsed: submission.hintUsed,
     });
 }

@@ -31,8 +31,11 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
         return NextResponse.json({ message: "Ratings already calculated" }, { status: 400 });
     }
 
+    // Filter out upsolve and virtual submissions
+    const liveSubmissions = contest.submissions.filter((s: any) => !s.isUpsolve && !s.isVirtual);
+
     // Get unique participants
-    const userIds = [...new Set(contest.submissions.map((s: any) => s.userId))];
+    const userIds = [...new Set(liveSubmissions.map((s: any) => s.userId))];
 
     // Calculate scores per user
     const participants = [];
@@ -41,7 +44,7 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
         if (!user) continue;
 
         let score = 0;
-        const userSubs = contest.submissions.filter((s: any) => s.userId === userId);
+        const userSubs = liveSubmissions.filter((s: any) => s.userId === userId);
 
         // Logic same as Standings:
         // For each problem, checking validation.

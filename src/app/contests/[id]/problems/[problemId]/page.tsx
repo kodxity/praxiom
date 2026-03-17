@@ -49,28 +49,45 @@ export default async function ProblemViewPage(props: { params: Promise<{ id: str
         });
 
         if (session?.user?.id) {
-            const allContestSubs = await prisma.submission.findMany({
-                where: { userId: session.user.id, contestId: params.id },
-                orderBy: { createdAt: 'desc' },
-            });
-            submissions = allContestSubs.filter((s: any) => s.problemId === params.problemId);
-            userSolvedIds = new Set(
-                allContestSubs.filter((s: any) => s.isCorrect && !s.isUpsolve).map((s: any) => s.problemId)
-            );
-
+            let reg = null;
             if (contest.contestType === 'team' || contest.contestType === 'relay') {
                 const member = await prisma.contestTeamMember.findFirst({
                     where: { userId: session.user.id, team: { contestId: params.id } },
                 });
                 isRegistered = !!member;
-                // Store relay order on the member object for locking logic below
                 (contest as any)._myRelayOrder = member?.relayOrder ?? null;
             } else {
-                const reg = await prisma.registration.findUnique({
-                    where: { userId_contestId: { userId: session.user.id, contestId: params.id } },
+                const regs = await prisma.registration.findMany({
+                    where: { userId: session.user.id, contestId: params.id },
+                    orderBy: { createdAt: 'desc' }
                 });
+
+                const now = new Date();
+                const virtualReg = regs.find(r => r.isVirtual && r.startTime && (new Date(r.startTime.getTime() + (contest.duration ?? 0) * 60000) > now));
+                const liveReg = regs.find(r => !r.isVirtual);
+                reg = virtualReg || liveReg;
                 isRegistered = !!reg;
+                if (reg?.isVirtual) (contest as any).isVirtualParticipant = true;
+                (contest as any).currentRegId = reg?.id;
             }
+
+            const allContestSubs = await prisma.submission.findMany({
+                where: { userId: session.user.id, contestId: params.id },
+                orderBy: { createdAt: 'desc' },
+            });
+
+            // Use current registration for active submissions
+            const curRegId = (contest as any).currentRegId;
+            submissions = allContestSubs.filter((s: any) => s.problemId === params.problemId);
+            
+            // If in a virtual session, we only count solves from THIS session for locking
+            userSolvedIds = new Set(
+                allContestSubs.filter((s: any) => {
+                    if (s.isUpsolve || !s.isCorrect) return false;
+                    if (curRegId) return s.registrationId === curRegId;
+                    return !s.isVirtual;
+                }).map((s: any) => s.problemId)
+            );
         }
     } catch {
         notFound();
@@ -99,8 +116,11 @@ export default async function ProblemViewPage(props: { params: Promise<{ id: str
 
     const now = new Date();
     const isPast = now > contest.endTime;
-    const isActive = now >= contest.startTime && now <= contest.endTime;
     const isUpcoming = now < contest.startTime;
+    
+    // Check if user is in an active virtual session
+    const isVirtual = (contest as any).isVirtualParticipant;
+    const isActive = isVirtual || (now >= contest.startTime && now <= contest.endTime);
 
     const diff = getPointsLabel(problem.points);
     const problemIndex = allProblems.findIndex((p: any) => p.id === params.problemId);
@@ -166,6 +186,11 @@ export default async function ProblemViewPage(props: { params: Promise<{ id: str
                 <Link href={`/contests/${params.id}`} style={crumbStyle}>{problem.contest.title}</Link>
                 <span>/</span>
                 <span style={{ color: crumbLast }}>{letter}. {problem.title}</span>
+            </div>
+            <div style={{ marginBottom: '18px' }}>
+                <Link href={`/contests/${params.id}`} className="btn btn-ghost btn-sm">
+                    {'<- Contest'}
+                </Link>
             </div>
 
             {/* Gate: hide problem content before contest starts (non-admins only) */}

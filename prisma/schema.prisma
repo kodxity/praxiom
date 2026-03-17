@@ -125,10 +125,12 @@ model Registration {
   contestId String
   createdAt DateTime  @default(now())
   startTime DateTime?
+  isVirtual Boolean   @default(false)
   contest   Contest   @relation(fields: [contestId], references: [id])
   user      User      @relation(fields: [userId], references: [id])
+  submissions Submission[]
 
-  @@unique([userId, contestId])
+  @@index([userId, contestId])
 }
 
 model Contest {
@@ -174,20 +176,23 @@ model HintReveal {
 }
 
 model Submission {
-  id        String       @id @default(cuid())
-  userId    String
-  contestId String
-  problemId String
-  answer    String
-  isCorrect Boolean
-  isUpsolve Boolean      @default(false)
-  createdAt DateTime     @default(now())
-  hintUsed  Boolean      @default(false)
-  teamId    String?
-  contest   Contest      @relation(fields: [contestId], references: [id])
-  problem   Problem      @relation(fields: [problemId], references: [id])
-  team      ContestTeam? @relation(fields: [teamId], references: [id])
-  user      User         @relation(fields: [userId], references: [id])
+  id             String        @id @default(cuid())
+  userId         String
+  contestId      String
+  problemId      String
+  registrationId String?
+  answer         String
+  isCorrect      Boolean
+  isUpsolve      Boolean       @default(false)
+  isVirtual      Boolean       @default(false)
+  createdAt      DateTime      @default(now())
+  hintUsed       Boolean       @default(false)
+  teamId         String?
+  contest        Contest       @relation(fields: [contestId], references: [id])
+  problem        Problem       @relation(fields: [problemId], references: [id])
+  team           ContestTeam?  @relation(fields: [teamId], references: [id])
+  user           User          @relation(fields: [userId], references: [id])
+  registration   Registration? @relation(fields: [registrationId], references: [id])
 }
 
 model BlogPost {

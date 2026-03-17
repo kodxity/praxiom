@@ -40,7 +40,9 @@ export default async function ContestSubmissionsPage(props: { params: Promise<{ 
         include: {
             problems: { orderBy: { id: 'asc' } },
             submissions: {
-                where: { isUpsolve: false },
+                where: {
+                    userId: session?.user?.id ?? '___no_user___',
+                },
                 include: { user: { select: { id: true, username: true } }, problem: { select: { id: true, title: true } } },
                 orderBy: { createdAt: 'desc' },
             },
@@ -147,7 +149,7 @@ export default async function ContestSubmissionsPage(props: { params: Promise<{ 
                             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                             {windowSubs.map((sub: any, i: number) => {
                                 const label = problemLabels.get(sub.problemId) ?? '?';
-                                const canSeeAnswer = viewerSolvedIds.has(sub.problemId);
+                                const canSeeAnswer = sub.user.id === session?.user?.id || viewerSolvedIds.has(sub.problemId);
                                 return (
                                     <tr key={sub.id} style={{ animation: `fade-in 0.3s ${i * 0.015}s both` }}>
                                         {/* Problem */}

@@ -45,8 +45,9 @@ export async function POST(req: Request) {
         const now = new Date();
         const isActive = now >= contestForCheck.startTime && now <= contestForCheck.endTime;
         if (isActive) {
-            const reg = await prisma.registration.findUnique({
-                where: { userId_contestId: { userId: session.user.id, contestId: problem.contestId } },
+            const reg = await prisma.registration.findFirst({
+                where: { userId: session.user.id, contestId: problem.contestId, isVirtual: false },
+                orderBy: { createdAt: 'desc' },
             });
             if (!reg) {
                 return NextResponse.json(

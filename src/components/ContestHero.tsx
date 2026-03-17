@@ -24,6 +24,7 @@ interface Props {
   isPast?: boolean
   isUpcoming?: boolean
   isLoggedIn?: boolean
+  isVirtualParticipant?: boolean
   isAdmin?: boolean
   contestType?: string
 }
@@ -56,6 +57,7 @@ export function ContestHero({
   isPast = false,
   isUpcoming = false,
   isLoggedIn = false,
+  isVirtualParticipant = false,
   isAdmin = false,
   contestType = 'individual',
 }: Props) {
@@ -132,6 +134,22 @@ export function ContestHero({
     }
   }
 
+  async function handleVirtualParticipation() {
+    if (starting) return
+    setStarting(true)
+    try {
+      const res = await fetch(`/api/contests/${contestId}/virtual`, { method: 'POST' })
+      if (res.ok) {
+           router.refresh()
+      } else {
+           const json = await res.json()
+           alert(json.error || "Failed to start virtual participation.")
+      }
+    } finally {
+      setStarting(false)
+    }
+  }
+
   if (isDark) {
     // ── Dark-themed hero (uses theme variables - works for any dark theme) ──
     const accentRgba = (a: number) => `${theme.accent}${Math.round(a * 255).toString(16).padStart(2, '0')}`
@@ -160,7 +178,13 @@ export function ContestHero({
                     LIVE NOW
                   </span>
                 )}
-                {isPast     && <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', letterSpacing: '0.1em', color: theme.textMuted }}>ENDED</span>}
+                {isVirtualParticipant && (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontFamily: 'var(--ff-mono)', fontSize: '10px', letterSpacing: '0.1em', color: theme.textAccent }}>
+                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: theme.accent, display: 'inline-block', animation: 'pulse 1.4s ease infinite' }} />
+                      VIRTUAL PARTICIPATION
+                    </span>
+                )}
+                {isPast && !isVirtualParticipant && <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', letterSpacing: '0.1em', color: theme.textMuted }}>ENDED</span>}
                 {isUpcoming && <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '10px', letterSpacing: '0.1em', color: theme.textMuted }}>UPCOMING</span>}
               </div>
               {/* Eyebrow */}
@@ -236,6 +260,18 @@ export function ContestHero({
                         In Progress
                       </Link>
                 )}
+                {isLoggedIn && isPast && !isTeamContest && !isVirtualParticipant && !isAdmin && (
+                  <button onClick={handleVirtualParticipation} disabled={starting} style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '6px',
+                    padding: '12px 28px', borderRadius: '10px',
+                    fontFamily: 'var(--ff-ui)', fontSize: '14px', fontWeight: 500,
+                    background: theme.accentBg, border: `1px solid ${theme.accentBorder}`,
+                    color: theme.textPrimary, transition: 'all 0.15s',
+                    cursor: starting ? 'wait' : 'pointer', opacity: starting ? 0.7 : 1,
+                  }}>
+                    {starting ? 'Starting…' : 'Virtual Participation →'}
+                  </button>
+                )}
                 <Link href={`/contests/${contestId}/standings`} style={{
                   display: 'inline-flex', alignItems: 'center', gap: '6px',
                   padding: '10px 20px', borderRadius: '10px', textDecoration: 'none',
@@ -245,7 +281,7 @@ export function ContestHero({
                 }}>
                   Standings
                 </Link>
-                {isLoggedIn && isRegistered && hasStarted && personalEndTime && personalMsLeft <= 0 && (
+                {isLoggedIn && (isRegistered || isVirtualParticipant) && hasStarted && personalEndTime && personalMsLeft <= 0 && (
                   <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '11px', color: theme.textMuted, letterSpacing: '0.05em' }}>Your window has ended</span>
                 )}
                 <Link href={`/contests/${contestId}/submissions`} style={{
@@ -310,8 +346,9 @@ export function ContestHero({
       <div className="container" style={{ position: 'relative', zIndex: 10 }}>
         {/* Status badge */}
         <div style={{ marginBottom: '18px' }}>
-          {isActive   && <Badge variant="sage">● Live now</Badge>}
-          {isPast     && <Badge variant="default"><span style={{ opacity: 0.7 }}>Ended</span></Badge>}
+          {isActive && !isVirtualParticipant && <Badge variant="sage">● Live now</Badge>}
+          {isVirtualParticipant && <Badge variant="sage">● Virtual active</Badge>}
+          {isPast && !isVirtualParticipant && <Badge variant="default"><span style={{ opacity: 0.7 }}>Ended</span></Badge>}
           {isUpcoming && <Badge variant="slate">Upcoming</Badge>}
         </div>
 
@@ -451,6 +488,24 @@ export function ContestHero({
                   In Progress
                 </Link>
           )}
+          {isLoggedIn && isPast && !isTeamContest && !isVirtualParticipant && !isAdmin && (
+            <button
+              onClick={handleVirtualParticipation}
+              disabled={starting}
+              className="btn"
+              style={{
+                padding: '12px 28px',
+                background: 'var(--sage)',
+                color: '#fff',
+                boxShadow: '0 4px 16px rgba(107,148,120,0.25)',
+                fontSize: '15px',
+                cursor: starting ? 'wait' : 'pointer',
+                opacity: starting ? 0.7 : 1,
+              }}
+            >
+              {starting ? 'Starting…' : 'Virtual Participation'}
+            </button>
+          )}
           <Link
             href={`/contests/${contestId}/standings`}
             className="btn btn-ghost"
@@ -458,7 +513,7 @@ export function ContestHero({
           >
             Standings
           </Link>
-          {isLoggedIn && isRegistered && hasStarted && personalEndTime && personalMsLeft <= 0 && (
+          {isLoggedIn && (isRegistered || isVirtualParticipant) && hasStarted && personalEndTime && personalMsLeft <= 0 && (
             <span style={{ fontFamily: 'var(--ff-mono)', fontSize: '12px', color: 'var(--ink4)', letterSpacing: '0.05em' }}>Your window has ended</span>
           )}
           {isAdmin && (

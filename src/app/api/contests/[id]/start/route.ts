@@ -24,8 +24,8 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
     }
 
     if (contest.contestType === 'individual') {
-        const reg = await prisma.registration.findUnique({
-            where: { userId_contestId: { userId: session.user.id, contestId: contest.id } }
+        const reg = await prisma.registration.findFirst({
+            where: { userId: session.user.id, contestId: contest.id, isVirtual: false }
         });
         if (!reg) return new NextResponse("You are not registered.", { status: 400 });
         if (reg.startTime) return new NextResponse("Contest already started.", { status: 400 });
