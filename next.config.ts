@@ -20,7 +20,7 @@ const securityHeaders = [
             "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.jsdelivr.net",
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
             "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net",
-            "img-src 'self' data: blob:",
+            "img-src 'self' data: blob: https://*.public.blob.vercel-storage.com",
             "connect-src 'self'",
             "frame-ancestors 'none'",
             "base-uri 'self'",

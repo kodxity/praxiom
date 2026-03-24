@@ -39,6 +39,10 @@ export default async function ProblemViewPage(props: { params: Promise<{ id: str
             include: {
                 contest: { select: { id: true, title: true } },
                 _count: { select: { submissions: true } },
+                transitionImages: {
+                    orderBy: { order: 'asc' },
+                    select: { url: true },
+                },
             },
         });
         if (!problem || problem.contestId !== params.id) notFound();
@@ -332,6 +336,7 @@ export default async function ProblemViewPage(props: { params: Promise<{ id: str
                         hintCost={Math.floor(problem.points / 2)}
                         userXp={userXp}
                         hintText={initialHintRevealed ? (problem.hint ?? undefined) : undefined}
+                        transitionImages={problem.transitionImages}
                     />
                 )}
                 {isActive && session && !isRegistered && (

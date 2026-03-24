@@ -19,6 +19,7 @@ interface Props {
     hintCost?: number;
     userXp?: number;
     hintText?: string;
+    transitionImages?: { url: string }[];
 }
 
 function MathDoodle() {
@@ -86,6 +87,7 @@ export default function ActiveSubmitPanel({
     hintCost = 0,
     userXp: initialUserXp = 0,
     hintText: initialHintText,
+    transitionImages,
 }: Props) {
     const router = useRouter();
     const [answer, setAnswer]         = useState('');
@@ -94,6 +96,7 @@ export default function ActiveSubmitPanel({
     const [attempts, setAttempts]     = useState(initialAttempts);
     const [feedback, setFeedback]     = useState<{ correct: boolean; message: string } | null>(null);
     const [showTransition, setShowTransition] = useState(false);
+    const [transitionImageIndex, setTransitionImageIndex] = useState(0);
     // Hint state
     const [revealedHintText, setRevealedHintText] = useState<string | undefined>(initialHintText);
     const [localXp, setLocalXp]       = useState(initialUserXp);
@@ -135,6 +138,11 @@ export default function ActiveSubmitPanel({
             setHintLoading(false);
         }
     }
+    useEffect(() => {
+        if (showTransition) document.body.style.overflow = 'hidden';
+        else document.body.style.overflow = '';
+        return () => { document.body.style.overflow = ''; };
+    }, [showTransition]);
 
     const hintUsed = !!revealedHintText;
 
@@ -173,6 +181,41 @@ export default function ActiveSubmitPanel({
         ? `/contests/${contestId}/problems/${nextProblemId}`
         : `/contests/${contestId}/standings`;
 
+    if (showTransition && transitionImages && transitionImageIndex < transitionImages.length) {
+        const currentImageUrl = transitionImages[transitionImageIndex].url;
+        return (
+            <div style={{
+                position: 'fixed', inset: 0, zIndex: 1000,
+                background: 'var(--glass-strong, rgba(8,16,11,0.97))',
+                backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
+                display: 'flex', flexDirection: 'column',
+                alignItems: 'center', justifyContent: 'center',
+                paddingTop: '80px',
+            }}>
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', padding: '48px', overflow: 'hidden' }}>
+                    <img 
+                        src={currentImageUrl} 
+                        alt="Transition Image" 
+                        style={{ width: '100%', height: '100%', maxWidth: '1280px', maxHeight: '720px', objectFit: 'contain', borderRadius: '8px' }} 
+                    />
+                </div>
+                <div style={{ padding: '24px', flexShrink: 0 }}>
+                    <button
+                        onClick={() => setTransitionImageIndex(i => i + 1)}
+                        style={{
+                            padding: '12px 32px', borderRadius: 'var(--r)',
+                            background: 'var(--sage)', color: '#fff', border: 'none',
+                            fontFamily: 'var(--ff-ui)', fontSize: '15px', fontWeight: 600,
+                            cursor: 'pointer', letterSpacing: '0.02em',
+                        }}
+                    >
+                        Next →
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     if (showTransition) {
         return (
             <div style={{
@@ -180,6 +223,7 @@ export default function ActiveSubmitPanel({
                 background: 'var(--glass-strong, rgba(8,16,11,0.97))',
                 backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
                 display: 'flex', flexDirection: 'column',
+                paddingTop: '80px',
             }}>
                 {/* Top half - celebration */}
                 <div style={{

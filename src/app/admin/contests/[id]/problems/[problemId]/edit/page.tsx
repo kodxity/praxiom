@@ -36,12 +36,18 @@ export default function EditProblemPage() {
     const [points, setPoints] = useState(100);
     const [hint, setHint] = useState('');
 
+    // Transition images state
+    const [transitionImages, setTransitionImages] = useState<{ id: string; url: string; order: number }[]>([]);
+    const [uploading, setUploading] = useState(false);
+    const [imgError, setImgError] = useState('');
+
     useEffect(() => {
         Promise.all([
             fetch(`/api/contests/${contestId}/problems/${problemId}`).then(r => r.json()),
             fetch(`/api/contests/${contestId}`).then(r => r.json()),
+            fetch(`/api/contests/${contestId}/problems/${problemId}/transition-images`).then(r => r.json()),
         ])
-            .then(([prob, contest]) => {
+            .then(([prob, contest, images]) => {
                 setTitle(prob.title ?? '');
                 setStatement(prob.statement ?? '');
                 setCorrectAnswer(prob.correctAnswer ?? '');
@@ -49,6 +55,7 @@ export default function EditProblemPage() {
                 setHint(prob.hint ?? '');
                 setContestTitle(contest.title ?? '');
                 setSiblingProblems(contest.problems ?? []);
+                if (Array.isArray(images)) setTransitionImages(images);
                 setLoading(false);
             })
             .catch(() => setLoading(false));
@@ -82,6 +89,62 @@ export default function EditProblemPage() {
             setError('Failed to delete problem.');
             setDeleting(false);
         }
+    }
+
+    async function handleUploadImage(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setUploading(true);
+        setImgError('');
+        try {
+            const form = new FormData();
+            form.append('file', file);
+            const uploadRes = await fetch('/api/upload', { method: 'POST', body: form });
+            const uploadData = await uploadRes.json();
+            if (!uploadRes.ok) { setImgError(uploadData.error ?? 'Upload failed'); return; }
+
+            const saveRes = await fetch(`/api/contests/${contestId}/problems/${problemId}/transition-images`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: uploadData.url }),
+            });
+            if (saveRes.ok) {
+                const img = await saveRes.json();
+                setTransitionImages(prev => [...prev, img]);
+            } else {
+                setImgError('Failed to save image reference.');
+            }
+        } catch {
+            setImgError('Network error during upload.');
+        } finally {
+            setUploading(false);
+            e.target.value = '';
+        }
+    }
+
+    async function handleDeleteImage(imageId: string) {
+        setTransitionImages(prev => prev.filter(i => i.id !== imageId));
+        await fetch(`/api/contests/${contestId}/problems/${problemId}/transition-images?imageId=${imageId}`, {
+            method: 'DELETE',
+        });
+    }
+
+    async function handleMoveImage(imageId: string, direction: 'up' | 'down') {
+        const idx = transitionImages.findIndex(i => i.id === imageId);
+        if (idx === -1) return;
+        const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+        if (swapIdx < 0 || swapIdx >= transitionImages.length) return;
+
+        const updated = [...transitionImages];
+        [updated[idx], updated[swapIdx]] = [updated[swapIdx], updated[idx]];
+        const reordered = updated.map((img, i) => ({ ...img, order: i }));
+        setTransitionImages(reordered);
+
+        await fetch(`/api/contests/${contestId}/problems/${problemId}/transition-images`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ items: reordered.map(i => ({ id: i.id, order: i.order })) }),
+        });
     }
 
     if (loading) return (
@@ -258,6 +321,115 @@ export default function EditProblemPage() {
                         </div>
                     </div>
                 </form>
+
+                {/* Transition Images */}
+                <div className="g" style={{ padding: '32px 36px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                    <h2 style={{ fontFamily: 'var(--ff-display)', fontSize: '18px', fontStyle: 'italic', color: 'var(--ink)', margin: 0 }}>
+                        Transition Images
+                    </h2>
+                    <p style={{ fontFamily: MONO, fontSize: '10px', color: 'var(--ink5)', margin: 0 }}>
+                        These images appear as a slideshow after a student solves this problem, before the &ldquo;Level Complete&rdquo; screen.
+                    </p>
+
+                    {/* Uploaded images list */}
+                    {transitionImages.length > 0 && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            {transitionImages.map((img, idx) => (
+                                <div key={img.id} style={{
+                                    display: 'flex', alignItems: 'center', gap: '12px',
+                                    padding: '10px 14px', borderRadius: 'var(--r)',
+                                    border: '1px solid var(--border)', background: 'var(--glass)',
+                                }}>
+                                    <span style={{ fontFamily: MONO, fontSize: '11px', color: 'var(--ink5)', minWidth: '20px' }}>
+                                        {idx + 1}.
+                                    </span>
+                                    <img
+                                        src={img.url}
+                                        alt={`Transition ${idx + 1}`}
+                                        style={{ width: '80px', height: '50px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--border)' }}
+                                    />
+                                    <div style={{ flex: 1, overflow: 'hidden' }}>
+                                        <span style={{ fontFamily: MONO, fontSize: '10px', color: 'var(--ink4)', wordBreak: 'break-all' }}>
+                                            {img.url.split('/').pop()}
+                                        </span>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '4px' }}>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleMoveImage(img.id, 'up')}
+                                            disabled={idx === 0}
+                                            title="Move up"
+                                            style={{
+                                                padding: '4px 8px', border: '1px solid var(--border)',
+                                                borderRadius: 'var(--r)', background: 'transparent',
+                                                cursor: idx === 0 ? 'not-allowed' : 'pointer',
+                                                opacity: idx === 0 ? 0.3 : 1, fontSize: '12px',
+                                                fontFamily: MONO, color: 'var(--ink4)',
+                                            }}
+                                        >↑</button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleMoveImage(img.id, 'down')}
+                                            disabled={idx === transitionImages.length - 1}
+                                            title="Move down"
+                                            style={{
+                                                padding: '4px 8px', border: '1px solid var(--border)',
+                                                borderRadius: 'var(--r)', background: 'transparent',
+                                                cursor: idx === transitionImages.length - 1 ? 'not-allowed' : 'pointer',
+                                                opacity: idx === transitionImages.length - 1 ? 0.3 : 1, fontSize: '12px',
+                                                fontFamily: MONO, color: 'var(--ink4)',
+                                            }}
+                                        >↓</button>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleDeleteImage(img.id)}
+                                        title="Delete image"
+                                        style={{
+                                            padding: '4px 10px', borderRadius: 'var(--r)',
+                                            border: '1px solid rgba(184,96,78,0.25)',
+                                            background: 'rgba(184,96,78,0.06)',
+                                            color: 'var(--rose)', cursor: 'pointer',
+                                            fontFamily: MONO, fontSize: '11px',
+                                        }}
+                                    >✕</button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Upload button */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <label style={{
+                            display: 'inline-flex', alignItems: 'center', gap: '7px',
+                            padding: '8px 16px', borderRadius: 'var(--r)',
+                            border: '1px dashed var(--sage-border)',
+                            background: 'var(--sage-bg)',
+                            cursor: uploading ? 'not-allowed' : 'pointer',
+                            fontFamily: 'var(--ff-ui)', fontSize: '13px', fontWeight: 600,
+                            color: 'var(--sage)', opacity: uploading ? 0.6 : 1,
+                            transition: 'all 0.15s',
+                        }}>
+                            {uploading ? 'Uploading…' : '+ Add Image'}
+                            <input
+                                type="file"
+                                accept="image/png,image/jpeg,image/webp,image/gif"
+                                onChange={handleUploadImage}
+                                disabled={uploading}
+                                style={{ display: 'none' }}
+                            />
+                        </label>
+                        <span style={{ fontFamily: MONO, fontSize: '10px', color: 'var(--ink5)' }}>
+                            PNG, JPEG, WebP, GIF · max 5 MB
+                        </span>
+                    </div>
+
+                    {imgError && (
+                        <p style={{ fontFamily: MONO, fontSize: '11px', color: 'var(--rose)', margin: 0 }}>
+                            {imgError}
+                        </p>
+                    )}
+                </div>
 
                 {/* Danger Zone */}
                 <div className="g" style={{ padding: '28px 36px', border: '1px solid rgba(184,96,78,0.22)', background: 'rgba(184,96,78,0.04)' }}>

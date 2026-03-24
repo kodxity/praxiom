@@ -153,16 +153,27 @@ model Contest {
 }
 
 model Problem {
-  id            String       @id @default(cuid())
-  contestId     String
-  title         String
-  statement     String
-  correctAnswer String
-  points        Int          @default(100)
-  hint          String?
-  hintReveals   HintReveal[]
-  contest       Contest      @relation(fields: [contestId], references: [id])
-  submissions   Submission[]
+  id               String            @id @default(cuid())
+  contestId        String
+  title            String
+  statement        String
+  correctAnswer    String
+  points           Int               @default(100)
+  hint             String?
+  hintReveals      HintReveal[]
+  contest          Contest           @relation(fields: [contestId], references: [id])
+  submissions      Submission[]
+  transitionImages TransitionImage[]
+}
+
+model TransitionImage {
+  id        String  @id @default(cuid())
+  problemId String
+  url       String
+  order     Int
+  problem   Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@index([problemId])
 }
 
 model HintReveal {
