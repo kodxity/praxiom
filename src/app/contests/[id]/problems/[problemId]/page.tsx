@@ -101,6 +101,30 @@ export default async function ProblemViewPage(props: { params: Promise<{ id: str
     // Hint reveal status (persisted in DB so it survives page refresh)
     let initialHintRevealed = false;
     let userXp = 0;
+    
+    // We also need reg details to calculate access
+    let reg: any = null;
+    let contestIsVirtualParticipant = false;
+    let currentRegId: string | null = null;
+    let myRelayOrder: number | null = null;
+    
+    // Attempt to extract those from the mutant contest object that existing code hacked together
+    if ((contest as any).isVirtualParticipant) contestIsVirtualParticipant = true;
+    if ((contest as any).currentRegId) currentRegId = (contest as any).currentRegId;
+    if ((contest as any)._myRelayOrder !== undefined) myRelayOrder = (contest as any)._myRelayOrder;
+    
+    // Let's actually find the real registration if needed for startTime
+    if (session?.user?.id && (!contestIsVirtualParticipant || currentRegId)) {
+        if (contest.contestType !== 'team' && contest.contestType !== 'relay') {
+             try {
+                 reg = await prisma.registration.findFirst({
+                     where: { id: currentRegId ?? undefined, userId: session.user.id, contestId: params.id },
+                     orderBy: { createdAt: 'desc' }
+                 });
+             } catch {}
+        }
+    }
+
     if (session?.user?.id) {
         try {
             const [hintReveal, dbUser] = await Promise.all([
@@ -124,12 +148,44 @@ export default async function ProblemViewPage(props: { params: Promise<{ id: str
     const isUpcoming = now < contest.startTime;
     
     // Check if user is in an active virtual session
-    const isVirtual = (contest as any).isVirtualParticipant;
-    const isActive = isVirtual || (now >= contest.startTime && now <= contest.endTime);
+    const isVirtual = contestIsVirtualParticipant;
+    const isActive = isVirtual || (!isPast && !isUpcoming);
 
     const diff = getPointsLabel(problem.points);
     const problemIndex = allProblems.findIndex((p: any) => p.id === params.problemId);
     const letter = String.fromCharCode(65 + problemIndex);
+    
+    // --------------------------------------------------------------------------------
+    // NEW ACCESS GATE LOGIC
+    // --------------------------------------------------------------------------------
+    let gateReason: string | null = null;
+    let isAdmin = session?.user?.isAdmin ?? false;
+
+    if (!isAdmin) {
+        if (isUpcoming) {
+            gateReason = 'NOT_STARTED_GLOBAL';
+        } else if (isActive && !isVirtual) { // Live contest
+            if (!isRegistered) {
+                gateReason = 'NOT_REGISTERED';
+            } else if (contest.contestType !== 'team' && contest.contestType !== 'relay' && (!reg || !reg.startTime)) {
+                gateReason = 'NOT_STARTED_PERSONAL';
+            } else if (contest.contestType !== 'team' && contest.contestType !== 'relay' && reg && reg.startTime) {
+                // Check if timer expired
+                const personalEndTime = new Date(reg.startTime.getTime() + (contest.duration ?? 0) * 60000);
+                if (now > personalEndTime) {
+                    // Timer expired. Can only view if already solved/revealed earlier.
+                    // For now, if they didn't unlock this problem during the contest, they are locked out until contest ends globally
+                    if (!userSolvedIds.has(params.problemId)) {
+                        gateReason = 'TIMER_EXPIRED';
+                    }
+                }
+            }
+        } else if (isVirtual) {
+            if (!reg || !reg.startTime) {
+                gateReason = 'NOT_STARTED_PERSONAL';
+            }
+        }
+    }
 
     // Solved by user (split by mode)
     const solvedLive = submissions.some((s: any) => s.isCorrect && !s.isUpsolve && !s.isVirtual);
@@ -138,7 +194,7 @@ export default async function ProblemViewPage(props: { params: Promise<{ id: str
     const userSolved = solvedLive || solvedVirtual || solvedUpsolve;
     const nonLiveSolved = solvedVirtual || solvedUpsolve;
     // Attempts split by context
-    const curRegId = (contest as any).currentRegId;
+    const curRegId = currentRegId;
     const activeSubmissions = isVirtual && curRegId
         ? submissions.filter((s: any) => s.registrationId === curRegId)
         : submissions.filter((s: any) => !s.isUpsolve);
@@ -155,9 +211,10 @@ export default async function ProblemViewPage(props: { params: Promise<{ id: str
 
     let isLocked = false;
     let lockReason = '';
-    if (isActive && isRegistered) {
+    // Only apply individual sequential locks if we made it past the hard gate
+    if (!gateReason && isActive && isRegistered) {
         if (contestType === 'relay') {
-            const mySlot: number | null = (contest as any)._myRelayOrder ?? null;
+            const mySlot: number | null = myRelayOrder;
             if (mySlot === null) {
                 // Relay slot not assigned yet
                 isLocked = true;
@@ -205,14 +262,47 @@ export default async function ProblemViewPage(props: { params: Promise<{ id: str
                 </Link>
             </div>
 
-            {/* Gate: hide problem content before contest starts (non-admins only) */}
-            {isUpcoming && !session?.user?.isAdmin ? (
+            {/* Gate: block access based on gateReason */}
+            {gateReason ? (
                 <div className="g" style={{ padding: '48px 32px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}>
                     <div style={{ fontSize: '32px' }}>🔒</div>
-                    <div style={{ fontFamily: 'var(--ff-display)', fontStyle: 'italic', fontSize: '22px', color: 'var(--ink)' }}>Contest Not Started</div>
-                    <div style={{ fontFamily: 'var(--ff-body)', fontSize: '14px', color: 'var(--ink4)', maxWidth: '360px' }}>
-                        This problem will be available when the contest begins.
-                    </div>
+                    
+                    {gateReason === 'NOT_STARTED_GLOBAL' && (
+                        <>
+                            <div style={{ fontFamily: 'var(--ff-display)', fontStyle: 'italic', fontSize: '22px', color: 'var(--ink)' }}>Contest Not Started</div>
+                            <div style={{ fontFamily: 'var(--ff-body)', fontSize: '14px', color: 'var(--ink4)', maxWidth: '360px' }}>
+                                This problem will be available when the contest begins.
+                            </div>
+                        </>
+                    )}
+                    
+                    {gateReason === 'NOT_REGISTERED' && (
+                        <>
+                            <div style={{ fontFamily: 'var(--ff-display)', fontStyle: 'italic', fontSize: '22px', color: 'var(--ink)' }}>Registration Required</div>
+                            <div style={{ fontFamily: 'var(--ff-body)', fontSize: '14px', color: 'var(--ink4)', maxWidth: '360px' }}>
+                                You must register for this contest to view the problems while it is live.
+                            </div>
+                        </>
+                    )}
+
+                    {gateReason === 'NOT_STARTED_PERSONAL' && (
+                        <>
+                            <div style={{ fontFamily: 'var(--ff-display)', fontStyle: 'italic', fontSize: '22px', color: 'var(--ink)' }}>Timer Not Started</div>
+                            <div style={{ fontFamily: 'var(--ff-body)', fontSize: '14px', color: 'var(--ink4)', maxWidth: '360px' }}>
+                                You have registered, but you need to start your contest timer before viewing problems.
+                            </div>
+                        </>
+                    )}
+
+                    {gateReason === 'TIMER_EXPIRED' && (
+                        <>
+                            <div style={{ fontFamily: 'var(--ff-display)', fontStyle: 'italic', fontSize: '22px', color: 'var(--ink)' }}>Time's Up</div>
+                            <div style={{ fontFamily: 'var(--ff-body)', fontSize: '14px', color: 'var(--ink4)', maxWidth: '360px' }}>
+                                Your timer expired before you unlocked this problem. You will be able to view it and upsolve once the global contest ends.
+                            </div>
+                        </>
+                    )}
+
                     <Link href={`/contests/${params.id}`} style={{ marginTop: '8px', padding: '8px 20px', borderRadius: 'var(--r)', background: 'var(--sage)', color: '#fff', fontFamily: 'var(--ff-ui)', fontSize: '13px', fontWeight: 600, textDecoration: 'none' }}>
                         Back to Contest
                     </Link>
@@ -297,11 +387,11 @@ export default async function ProblemViewPage(props: { params: Promise<{ id: str
                                 <>
                                     <div style={{ fontFamily: 'var(--ff-display)', fontStyle: 'italic', fontSize: '20px', color: 'var(--ink)' }}>Not Your Slot</div>
                                     <div style={{ fontFamily: 'var(--ff-body)', fontSize: '14px', color: 'var(--ink4)', maxWidth: '340px' }}>
-                                        You are assigned to Slot {(contest as any)._myRelayOrder}. Navigate to Problem {String.fromCharCode(64 + ((contest as any)._myRelayOrder ?? 1))} to submit.
+                                        You are assigned to Slot {myRelayOrder ?? 1}. Navigate to Problem {String.fromCharCode(64 + (myRelayOrder ?? 1))} to submit.
                                     </div>
-                                    {allProblems[(contest as any)._myRelayOrder - 1] && (
-                                        <Link href={`/contests/${params.id}/problems/${allProblems[(contest as any)._myRelayOrder - 1].id}`} style={{ padding: '8px 20px', borderRadius: 'var(--r)', background: 'var(--sage)', color: '#fff', fontFamily: 'var(--ff-ui)', fontSize: '13px', fontWeight: 600, textDecoration: 'none', marginTop: '4px' }}>
-                                            Go to Problem {String.fromCharCode(64 + ((contest as any)._myRelayOrder ?? 1))}
+                                    {allProblems[(myRelayOrder ?? 1) - 1] && (
+                                        <Link href={`/contests/${params.id}/problems/${allProblems[(myRelayOrder ?? 1) - 1].id}`} style={{ padding: '8px 20px', borderRadius: 'var(--r)', background: 'var(--sage)', color: '#fff', fontFamily: 'var(--ff-ui)', fontSize: '13px', fontWeight: 600, textDecoration: 'none', marginTop: '4px' }}>
+                                            Go to Problem {String.fromCharCode(64 + (myRelayOrder ?? 1))}
                                         </Link>
                                     )}
                                 </>
