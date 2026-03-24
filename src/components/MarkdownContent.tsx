@@ -10,6 +10,8 @@ interface Props {
 }
 
 export function MarkdownContent({ content, className, style }: Props) {
+  const normalizedContent = protectInlineMathDollars(content);
+
   return (
     <div className={`md-body ${className ?? ''}`} style={style}>
       <ReactMarkdown
@@ -64,8 +66,127 @@ export function MarkdownContent({ content, className, style }: Props) {
           td: ({ children }) => <td style={{ padding: '8px 12px', borderBottom: '1px solid var(--glass-border)', color: 'var(--ink2)', verticalAlign: 'top' }}>{children}</td>,
         }}
       >
-        {content}
+        {normalizedContent}
       </ReactMarkdown>
     </div>
   );
+}
+
+function protectInlineMathDollars(input: string): string {
+  let out = '';
+  let i = 0;
+  let inInlineMath = false;
+  let inBlockMath = false;
+  let inInlineCode = false;
+  let inlineCodeTicks = 0;
+  let inFence = false;
+  let fenceChar = '';
+  let fenceLen = 0;
+
+  const isEscaped = (idx: number) => {
+    let slashCount = 0;
+    let j = idx - 1;
+    while (j >= 0 && input[j] === '\\') {
+      slashCount++;
+      j--;
+    }
+    return slashCount % 2 === 1;
+  };
+
+  const atLineStart = (idx: number) => idx === 0 || input[idx - 1] === '\n';
+
+  while (i < input.length) {
+    const ch = input[i];
+
+    // Fenced code blocks: ``` or ~~~
+    if (!inInlineCode && !inInlineMath && !inBlockMath) {
+      if (atLineStart(i) && (ch === '`' || ch === '~')) {
+        let j = i;
+        while (j < input.length && input[j] === ch) j++;
+        const len = j - i;
+        if (len >= 3) {
+          if (!inFence) {
+            inFence = true;
+            fenceChar = ch;
+            fenceLen = len;
+            out += input.slice(i, j);
+            i = j;
+            continue;
+          }
+          if (ch === fenceChar && len >= fenceLen) {
+            inFence = false;
+            fenceChar = '';
+            fenceLen = 0;
+            out += input.slice(i, j);
+            i = j;
+            continue;
+          }
+        }
+      }
+    }
+
+    if (inFence) {
+      out += ch;
+      i++;
+      continue;
+    }
+
+    // Inline code spans: `code`
+    if (!inInlineMath && !inBlockMath && ch === '`') {
+      let j = i;
+      while (j < input.length && input[j] === '`') j++;
+      const tickLen = j - i;
+      if (!inInlineCode) {
+        inInlineCode = true;
+        inlineCodeTicks = tickLen;
+      } else if (tickLen === inlineCodeTicks) {
+        inInlineCode = false;
+        inlineCodeTicks = 0;
+      }
+      out += input.slice(i, j);
+      i = j;
+      continue;
+    }
+
+    if (inInlineCode) {
+      out += ch;
+      i++;
+      continue;
+    }
+
+    // Block math with $$...$$
+    if (!inInlineMath && ch === '$' && !isEscaped(i) && input[i + 1] === '$') {
+      inBlockMath = !inBlockMath;
+      out += '$$';
+      i += 2;
+      continue;
+    }
+
+    if (inBlockMath) {
+      out += ch;
+      i++;
+      continue;
+    }
+
+    // Inline math with $...$
+    if (ch === '$' && !isEscaped(i)) {
+      inInlineMath = !inInlineMath;
+      out += ch;
+      i++;
+      continue;
+    }
+
+    if (inInlineMath && ch === '\\' && input[i + 1] === '$') {
+      // Replace escaped dollar inside inline math to avoid early close.
+      // Use a delimiter so following digits are not consumed by \\char.
+      out += '\\char36{}';
+      i += 2;
+      continue;
+    }
+
+    out += ch;
+    i++;
+  }
+
+  return out;
 }
