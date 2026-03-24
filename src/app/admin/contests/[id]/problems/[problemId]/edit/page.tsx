@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
+import { MarkdownEditor } from '@/components/MarkdownEditor';
 
 const MONO = 'var(--ff-mono)';
 const LABEL: React.CSSProperties = {
@@ -201,14 +202,12 @@ export default function EditProblemPage() {
                         {/* Problem statement */}
                         <div>
                             <label style={LABEL}>Problem Statement</label>
-                            <textarea
+                            <MarkdownEditor
                                 value={statement}
-                                onChange={e => setStatement(e.target.value)}
+                                onChange={setStatement}
+                                placeholder="Write the full problem statement here. Supports **Markdown** and $\LaTeX$ math."
+                                minHeight={260}
                                 required
-                                rows={10}
-                                className="input"
-                                style={{ width: '100%', resize: 'vertical', fontFamily: 'var(--ff-ui)', fontSize: '14px', lineHeight: 1.7 }}
-                                placeholder="Write the full problem statement here…"
                             />
                         </div>
 
@@ -231,13 +230,11 @@ export default function EditProblemPage() {
                         {/* Hint */}
                         <div>
                             <label style={LABEL}>Hint <span style={{ color: 'var(--ink5)', fontWeight: 400, letterSpacing: '0.05em' }}>(optional)</span></label>
-                            <textarea
+                            <MarkdownEditor
                                 value={hint}
-                                onChange={e => setHint(e.target.value)}
-                                rows={3}
-                                className="input"
-                                style={{ width: '100%', resize: 'vertical', fontFamily: 'var(--ff-ui)', fontSize: '14px', lineHeight: 1.7 }}
+                                onChange={setHint}
                                 placeholder="Optional hint shown to users for half the XP…"
+                                minHeight={120}
                             />
                             <p style={{ fontFamily: MONO, fontSize: '10px', color: 'var(--ink5)', marginTop: '6px' }}>
                                 Revealing the hint costs {Math.floor(points / 2)} XP (half of {points}). Leave empty for no hint.

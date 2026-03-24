@@ -1,8 +1,8 @@
 'use client'
 
 import { useTheme } from '@/context/ThemeContext'
-import { InlineMath, BlockMath } from 'react-katex'
-import { DiffDot, DiffLabel } from '@/components/DiffDot'
+import { DiffLabel } from '@/components/DiffDot'
+import { MarkdownContent } from '@/components/MarkdownContent'
 
 interface Props {
   title: string
@@ -13,62 +13,6 @@ interface Props {
   imageUrl?: string | null
   contestName?: string
   problemNumber?: number
-}
-
-/**
- * Renders a problem body, parsing $...$ as inline KaTeX and $$...$$ as block KaTeX.
- */
-function renderMath(text: string) {
-  // Split on $$...$$ first (block), then $...$ (inline)
-  const parts: React.ReactNode[] = []
-  let remaining = text
-  let key = 0
-
-  while (remaining.length > 0) {
-    const blockIdx = remaining.indexOf('$$')
-    if (blockIdx !== -1) {
-      // Text before block math
-      if (blockIdx > 0) {
-        parts.push(...renderInlineMath(remaining.slice(0, blockIdx), key))
-        key += 100
-      }
-      const afterOpen = remaining.slice(blockIdx + 2)
-      const closeIdx = afterOpen.indexOf('$$')
-      if (closeIdx !== -1) {
-        const mathContent = afterOpen.slice(0, closeIdx)
-        parts.push(<BlockMath key={key++} math={mathContent} />)
-        remaining = afterOpen.slice(closeIdx + 2)
-      } else {
-        parts.push(remaining.slice(blockIdx))
-        break
-      }
-    } else {
-      parts.push(...renderInlineMath(remaining, key))
-      break
-    }
-  }
-
-  return parts
-}
-
-function renderInlineMath(text: string, baseKey: number): React.ReactNode[] {
-  const parts: React.ReactNode[] = []
-  const segments = text.split('$')
-  segments.forEach((seg, i) => {
-    if (i % 2 === 0) {
-      // plain text - split newlines into paragraphs
-      if (seg.trim()) {
-        seg.split('\n\n').forEach((para, j) => {
-          if (para.trim()) {
-            parts.push(<p key={baseKey + i * 10 + j} style={{ marginBottom: '0.75rem' }}>{para}</p>)
-          }
-        })
-      }
-    } else {
-      parts.push(<InlineMath key={baseKey + i * 10} math={seg} />)
-    }
-  })
-  return parts
 }
 
 export function ProblemStatement({
@@ -83,6 +27,16 @@ export function ProblemStatement({
 }: Props) {
   const theme = useTheme()
   const isDark = theme.navVariant === 'dark'
+  const markdownVars = isDark ? ({
+    '--ink': theme.textPrimary,
+    '--ink2': theme.textSecondary,
+    '--ink3': theme.textMuted,
+    '--ink4': theme.textMuted,
+    '--ink5': theme.surfaceBorder,
+    '--glass': theme.surface,
+    '--glass-border': theme.surfaceBorder,
+    '--sage': theme.accent,
+  } as React.CSSProperties) : undefined
 
   return (
     <div
@@ -160,7 +114,15 @@ export function ProblemStatement({
           lineHeight: 1.75,
         }}
       >
-        {renderMath(body)}
+        <MarkdownContent
+          content={body}
+          style={{
+            color: isDark ? theme.textPrimary : 'var(--ink)',
+            fontSize: '1rem',
+            lineHeight: 1.75,
+            ...markdownVars,
+          }}
+        />
       </div>
 
       {/* Diagram */}

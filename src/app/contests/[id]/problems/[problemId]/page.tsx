@@ -6,6 +6,7 @@ import Link from 'next/link';
 import UpsolvePanel from './UpsolvePanel';
 import ActiveSubmitPanel from './ActiveSubmitPanel';
 import { ContestCountdown } from '@/components/ContestCountdown';
+import { MarkdownContent } from '@/components/MarkdownContent';
 
 function getPointsLabel(pts: number) {
     if (pts <= 80)  return { label: 'E', title: 'Easy',   cls: 'diff-e' };
@@ -267,8 +268,8 @@ export default async function ProblemViewPage(props: { params: Promise<{ id: str
                     </h1>
 
                     {/* Statement body */}
-                    <div className="prob-body" suppressHydrationWarning style={{ fontFamily: 'var(--ff-body)', fontSize: '15px', lineHeight: 1.82, color: bodyColor, fontWeight: 300, whiteSpace: 'pre-wrap' }}>
-                        {problem.statement}
+                    <div className="prob-body" suppressHydrationWarning style={{ fontFamily: 'var(--ff-body)', fontSize: '15.5px', color: bodyColor, fontWeight: 300 }}>
+                        <MarkdownContent content={problem.statement} />
                     </div>
 
                 </div>}

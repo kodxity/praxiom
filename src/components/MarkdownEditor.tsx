@@ -3,8 +3,11 @@ import { useRef, useState, useCallback } from 'react';
 import { MarkdownContent } from './MarkdownContent';
 
 interface Props {
-    name: string;
+    name?: string;
     defaultValue?: string;
+    /** Controlled mode: provide value + onChange together */
+    value?: string;
+    onChange?: (val: string) => void;
     placeholder?: string;
     minHeight?: number;
     required?: boolean;
@@ -52,8 +55,11 @@ const BTN: React.CSSProperties = {
     textAlign: 'center',
 };
 
-export function MarkdownEditor({ name, defaultValue = '', placeholder, minHeight = 320, required }: Props) {
-    const [value, setValue] = useState(defaultValue);
+export function MarkdownEditor({ name, defaultValue = '', value: controlledValue, onChange, placeholder, minHeight = 320, required }: Props) {
+    const isControlled = controlledValue !== undefined && onChange !== undefined;
+    const [internalValue, setInternalValue] = useState(defaultValue);
+    const value = isControlled ? controlledValue : internalValue;
+    const setValue = isControlled ? onChange : setInternalValue;
     const [preview, setPreview] = useState(false);
     const [hoveredBtn, setHoveredBtn] = useState<string | null>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);

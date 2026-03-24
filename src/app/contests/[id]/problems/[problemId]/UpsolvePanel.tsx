@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { MarkdownContent } from '@/components/MarkdownContent';
 
 interface UpsolvePanelProps {
     contestId: string;
@@ -216,8 +217,8 @@ export default function UpsolvePanel({
                                 <span>💡</span> HINT
                                 <span style={{ opacity: 0.5, fontWeight: 400 }}>· {hintCost} XP spent</span>
                             </div>
-                            <div style={{ fontFamily: 'var(--ff-body)', fontSize: '14px', lineHeight: 1.7, color: 'var(--ink2)', padding: '12px 16px', background: 'rgba(107,148,120,0.06)', borderRadius: 'var(--r)', border: '1px solid var(--sage-border)' }}>
-                                {revealedHintText}
+                            <div style={{ padding: '4px 16px 12px', background: 'rgba(107,148,120,0.06)', borderRadius: 'var(--r)', border: '1px solid var(--sage-border)', fontSize: '14.5px' }}>
+                                <MarkdownContent content={revealedHintText} />
                             </div>
                         </div>
                     ) : (

@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
+import { MarkdownEditor } from '@/components/MarkdownEditor';
 
 export function AddProblemForm({ contestId }: { contestId: string }) {
     const router = useRouter();
@@ -49,9 +50,24 @@ export function AddProblemForm({ contestId }: { contestId: string }) {
     return (
         <form ref={formRef} onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <input name="title" placeholder="Problem Title" required className="input" />
-            <textarea name="statement" placeholder="Problem Statement" required className="input" rows={4} style={{ resize: 'vertical' }} />
+            <div>
+                <label style={{ display: 'block', fontFamily: 'var(--ff-mono)', fontSize: '10px', letterSpacing: '0.14em', color: 'var(--ink5)', textTransform: 'uppercase', marginBottom: '8px' }}>Problem Statement</label>
+                <MarkdownEditor
+                    name="statement"
+                    placeholder="Write the full problem statement here. Supports **Markdown** and $\LaTeX$ math."
+                    minHeight={200}
+                    required
+                />
+            </div>
             <input name="correctAnswer" placeholder="Correct Answer" required className="input" />
-            <textarea name="hint" placeholder="Hint (optional - costs half XP to reveal)" className="input" rows={2} style={{ resize: 'vertical' }} />
+            <div>
+                <label style={{ display: 'block', fontFamily: 'var(--ff-mono)', fontSize: '10px', letterSpacing: '0.14em', color: 'var(--ink5)', textTransform: 'uppercase', marginBottom: '8px' }}>Hint <span style={{ fontWeight: 400 }}>(optional)</span></label>
+                <MarkdownEditor
+                    name="hint"
+                    placeholder="Optional hint shown for half the XP…"
+                    minHeight={100}
+                />
+            </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <input name="points" type="number" placeholder="Points" defaultValue={100} required className="input" style={{ width: '100px' }} />
                 <button className="btn btn-sage" disabled={submitting} style={{ flex: 1, opacity: submitting ? 0.7 : 1 }}>

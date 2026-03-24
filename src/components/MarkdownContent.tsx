@@ -13,7 +13,7 @@ export function MarkdownContent({ content, className, style }: Props) {
   return (
     <div className={`md-body ${className ?? ''}`} style={style}>
       <ReactMarkdown
-        remarkPlugins={[remarkMath]}
+        remarkPlugins={[[remarkMath, { singleDollarTextMath: true }]]}
         rehypePlugins={[rehypeKatex as any]}
         components={{
           h1: ({ children }) => <h1 style={{ fontFamily: 'var(--ff-display)', fontSize: '1.7em', fontWeight: 400, fontStyle: 'italic', color: 'var(--ink)', lineHeight: 1.2, margin: '1.4em 0 0.6em' }}>{children}</h1>,
